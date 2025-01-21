@@ -1,7 +1,8 @@
 <script lang="ts">
 	import '../app.css';
-
 	let { children } = $props();
+
+	import { Navbar, NavBrand, NavLi, NavUl, NavHamburger} from 'flowbite-svelte';
 </script>
 
 <svelte:head>
@@ -11,7 +12,7 @@
 
 <nav>
 	<a href="/">Welcome Landing Page</a>
-	<a href="/">Login</a>
+	<a href="/loginpage">Login page</a>
 </nav>
 
 
