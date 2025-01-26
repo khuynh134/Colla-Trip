@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+}
+
+nav a {
+    text-decoration: none;
+    color: inherit;
+    padding: 0.5rem 1rem;
+}
+
+nav a:hover {
+    color: #60a5fa; /* Matches text-blue-400 */
+}
+
+footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}

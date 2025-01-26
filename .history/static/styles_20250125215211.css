@@ -1,0 +1,43 @@
+/* Navigation Bar */
+nav {
+    background-color: #00acc1; /* Cyan background matching the example */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 1.5rem; /* Adds spacing between links */
+}
+
+nav li {
+    margin: 0;
+}
+
+nav a {
+    text-decoration: none;
+    color: white;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+nav img {
+    height: 50px; /* Ensures the logo is the correct size */
+}
+
+/* Footer */
+footer {
+    background-color: #1f2937; /* Matches bg-gray-800 */
+    color: white;
+    padding: 1rem;
+    text-align: center;
+}

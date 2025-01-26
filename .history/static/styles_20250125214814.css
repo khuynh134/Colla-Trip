@@ -1,0 +1,28 @@
+nav {
+    background-color: #1f2937; /* Matches bg-gray-800 */
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+}
+
+nav ul {
+    display: flex; /* Ensure links are horizontal */
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+nav li {
+    margin-right: 1rem; /* Add spacing between links */
+}
+
+nav a {
+    text-decoration: none;
+    color: white;
+}
+
+h1, p {
+    text-align: center;
+}
