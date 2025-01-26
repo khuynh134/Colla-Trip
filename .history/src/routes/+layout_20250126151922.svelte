@@ -1,14 +1,6 @@
 <script lang="ts">
 	import '../app.css';
 	import { Navbar, NavBrand, NavUl, NavLi } from 'flowbite-svelte';
-	import { onMount } from 'svelte';
-    import { page } from '$app/stores';
-	
-	let isMenuOpen: boolean = false; 
-	 // Close menu when route changes
-	 $: if ($page.url.pathname) {
-       isMenuOpen = false;
-   }
 </script>
  
  <Navbar class="bg-[#3598db] text-white fixed w-full p-4 z-50">
