@@ -11,7 +11,7 @@
                 <stop offset="100%" style="stop-color:#3598db">
                     <animate attributeName="stop-color" 
                         values="#3598db;#84eaeb;#3598db" 
-                        dur="8s" 
+                        dur="4s" 
                         repeatCount="indefinite"/>
                 </stop>
             </linearGradient>
@@ -19,9 +19,26 @@
         <rect width="100" height="100" fill="url(#grad)"/>
     </svg>
     
-    <img src="/Colla-TripLogo-rem.png" alt="Travel Planner Logo" class="w-70 h-70 mb-6 drop-shadow-lg relative z-10">
-    <h1 class="text-4xl font-bold text-white relative z-10">Plan Your Next Adventure</h1>
-    <p class="mt-4 text-lg text-white relative z-10">Discover, organize, and enjoy your trips effortlessly.</p>
+	<script>
+   import { onMount } from 'svelte';
+   let bounceCount = 0;
+   let shouldBounce = true;
+
+   onMount(() => {
+       const interval = setInterval(() => {
+           bounceCount++;
+           if (bounceCount >= 4) {
+               shouldBounce = false;
+               clearInterval(interval);
+           }
+       }, 1500); // 1.5s per bounce
+   });
+</script>
+
+<img 
+   src="/Colla-TripLogo-rem.png" 
+   alt="Travel Planner Logo" 
+   class="{shouldBounce ? 'animate-bounce' : ''} w-70 h-70 mb-6 drop-shadow-lg relative z-10">
 </section>
 
 <style>

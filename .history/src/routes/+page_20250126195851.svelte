@@ -11,7 +11,7 @@
                 <stop offset="100%" style="stop-color:#3598db">
                     <animate attributeName="stop-color" 
                         values="#3598db;#84eaeb;#3598db" 
-                        dur="8s" 
+                        dur="4s" 
                         repeatCount="indefinite"/>
                 </stop>
             </linearGradient>

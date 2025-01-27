@@ -49,7 +49,7 @@
 				<a href="/explore" class="text-white">Explore</a>
 				<a href="/about" class="text-white">About</a>
 				<a href="/contactpage" class="text-white">Contact Us</a>
-				<a href="/loginpage" class="bg-white text-cyan-600 px-4 py-2 rounded-md transition-colors text-center">
+				<a href="/loginpage" class="bg-white text-cyan-600 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors text-center">
 					Log In
 				</a>
 			</div>

@@ -21,10 +21,10 @@
 		<!-- Desktop Menu -->
 		<div class="hidden md:flex items-center space-x-12 ml-auto">
 			<a href="/" class="text-white font-bold text-lg">Home</a>
-			<a href="/explore" class="text-white font-bold text-lg">Explore</a>
-			<a href="/aboutpage" class="text-white font-bold text-lg">About</a>
-			<a href="/contactpage" class="text-white font-bold text-lg">Contact Us</a>
-			<a href="/loginpage" class="bg-white text-cyan-600 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors font-bold text-lg">
+			<a href="/explore" class="text-white font-bold">Explore</a>
+			<a href="/aboutpage" class="text-white font-bold">About</a>
+			<a href="/contactpage" class="text-white font-bold">Contact Us</a>
+			<a href="/loginpage" class="bg-white text-cyan-600 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors">
 				Log In
 			</a>
 		</div>
@@ -49,7 +49,7 @@
 				<a href="/explore" class="text-white">Explore</a>
 				<a href="/about" class="text-white">About</a>
 				<a href="/contactpage" class="text-white">Contact Us</a>
-				<a href="/loginpage" class="bg-white text-cyan-600 px-4 py-2 rounded-md transition-colors text-center">
+				<a href="/loginpage" class="bg-white text-cyan-600 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors text-center">
 					Log In
 				</a>
 			</div>

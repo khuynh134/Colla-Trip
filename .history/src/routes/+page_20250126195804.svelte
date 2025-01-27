@@ -5,13 +5,13 @@
                 <stop offset="0%" style="stop-color:#84eaeb" class="animate-pulse">
                     <animate attributeName="stop-color" 
 						values="#ddebf5;#bbebf5;#ffebf5;#ddebf5" 
-                        dur="10s" 
+                        dur="4s" 
                         repeatCount="indefinite"/>
                 </stop>
                 <stop offset="100%" style="stop-color:#3598db">
                     <animate attributeName="stop-color" 
                         values="#3598db;#84eaeb;#3598db" 
-                        dur="8s" 
+                        dur="4s" 
                         repeatCount="indefinite"/>
                 </stop>
             </linearGradient>

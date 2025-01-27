@@ -1,0 +1,22 @@
+body {
+    margin: 0;
+    font-family: 'Quicksand', sans-serif;
+}
+
+nav a {
+    text-decoration: none;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+footer {
+    background-color: #1f2937;
+    color: rgb(72, 23, 175);
+    padding: 1rem;
+    text-align: center;
+}
