@@ -1,6 +1,13 @@
 <script lang="ts">
 	import '../../app.css';
 	let name = $state('');
+
+	import { goto } from '$app/navigation'; 
+
+	function handleSignUpClick(event: Event){
+		event.preventDefault();
+		goto('/signuppage');
+	}
  </script>
  
  <div class="min-h-screen bg-gradient-to-r from-[#84eaeb] to-[#3598db] flex flex-col items-center justify-center p-4">
@@ -38,7 +45,7 @@
 		
 		<p class="mt-4 text-center text-gray-600">
 			Don't have an account? 
-			<a href="/signup" class="text-[#3598db] hover:underline">Sign up</a>
+			<a href="/signuppage" class="text-[#3598db] hover:underline" onclick={handleSignUpClick}>Sign up</a>
 		</p>
 	</div>
  </div>
