@@ -12,14 +12,14 @@
 </script>
  
  <Navbar class="bg-[#3598db] text-white fixed w-full p-4 z-50">
-	<div class="container mx-0 flex justify-between items-center">
+	<div class="container mx-auto flex justify-between items-center">
 		<NavBrand href="/" class="flex items-center">
 			<img src="/Colla-TripLogo-rem.png" class="h-20 mr-10 drop-shadow-lg" alt="Colla-Trip Logo" />
 			<span class="self-center whitespace-nowrap text-3xl font-extrabold">Colla-Trip</span>
 		</NavBrand>
  
 		<!-- Desktop Menu -->
-		<div class="hidden md:flex items-center space-x-12 ml-auto">
+		<div class="hidden md:flex items-center space-x-6 ml-auto">
 			<a href="/" class="text-white font-bold text-lg">Home</a>
 			<a href="/explore" class="text-white font-bold text-lg">Explore</a>
 			<a href="/aboutpage" class="text-white font-bold text-lg">About</a>

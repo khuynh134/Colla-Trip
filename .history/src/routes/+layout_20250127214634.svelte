@@ -1,30 +1,29 @@
 <script lang="ts">
 	import '../app.css';
-	import { Navbar, NavBrand, NavUl, NavLi } from 'flowbite-svelte';
+	import { Navbar, NavBrand } from 'flowbite-svelte';
 	import { onMount } from 'svelte';
-    import { page } from '$app/stores';
-
-	let isMenuOpen: boolean = false; 
-	 // Close menu when route changes
-	 $: if ($page.url.pathname) {
-       isMenuOpen = false;
-   }
-</script>
+	import { page } from '$app/stores';
+ 
+	let isMenuOpen: boolean = false;
+	$: if ($page.url.pathname) {
+		isMenuOpen = false;
+	}
+ </script>
  
  <Navbar class="bg-[#3598db] text-white fixed w-full p-4 z-50">
-	<div class="container mx-0 flex justify-between items-center">
+	<div class="flex justify-between items-center px-6">
 		<NavBrand href="/" class="flex items-center">
-			<img src="/Colla-TripLogo-rem.png" class="h-20 mr-10 drop-shadow-lg" alt="Colla-Trip Logo" />
-			<span class="self-center whitespace-nowrap text-3xl font-extrabold">Colla-Trip</span>
+			<img src="/Colla-TripLogo-rem.png" class="h-16 mr-6 drop-shadow-lg" alt="Colla-Trip Logo" />
+			<span class="self-center whitespace-nowrap text-2xl font-extrabold">Colla-Trip</span>
 		</NavBrand>
  
 		<!-- Desktop Menu -->
-		<div class="hidden md:flex items-center space-x-12 ml-auto">
+		<div class="hidden md:flex items-center space-x-8">
 			<a href="/" class="text-white font-bold text-lg">Home</a>
 			<a href="/explore" class="text-white font-bold text-lg">Explore</a>
 			<a href="/aboutpage" class="text-white font-bold text-lg">About</a>
 			<a href="/contactpage" class="text-white font-bold text-lg">Contact Us</a>
-			<a href="/loginpage" class="bg-white text-cyan-600 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors font-bold text-lg">
+			<a href="/loginpage" class="bg-white text-cyan-600 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors font-bold">
 				Log In
 			</a>
 		</div>
@@ -49,19 +48,19 @@
 				<a href="/explore" class="text-white">Explore</a>
 				<a href="/aboutpage" class="text-white">About</a>
 				<a href="/contactpage" class="text-white">Contact Us</a>
-				<a href="/loginpage" class="bg-white text-cyan-600 px-4 py-2 rounded-md transition-colors text-center">
+				<a href="/loginpage" class="bg-white text-cyan-600 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors text-center">
 					Log In
 				</a>
 			</div>
 		</div>
 	{/if}
  </Navbar>
-
-<div class="pt-20">
+ 
+ <div class="pt-20">
 	<slot />
-</div>
-
-<footer class="bg-[#84eaeb] text-blue-700 p-4 text-center font-bold">
+ </div>
+ 
+ <footer class="bg-[#84eaeb] text-blue-700 p-4 text-center font-bold">
 	<p>&copy; 2025 Colla-Trip. All rights reserved.</p>
 	<p>Plan your trips with ease!</p>
-</footer>
+ </footer>

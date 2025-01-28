@@ -12,9 +12,9 @@
 </script>
  
  <Navbar class="bg-[#3598db] text-white fixed w-full p-4 z-50">
-	<div class="container mx-0 flex justify-between items-center">
+	<div class="container mx-auto flex justify-between items-center">
 		<NavBrand href="/" class="flex items-center">
-			<img src="/Colla-TripLogo-rem.png" class="h-20 mr-10 drop-shadow-lg" alt="Colla-Trip Logo" />
+			<img src="/Colla-TripLogo-rem.png" class="h-20 mr-5 drop-shadow-lg" alt="Colla-Trip Logo" />
 			<span class="self-center whitespace-nowrap text-3xl font-extrabold">Colla-Trip</span>
 		</NavBrand>
  

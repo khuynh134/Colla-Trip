@@ -11,7 +11,7 @@
    }
 </script>
  
- <Navbar class="bg-[#3598db] text-white fixed w-full p-4 z-50">
+ <Navbar class="bg-[#3598db] text-white fixed w-full p-4 py-2 z-50">
 	<div class="container mx-0 flex justify-between items-center">
 		<NavBrand href="/" class="flex items-center">
 			<img src="/Colla-TripLogo-rem.png" class="h-20 mr-10 drop-shadow-lg" alt="Colla-Trip Logo" />
