@@ -47,9 +47,9 @@
         </div>
      </div>
     
-     <div class="flex flex-row justify-between items-start max-h-auto mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Sidebar -->
-            <div class="basis-1/3 space-y-10">
+     <!-- Widgets Section -->
+     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Budget Widget -->
                 <div class="bg-white border-2 border-cyan-500 rounded-lg shadow p-7">
                     <div class="flex items-center justify-between mb-2">
@@ -69,7 +69,7 @@
                         <h2 class="text-lg font-semibold text-cyan-700">Packing List</h2>
                         <Luggage class="w-6 h-6 text-gray-400" />
                     </div>
-                    <div class="basis-2/3 space-y-3">
+                    <div class="space-y-3">
                         {#each packingItems as item} 
                             <label class="flex items-center space-x-2">
                                 <input type="checkbox" class="rounded text-blue-500" />
