@@ -19,7 +19,7 @@
             console.log(user);
             success = true;
             // Redirect to another page after successful signup
-            goto('/dashboard'); 
+            goto('/loginpage'); 
         } catch (error) {
             console.error('Error signing up:', error);
             errorMessage = 'Error signing up. Please try again.';
