@@ -8,6 +8,11 @@
 		event.preventDefault();
 		goto('/signuppage');
 	}
+
+	function handleLoginClick(event: Event){
+		event.preventDefault();
+		goto('/dashboardpage');
+	}
  </script>
  
  <div class="min-h-screen bg-gradient-to-r from-[#84eaeb] to-[#3598db] flex flex-col items-center justify-center p-4">
@@ -38,6 +43,7 @@
 			<button 
 				type="submit" 
 				class="w-full bg-[#3598db] text-white py-3 rounded-lg hover:bg-[#3598db]/90 transition-colors"
+				onclick={handleLoginClick}
 			>
 				Login
 			</button>
