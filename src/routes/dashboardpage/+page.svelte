@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { Card } from 'flowbite-svelte';
+	import { goto } from '$app/navigation';
   
     // State for sidebar
     let sidebarExtended = false;
@@ -17,6 +18,13 @@
     sidebarExtended = !sidebarExtended;
     sidebarWidth = sidebarExtended ? '300px' : '80px';
   }
+
+  // Create a clickable link 
+  function handleCreateTripClick(event: Event) {
+    event.preventDefault();
+    console.log('Create Trip clicked');
+    goto('./tripspage');
+  }
 </script>
 
 <div class="min-h-screen bg-gray-50">
@@ -30,7 +38,7 @@
   >
     <div class="space-y-8 mt-40">
       <!-- Create Trip Link -->
-<a href="/create-trip" class="flex items-center p-1 hover:bg-blue-600 rounded-lg transition-colors">
+<a href="/create-trip" class="flex items-center p-1 hover:bg-blue-600 rounded-lg transition-colors" on:click={handleCreateTripClick}>
     <div class="bg-[#85e9eb] text-cyan rounded-full p-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all ">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="Create Trip">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
