@@ -204,7 +204,7 @@
             Trip Start Date
           </label>
           <input
-            type="Date"
+            type="startDate"
             id="tripStartDate"
             required
             class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"
@@ -216,7 +216,7 @@
             Trip End Date
           </label>
           <input
-            type="Date"
+            type="endDate"
             id="tripEndDate"
             required
             class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"

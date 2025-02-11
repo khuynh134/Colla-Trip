@@ -200,24 +200,12 @@
         </div>
 
         <div>
-          <label for="tripStartDate" class="block text-sm font-medium text-gray-700 mb-2">
-            Trip Start Date
+          <label for="tripDate" class="block text-sm font-medium text-gray-700 mb-2">
+            Trip Date
           </label>
           <input
-            type="Date"
-            id="tripStartDate"
-            required
-            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"
-          />
-        </div>
-
-        <div>
-          <label for="tripEndDate" class="block text-sm font-medium text-gray-700 mb-2">
-            Trip End Date
-          </label>
-          <input
-            type="Date"
-            id="tripEndDate"
+            type="date"
+            id="tripDate"
             required
             class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"
           />

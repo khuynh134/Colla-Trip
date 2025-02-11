@@ -64,7 +64,11 @@
       <!-- Sidebar Links -->
       <div class="space-y-4">
         <!-- Create Trip Link -->
-        <a href="/create-trip" class="flex items-center p-1 hover:bg-blue-600 rounded-lg transition-colors" on:click={handleCreateTripClick}>
+        <a 
+          href="/create-trip" 
+          class="flex items-center justify-center p-1 hover:bg-blue-600 rounded-lg transition-colors" 
+          on:click={handleCreateTripClick}
+        >
           <div class="bg-[#85e9eb] text-cyan rounded-full p-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="Create Trip">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -96,18 +100,6 @@
           </div>
           <div class="ml-4 {sidebarExtended ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500">
             <span class="text-lg">Trips</span>
-          </div>
-        </a>
-
-        <!-- Schedule-->
-        <a href="/schedule" class="flex items-center p-3 hover:bg-blue-600 rounded-lg transition-colors">
-          <div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="Schedule">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" />
-            </svg>
-          </div>
-          <div class="ml-4 {sidebarExtended ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500">
-            <span class="text-lg">Schedule</span>
           </div>
         </a>
       </div>
@@ -160,13 +152,9 @@
     </div>
   </div>
 
-<!-- Create Trip Form Panel -->
-<div 
-  class="fixed inset-0 flex items-center justify-center z-50"
-  style="visibility: {createFormOpen ? 'visible' : 'hidden'};"
->
+  <!-- Create Trip Form Panel -->
   <div 
-    class="bg-white rounded-lg shadow-lg w-[500px] transform transition-transform duration-300 ease-in-out {createFormOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}"
+    class="fixed right-0 top-0 h-full w-96 bg-white shadow-lg transform transition-transform duration-300 ease-in-out {createFormOpen ? 'translate-x-0' : 'translate-x-full'} overflow-y-auto z-50"
   >
     <div class="p-6">
       <!-- Form Header -->
@@ -200,24 +188,12 @@
         </div>
 
         <div>
-          <label for="tripStartDate" class="block text-sm font-medium text-gray-700 mb-2">
-            Trip Start Date
+          <label for="tripDate" class="block text-sm font-medium text-gray-700 mb-2">
+            Trip Date
           </label>
           <input
-            type="Date"
-            id="tripStartDate"
-            required
-            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"
-          />
-        </div>
-
-        <div>
-          <label for="tripEndDate" class="block text-sm font-medium text-gray-700 mb-2">
-            Trip End Date
-          </label>
-          <input
-            type="Date"
-            id="tripEndDate"
+            type="date"
+            id="tripDate"
             required
             class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"
           />
@@ -261,13 +237,35 @@
       </form>
     </div>
   </div>
-</div>
 
   <!-- Overlay -->
   {#if createFormOpen}
-  <div 
-    class="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-40"
-    on:click={closeCreateForm}
-  ></div>
-{/if}
+    <div 
+      class="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-40"
+      on:click={closeCreateForm}
+    ></div>
+  {/if}
 </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 mb-8 sm:mb-12">
+          <Card class="p-6 sm:p-8 shadow-lg">
+            <h3 class="text-xl font-semibold mb-4">Total Trips</h3>
+            <div class="text-3xl sm:text-4xl font-bold">5</div>
+            <div class="text-green-500 text-lg mt-2">+2 this month</div>
+          </Card>
+          <Card class="p-6 sm:p-8 shadow-lg">
+            <h3 class="text-xl font-semibold mb-4">Upcoming Trips</h3>
+            <div class="text-3xl sm:text-4xl font-bold">2</div>
+            <div class="text-blue-500 text-lg mt-2">Next: Paris, France</div>
+          </Card>
+        </div>
+  
+        <!-- Trip Activity Section -->
+        <Card class="p-6 sm:p-8 shadow-lg">
+          <h3 class="text-xl font-semibold mb-6">Trip Activity</h3>
+          <!-- Chart component can go here -->
+        </Card>
+      </div>
+    </div>
+  </div>
