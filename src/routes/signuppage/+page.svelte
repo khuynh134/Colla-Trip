@@ -1,7 +1,7 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { auth } from '$lib/firebase';
-    import { createUserWithEmailAndPassword } from 'firebase/auth';
+    import { getAuth, validatePassword, createUserWithEmailAndPassword } from 'firebase/auth';
 
     // Form state
     let firstName = '';
@@ -15,17 +15,39 @@
     let isLoading = false;
 
     // Password validation
-    function validatePasswords(): boolean {
+    async function validatePasswords(): Promise<boolean> {
         if (password !== confirmPassword) {
             errorMessage = 'Passwords do not match';
             success = false;
             return false;
         }
-        if (password.length < 8) {
-            errorMessage = 'Password must be at least 8 characters long';
+        //Validate password using Firebase Auth
+        const status = await validatePassword(getAuth(), password);
+        if(!status.isValid){
+            //Password is not valid. Use the status to show what requirements are met and which are not met
+            const needsLowerCase = status.containsLowercaseLetter !== true;
+            const needsUpperCase = status.containsUppercaseLetter !== true;
+            const needsNumber = status.containsNumericCharacter !== true;
+            const needsMinLength = status.meetsMinPasswordLength !== true; //This is true if the password is at least 8 characters long
+
+            errorMessage = 'Password does not meet requirements';
+            if(needsLowerCase){
+                errorMessage += ' (needs lowercase letter)';
+            }
+            if(needsUpperCase){
+                errorMessage += ' (needs uppercase letter)';
+            }
+            if(needsNumber){
+                errorMessage += ' (needs number)';
+            }
+            if(needsMinLength){
+                errorMessage += ' (needs to be at least 8 characters long)';
+            }
             success = false;
-            return false;
+            return false; 
+            
         }
+
         return true;
     }
 
@@ -44,7 +66,7 @@
         success = undefined;
 
         // Validate passwords match
-        if (!validatePasswords()) {
+        if (!await validatePasswords()) {
             isLoading = false;
             return;
         }
@@ -148,7 +170,7 @@
                     required
                     minlength="8"
                 />
-                <p class="text-sm text-gray-500 mt-1">Password must be at least 8 characters long</p>
+                <p class="text-sm text-gray-500 mt-1">Password must be at least 8 characters long, must contain lower case, uppercase & a number</p>
             </div>
 
             <div>
