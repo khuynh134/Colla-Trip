@@ -2,10 +2,32 @@
   import { Card } from 'flowbite-svelte';
   import Sidebar from '$lib/components/Sidebar.svelte';
   
- // State management for sidebar only
- let sidebarExtended = false;
+  // State management
+  let sidebarExtended = false;
   let sidebarWidth = '80px';
   let createFormOpen = false;
+  let invitedMembers: string[] = [''];
+
+  // Form functions
+  function closeCreateForm() {
+    createFormOpen = false;
+  }
+
+  function addNewMemberField() {
+    if (invitedMembers[invitedMembers.length - 1].trim() !== '') {
+      invitedMembers = [...invitedMembers, ''];
+    }
+  }
+
+  function updateMember(index: number, value: string) {
+    invitedMembers[index] = value;
+    invitedMembers = [...invitedMembers];
+  }
+
+  function handleSubmitTrip(event: Event) {
+    event.preventDefault();
+    closeCreateForm();
+  }
 </script>
 
 <div class="min-h-screen bg-gray-50">
