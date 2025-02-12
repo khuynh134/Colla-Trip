@@ -17,6 +17,8 @@
             // Signed in successfully
             const user = userCredential.user; 
             console.log(user);
+            //User created in Firebase Auth
+            console.log('Firebase UID:', user.uid);
             success = true;
             // Redirect to another page after successful signup
             goto('/loginpage'); 
