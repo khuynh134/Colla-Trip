@@ -12,17 +12,11 @@
     let confirmPassword = '';
     let errorMessage = ''; 
     let success: boolean | undefined = undefined;
-    let isLoading = false;
 
     // Password validation
     function validatePasswords(): boolean {
         if (password !== confirmPassword) {
             errorMessage = 'Passwords do not match';
-            success = false;
-            return false;
-        }
-        if (password.length < 8) {
-            errorMessage = 'Password must be at least 8 characters long';
             success = false;
             return false;
         }
@@ -37,24 +31,19 @@
 
     async function handleSignUp(event: Event) {
         event.preventDefault();
-        isLoading = true;
         
         // Reset error state
         errorMessage = '';
         success = undefined;
 
         // Validate passwords match
-        if (!validatePasswords()) {
-            isLoading = false;
-            return;
-        }
+        if (!validatePasswords()) return;
 
         // Check username uniqueness
         const isUnique = await isUsernameUnique(username);
         if (!isUnique) {
             errorMessage = 'Username is already taken';
             success = false;
-            isLoading = false;
             return;
         }
 
@@ -64,15 +53,13 @@
             const user = userCredential.user;
             // Here you would typically save additional user info (firstName, lastName, username)
             // to your database using the user.uid as the reference
-            console.log('Firebase UID:', user.uid);
+            
             success = true;
             goto('/loginpage');
         } catch (error) {
             console.error('Error signing up:', error);
             errorMessage = 'Error signing up. Please try again.';
             success = false;
-        } finally {
-            isLoading = false;
         }
     }
 </script>
@@ -122,7 +109,6 @@
                     class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"
                     required
                 />
-                <p class="text-sm text-gray-500 mt-1">Username must be unique</p>
             </div>
 
             <div>
@@ -148,7 +134,6 @@
                     required
                     minlength="8"
                 />
-                <p class="text-sm text-gray-500 mt-1">Password must be at least 8 characters long</p>
             </div>
 
             <div>
@@ -166,18 +151,10 @@
  
             <button 
                 type="submit" 
-                class="w-full bg-[#3598db] text-white py-3 rounded-lg hover:bg-[#3598db]/90 transition-colors disabled:opacity-50"
-                disabled={isLoading}
+                class="w-full bg-[#3598db] text-white py-3 rounded-lg hover:bg-[#3598db]/90 transition-colors"
             >
-                {isLoading ? 'Signing up...' : 'Sign Up'}
+                Sign Up
             </button>
         </form>
-
-        <div class="mt-6 text-center">
-            <p class="text-gray-600">
-                Already have an account? 
-                <a href="/loginpage" class="text-[#3598db] hover:underline">Log in</a>
-            </p>
-        </div>
     </div>
 </div>

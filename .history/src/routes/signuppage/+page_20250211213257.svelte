@@ -64,7 +64,7 @@
             const user = userCredential.user;
             // Here you would typically save additional user info (firstName, lastName, username)
             // to your database using the user.uid as the reference
-            console.log('Firebase UID:', user.uid);
+            
             success = true;
             goto('/loginpage');
         } catch (error) {

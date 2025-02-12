@@ -24,6 +24,28 @@
 
     const packingItems = ['Passport', 'Clothes', 'Toiletries', 'Medications', 'Phone Charger', 'Camera'];
 
+    // Form functions
+    let invitedMembers: string[] = [''];
+
+    function closeCreateForm() {
+        createFormOpen = false;
+    }
+
+    function addNewMemberField() {
+        if (invitedMembers[invitedMembers.length - 1].trim() !== '') {
+            invitedMembers = [...invitedMembers, ''];
+        }
+    }
+
+    function updateMember(index: number, value: string) {
+        invitedMembers[index] = value;
+        invitedMembers = [...invitedMembers];
+    }
+
+    function handleSubmitTrip(event: Event) {
+        event.preventDefault();
+        closeCreateForm();
+    }
 </script>
 
 <div class="min-h-screen bg-[#85e9eb]">
@@ -161,6 +183,24 @@
             </div>
         </div>
     </div>
-</div>
 
-   
+    <!-- Create Trip Form Panel -->
+    <div 
+        class="fixed inset-0 flex items-center justify-center z-50"
+        style="visibility: {createFormOpen ? 'visible' : 'hidden'};"
+    >
+        <div 
+            class="bg-white rounded-lg shadow-lg w-[500px] transform transition-transform duration-300 ease-in-out {createFormOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}"
+        >
+            <!-- Form content here (your existing form code) -->
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    {#if createFormOpen}
+        <div 
+            class="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-40"
+            on:click={closeCreateForm}
+        ></div>
+    {/if}
+</div>
