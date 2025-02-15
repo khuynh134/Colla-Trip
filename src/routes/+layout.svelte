@@ -2,7 +2,7 @@
 	import '../app.css';
 	import { Navbar, NavBrand, NavUl, NavLi } from 'flowbite-svelte';
 	import { onMount } from 'svelte';
-    import { page } from '$app/stores';
+	import { page } from '$app/stores';
 
 	let isMenuOpen: boolean = false; 
 	 // Close menu when route changes
@@ -21,7 +21,7 @@
 		<!-- Desktop Menu -->
 		<div class="hidden md:flex items-center space-x-12 ml-auto">
 			<a href="/" class="text-white font-bold text-lg">Home</a>
-			<a href="/explore" class="text-white font-bold text-lg">Explore</a>
+			<a href="/explorepage" class="text-white font-bold text-lg">Explore</a>
 			<a href="/aboutpage" class="text-white font-bold text-lg">About</a>
 			<a href="/contactpage" class="text-white font-bold text-lg">Contact Us</a>
 			<a href="/loginpage" class="bg-white text-cyan-600 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors font-bold text-lg">
@@ -46,7 +46,7 @@
 		<div class="md:hidden absolute top-full left-0 right-0 bg-[#3598db] p-4">
 			<div class="flex flex-col space-y-4">
 				<a href="/" class="text-white">Home</a>
-				<a href="/explore" class="text-white">Explore</a>
+				<a href="/explorepage" class="text-white">Explore</a>
 				<a href="/aboutpage" class="text-white">About</a>
 				<a href="/contactpage" class="text-white">Contact Us</a>
 				<a href="/loginpage" class="bg-white text-cyan-600 px-4 py-2 rounded-md transition-colors text-center">
