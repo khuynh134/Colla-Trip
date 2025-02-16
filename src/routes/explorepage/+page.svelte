@@ -1,6 +1,6 @@
 <script lang="ts">
     import { Search, Button, Dropdown, DropdownItem } from 'flowbite-svelte';
-	import { Carousel } from 'flowbite-svelte';
+	
     
     import { 
         Search as SearchIcon,

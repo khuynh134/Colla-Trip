@@ -2,6 +2,7 @@
     import { goto } from '$app/navigation';
     import { auth } from '$lib/firebase';
     import { getAuth, validatePassword, createUserWithEmailAndPassword } from 'firebase/auth';
+	import { Users } from 'lucide-svelte';
 
     // Form state
     let firstName = '';
@@ -84,11 +85,29 @@
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             // Add user details to your database
             const user = userCredential.user;
-            // Here you would typically save additional user info (firstName, lastName, username)
-            // to your database using the user.uid as the reference
-            console.log('Firebase UID:', user.uid);
-            success = true;
-            goto('/loginpage');
+            
+            //Save user to database 
+            const response = await fetch('/api/users',{
+                method: 'POST',
+                headers: {
+                    'Content-Type' : 'application/json'
+                },
+                body: JSON.stringify({
+                    firebase_uid: user.uid,
+                    email: user.email,
+                    username: username,
+                    profile: `${firstName} ${lastName}`,
+                    roles: ['user']
+                })
+            });
+            if( !response.ok){
+                throw new Error('Error saving user to database');
+            }
+            else {
+                console.log('Firebase UID:', user.uid);
+                success = true;
+            goto('/loginpage')
+            };
         } catch (error) {
             console.error('Error signing up:', error);
             errorMessage = 'Error signing up. Please try again.';
