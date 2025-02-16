@@ -45,6 +45,7 @@
 	"dependencies": {
 		"firebase": "^11.2.0",
 		"lucide-svelte": "^0.474.0",
-		"postgres": "^3.4.5"
+		"postgres": "^3.4.5",
+		"sveaflet": "^0.1.3"
 	}
 }
