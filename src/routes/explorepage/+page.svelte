@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Search, Button, Dropdown, DropdownItem } from 'flowbite-svelte';
+    import { Search, Button, Dropdown, DropdownItem, type InputType } from 'flowbite-svelte';
 	import { Map, TileLayer, Marker, Popup } from 'sveaflet';
  
     import { 
@@ -18,6 +18,7 @@
         BookOpen,
         Binoculars,
         MoreHorizontal,
+        Megaphone,
 		AlertTriangle
 
     }from 'lucide-svelte';
@@ -32,12 +33,17 @@
                 longitude: number;
             };
         };
-        category: Array<{
+        categories: Array<{
             name:string;
         }>;
         location: {
             address: string; 
+            address_extended: string;
+            locality: string;
+            region: string;
+            postcode: string;
         };
+       
 
     }
 
@@ -124,7 +130,7 @@
            //update the category ID and label when selecting a new category
            const updateCategory = (categoryId: string) => {
                 selectedCategoryId = categoryId;
-                handleSubmit(new Event('submit'));
+                //handleSubmit(new Event('submit'));
            }
 </script>
 
@@ -146,23 +152,33 @@
         <!-- Dropdown Menue for Category -->
                 <Dropdown style="position: absolute; top: 60px; z-index: 1000; max-height: 200px; overflow-y: auto; width:auto;">
                     {#each items as { label, icon, categoryId }}
-                        <DropdownItem on:click={() => updateCategory(categoryId)}
-                        class={selectedCategoryId === categoryId? 'underline' : ''}> 
-                      
-                            <div class="flex items-center">
-                                {#if icon}
+                    <!-- Note 
+                    <DropdownItem on:click={() => updateCategory(categoryId)}
+                        class={selectedCategoryId === categoryId? 'underline' : ''}>
+                -->
+                   <DropdownItem on:click={() => {
+                        //selectedCategoryId =  label;
+                        updateCategory(categoryId)
+                        //handleSubmit(new Event('submit'));
+
+                    }}
+                        
+                    class={selectedCategoryId === categoryId? 'underline' : ''}> 
+                  
+                        <div class="flex items-center">
+                            {#if icon}
                                 <svelte:component this={icon} class="w-4 h-4 mr-1.5" />
-                                {/if}
+                            {/if}
                             
                             {label}
-
-                            </div>
-                        </DropdownItem>
+                        </div>
+                    </DropdownItem>
                         {/each}
                     </Dropdown>
             </div>
-            <Search size="md" class="rounded-lg py-2.5 text-sky-500" bind:value={searchValue} placeholder="Search places..." />
-            <Button class="!p-2.5 rounded-s-none text-sky-300 bg-sky-400 hover:bg-sky-500 focus:ring focus:ring-primary-200">
+            <Search size="md" class="rounded-lg py-2.5 text-sky-500" bind:value={searchValue} placeholder="Search places...(Ex:coffee)" />
+            <Search size="md" class="rounded-lg py-2.5 text-sky-500" bind:value={location} placeholder="Enter location..." />
+            <Button on:click={handleSubmit} class="!p-2.5 rounded-s-none text-sky-300 bg-sky-400 hover:bg-sky-500 focus:ring focus:ring-primary-200">
                 <SearchIcon class="w-6 h-6" />
             </Button>
         </form>
@@ -225,13 +241,23 @@
          <!-- Information Display for Users -->
           <div class="relative w-full max-w-2xl mx-auto p-2 bg-white rounded-lg shadow-lg">
             <h3 class="text-xl font-bold mb-3"> Search Details</h3>
+            <div class="flex items-center">
+                <Megaphone class="w-6 h-6 text-red-500" />
+                <p class="text-red-500 ms-2">Please note that the map will display 10 results</p>
+            </div>
             {#if places.length > 0}
                 <ul>
                     {#each places as place}
                         <li class="mb-2">
-                            <h3 class="text-lg font-bold">{place.name}</h3>
-                            <p class="text-gray-600">{place.category[0]?.name || 'Unknown'}</p>
-                            <p class="text-gray-600">{place.location.address}</p>
+                            <h3 class="text-lg font-bold">Name: {place.name}</h3>
+                            <p class="text-gray-600">Categories: {place.categories[0]?.name || 'Unknown'}</p>
+                            <p class="text-gray-600">
+                                Address: {place.location.address || 'No street info'},
+                                {place.location.locality || 'No city info'},
+                                {place.location.region || 'No region'},
+                                {place.location.postcode || 'No ZIP'}
+                            </p>
+                            
                         </li>
                     {/each}
                 </ul>
