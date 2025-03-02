@@ -120,9 +120,50 @@
                }
            };
 
+           //Function on geocodeLocation 
+        const geocodeLocation = async (location: string) => {
+            const url = new URL ('https://nominatim.openstreetmap.org/search');
+            url.searchParams.append('q', location);
+            url.searchParams.append('format', 'json');
+
+            try{
+                const response = await fetch(url, {
+                    headers: {
+                        'User-Agent': 'Colla-Trip/1.0 (collatrip@gmail.com)',
+
+                    },
+                });
+                if(!response.ok){
+                    throw new Error('Failed to get geocode loacation: ${response.statusText}');
+                }
+
+                const data = await response.json();
+                if(data && data.length > 0){
+                    const { lat, lon } = data[0]; //get the first result
+                    return { lat: parseFloat(lat), lng:parseFloat(lon)};
+                }else {
+                    throw new Error('No results found for the location');
+                }
+            }catch (error){
+                console.error('Error geocoding location: ', error);
+                return null;
+            }
+         };
+        
+
            //handle the form submit 
         const handleSubmit = async (event: Event) => {
                 event.preventDefault();
+
+                //Geocode the location
+                const coordinates = await geocodeLocation(location);
+                if(coordinates){
+                    //Update the map center 
+                    lat = coordinates.lat;
+                    lng = coordinates.lng; 
+                }
+
+                //Fetch places from Foursquare
                 const results = await searchFoursquare(searchValue, location, selectedCategoryId || undefined);
                 places = results;  //update places array with results
            }
