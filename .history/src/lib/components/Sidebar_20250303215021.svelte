@@ -1,6 +1,5 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { Mail } from 'lucide-svelte'; // Import Ticket icon
   
     // Props
     export let sidebarExtended = false;
@@ -61,7 +60,26 @@
       <!-- Sidebar Links -->
       <div class="space-y-4">
 
-       
+        <!-- Notifications Icon (Leads to Polling Notifications) -->
+        <a href="/trip-polling-notifications" class="relative flex items-center p-3 hover:bg-blue-600 rounded-lg transition-colors">
+          <div class="relative">
+              <!-- Custom Bell Icon -->
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white group-hover:text-gray-200 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.5-1.5M9 17H4l1.5-1.5M12 17v2m0 0h-2m2 0h2M4 8v6a8 8 0 0016 0V8a8 8 0 00-16 0z" />
+              </svg>
+      
+              <!-- Notification Badge (Only Shows if `tripPollNotifications > 0`) -->
+              {#if tripPollNotifications > 0}
+                  <span class="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
+                      {tripPollNotifications}
+                  </span>
+              {/if}
+          </div>
+      
+          <div class="ml-4 {sidebarExtended ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500">
+              <span class="text-lg">Notifications</span>
+          </div>
+      </a>
 
 
 
@@ -80,25 +98,7 @@
             <span class="text-lg">Create</span>
           </div>
         </a>
-
-       <!-- Notifications (Envelope Icon) -->
-<a href="/trip-polling-notifications" class="relative flex items-center p-3 mt-4 hover:bg-blue-600 rounded-lg transition-colors">
-  <div class="relative">
-      <!-- Envelope Icon for Notifications -->
-      <Mail class="w-7 h-7 text-white group-hover:text-gray-200 transition-colors" />
-
-      <!-- Notification Badge -->
-      {#if tripPollNotifications > 0}
-          <span class="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
-              {tripPollNotifications}
-          </span>
-      {/if}
-  </div>
-
-  <div class="ml-4 {sidebarExtended ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500">
-      <span class="text-lg">Notifications</span>
-  </div>
-</a>
+  
         <!-- Dashboard Link -->
         <a href="/dashboardpage" class="flex items-center p-3 hover:bg-blue-600 rounded-lg transition-colors">
           <div>

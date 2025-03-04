@@ -81,13 +81,13 @@
           </div>
         </a>
 
-       <!-- Notifications (Envelope Icon) -->
+        <!-- Notifications (Ticket Icon) -->
 <a href="/trip-polling-notifications" class="relative flex items-center p-3 mt-4 hover:bg-blue-600 rounded-lg transition-colors">
   <div class="relative">
-      <!-- Envelope Icon for Notifications -->
-      <Mail class="w-7 h-7 text-white group-hover:text-gray-200 transition-colors" />
+      <!-- Ticket Icon for Notifications -->
+      <Ticket class="w-7 h-7 text-white group-hover:text-gray-200 transition-colors" />
 
-      <!-- Notification Badge -->
+      <!-- Notification Badge (Only Shows if `tripPollNotifications > 0`) -->
       {#if tripPollNotifications > 0}
           <span class="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
               {tripPollNotifications}

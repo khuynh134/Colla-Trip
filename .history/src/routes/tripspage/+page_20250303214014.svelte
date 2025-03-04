@@ -29,7 +29,26 @@
 
 </script>
 
+<TabItem>
+    <span slot="title" class="relative flex items-center gap-2">
+        <Vote class="w-8 h-8 text-gray-400 group-hover:text-blue-500 transition-colors"/>
 
+        <!-- Notification Badge (only shows if there are notifications) -->
+        {#if pollNotifications > 0}
+            <span class="absolute -top-2 -right-3 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
+                {pollNotifications}
+            </span>
+        {/if}
+
+        <div class="group-hover:text-blue-600 transition-colors">Polling</div>
+    </span>
+    
+    <div class="bg-cyan-200/50 rounded-lg shadow p-2 mt-4">
+        <p class="text-sm text-gray-500">
+            <b>Polling:</b> Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        </p>
+    </div>
+</TabItem>
 
 <div class="min-h-screen bg-[#85e9eb]">
     <Sidebar 
@@ -152,19 +171,10 @@
 
                     <!-- Polling Tab -->
                     <TabItem>
-                        <span slot="title" class="relative flex items-center gap-2">
+                        <span slot="title" class="flex items-center gap-2">
                             <Vote class="w-8 h-8 text-gray-400 group-hover:text-blue-500 transition-colors"/>
-                    
-                            <!-- Notification Badge (only shows if there are notifications) -->
-                            {#if pollNotifications > 0}
-                                <span class="absolute -top-2 -right-3 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
-                                    {pollNotifications}
-                                </span>
-                            {/if}
-                    
                             <div class="group-hover:text-blue-600 transition-colors">Polling</div>
                         </span>
-                        
                         <div class="bg-cyan-200/50 rounded-lg shadow p-2 mt-4">
                             <p class="text-sm text-gray-500">
                                 <b>Polling:</b> Lorem ipsum dolor sit amet, consectetur adipiscing elit.

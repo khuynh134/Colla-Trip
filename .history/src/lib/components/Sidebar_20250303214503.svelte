@@ -1,6 +1,5 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { Mail } from 'lucide-svelte'; // Import Ticket icon
   
     // Props
     export let sidebarExtended = false;
@@ -9,9 +8,6 @@
   
     let sidebarTransition = '';
     let invitedMembers: string[] = [''];
-
-    // Notification count for trip polling (Example: Unread notifications)
-    let tripPollNotifications = 3; // Dynamic value, adjust based on logic
   
     // Initialize sidebar transition on mount
     onMount(() => {
@@ -60,11 +56,6 @@
   <div class="space-y-8 mt-40"> 
       <!-- Sidebar Links -->
       <div class="space-y-4">
-
-       
-
-
-
         <!-- Create Trip Link -->
         <a 
           href="/create-trip" 
@@ -80,25 +71,7 @@
             <span class="text-lg">Create</span>
           </div>
         </a>
-
-       <!-- Notifications (Envelope Icon) -->
-<a href="/trip-polling-notifications" class="relative flex items-center p-3 mt-4 hover:bg-blue-600 rounded-lg transition-colors">
-  <div class="relative">
-      <!-- Envelope Icon for Notifications -->
-      <Mail class="w-7 h-7 text-white group-hover:text-gray-200 transition-colors" />
-
-      <!-- Notification Badge -->
-      {#if tripPollNotifications > 0}
-          <span class="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
-              {tripPollNotifications}
-          </span>
-      {/if}
-  </div>
-
-  <div class="ml-4 {sidebarExtended ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500">
-      <span class="text-lg">Notifications</span>
-  </div>
-</a>
+  
         <!-- Dashboard Link -->
         <a href="/dashboardpage" class="flex items-center p-3 hover:bg-blue-600 rounded-lg transition-colors">
           <div>
