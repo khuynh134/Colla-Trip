@@ -105,8 +105,8 @@
         <!-- Centered Calendar Container -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <!-- Page Header -->
-            <div class="mt-12 mb-8 flex flex-col sm:flex-row justify-between items-center">
-                <div class="flex items-center mb-4 mt-2 sm:mb-0">
+            <div class="mt-10 mb-8 flex flex-col sm:flex-row justify-between items-center">
+                <div class="flex items-center mb-4 sm:mb-0">
                     <h1 class="text-2xl sm:text-3xl font-bold">Calendar</h1>
                     <button 
                         on:click={addEvent}

@@ -22,7 +22,7 @@
   >
     <div class="px-4 sm:px-8">
       <!-- Search Bar -->
-      <div class="mt-12 mb-8 mt-16">
+      <div class="mt-12 mb-8 mt-6">
         <input
           type="text"
           placeholder="Search trips..."
