@@ -98,7 +98,7 @@
           </a>
   
           <!-- Schedule-->
-          <a href="/calendarpage" class="flex items-center p-3 hover:bg-blue-600 rounded-lg transition-colors">
+          <a href="/schedule" class="flex items-center p-3 hover:bg-blue-600 rounded-lg transition-colors">
             <div>
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="Schedule">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" />
