@@ -2,31 +2,51 @@
 	import '../app.css';
 	import { Navbar, NavBrand, NavUl, NavLi } from 'flowbite-svelte';
 	import { onMount } from 'svelte';
-    import { page } from '$app/stores';
+	import { page } from '$app/stores';
 
 	let isMenuOpen: boolean = false; 
+	let isLoggedIn: boolean = false; //tracks login state
+
 	 // Close menu when route changes
 	 $: if ($page.url.pathname) {
        isMenuOpen = false;
    }
+
+   // Simulated login/logout function
+	function toggleLogin() {
+		if (isLoggedIn) {
+			// Perform logout actions (e.g., clear session)
+			console.log("Logging out...");
+			isLoggedIn = false;
+		} else {
+			// Redirect to login page or authentication logic
+			console.log("Redirecting to login...");
+			window.location.href = "/loginpage";
+		}
+	}
 </script>
  
- <Navbar class="bg-[#3598db] text-white fixed w-full p-4 z-50">
-	<div class="container mx-auto flex justify-between items-center">
+<Navbar class="bg-[#3598db] text-white fixed w-full p-4 z-50">
+	<div class="container mx-0 flex justify-between items-center">
 		<NavBrand href="/" class="flex items-center">
 			<img src="/Colla-TripLogo-rem.png" class="h-20 mr-10 drop-shadow-lg" alt="Colla-Trip Logo" />
-			<span class="self-center whitespace-nowrap text-3xl font-extrabold">Colla-Trip</span>
+			<span class="text-white self-center whitespace-nowrap text-3xl font-extrabold">Colla-Trip</span>
 		</NavBrand>
  
 		<!-- Desktop Menu -->
 		<div class="hidden md:flex items-center space-x-12 ml-auto">
 			<a href="/" class="text-white font-bold text-lg">Home</a>
-			<a href="/explore" class="text-white font-bold text-lg">Explore</a>
+			<a href="/explorepage" class="text-white font-bold text-lg">Explore</a>
 			<a href="/aboutpage" class="text-white font-bold text-lg">About</a>
 			<a href="/contactpage" class="text-white font-bold text-lg">Contact Us</a>
-			<a href="/loginpage" class="bg-white text-cyan-600 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors font-bold text-lg">
-				Log In
-			</a>
+			
+			<!-- Login/Logout Button -->
+			<button 
+				on:click={toggleLogin} 
+				class="bg-white text-cyan-600 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors font-bold text-lg"
+			>
+				{isLoggedIn ? 'Log Out' : 'Log In'}
+			</button>
 		</div>
  
 		<!-- Hamburger Button -->
@@ -46,16 +66,21 @@
 		<div class="md:hidden absolute top-full left-0 right-0 bg-[#3598db] p-4">
 			<div class="flex flex-col space-y-4">
 				<a href="/" class="text-white">Home</a>
-				<a href="/explore" class="text-white">Explore</a>
-				<a href="/about" class="text-white">About</a>
+				<a href="/explorepage" class="text-white">Explore</a>
+				<a href="/aboutpage" class="text-white">About</a>
 				<a href="/contactpage" class="text-white">Contact Us</a>
-				<a href="/loginpage" class="bg-white text-cyan-600 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors text-center">
-					Log In
-				</a>
+				
+				<!-- Mobile Login/Logout Button -->
+				<button 
+					on:click={toggleLogin} 
+					class="bg-white text-cyan-600 px-4 py-2 rounded-md transition-colors text-center"
+				>
+					{isLoggedIn ? 'Log Out' : 'Log In'}
+				</button>
 			</div>
 		</div>
 	{/if}
- </Navbar>
+</Navbar>
 
 <div class="pt-20">
 	<slot />
