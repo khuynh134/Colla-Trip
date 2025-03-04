@@ -12,41 +12,14 @@
        isMenuOpen = false;
    }
 
-	// Check login status when component mounts
-	onMount(() => {
-		checkLoginStatus();
-	});
-
-	// Function to check if user is logged in
-	function checkLoginStatus() {
-		// Check for user session, token, or other auth indicator
-		// This will depend on how you're storing auth state in your app
-		
-		// Example using localStorage:
-		const token = localStorage.getItem('userToken');
-		isLoggedIn = !!token; // Convert to boolean
-		
-		// Alternative example if using a cookie:
-		// isLoggedIn = document.cookie.includes('authenticated=true');
-	}
-
-	// Login/logout function
+	// Simulated login/logout function
 	function toggleLogin() {
 		if (isLoggedIn) {
-			// Perform logout actions
-			localStorage.removeItem('userToken'); // Remove token
-			// Optionally clear other user data
-			localStorage.removeItem('userData');
-			
-			// Update UI state
+			// Perform logout actions (e.g., clear session)
+			console.log("Logging out...");
 			isLoggedIn = false;
-			
-			console.log("Logged out successfully");
-			
-			// Optional: redirect to home page
-			// window.location.href = "/";
 		} else {
-			// Redirect to login page
+			// Redirect to login page or authentication logic
 			console.log("Redirecting to login...");
 			window.location.href = "/loginpage";
 		}
