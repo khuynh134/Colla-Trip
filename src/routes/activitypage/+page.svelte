@@ -204,7 +204,7 @@
     }
 </script>
 
-<div class="min-h-screen bg-gradient-to-tr from-sky-200 via-cyan-400 to-sky-500/80">
+<div class="flex min-h-screen bg-gradient-to-tr from-sky-200 via-cyan-400 to-sky-500/80">
     <div class="container mx-auto p-3 m-5">
     <!-- Sidebar -->
     <Sidebar bind:sidebarExtended bind:sidebarWidth bind:createFormOpen />
@@ -252,13 +252,17 @@
          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {#each activities as activity}
                 <Card horizontal size='lg' class="bg-slate-100 shadow-md rounded-lg p-4">
-                    <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-pink">{activity.name}</h5>
-                    <p class="text-gray-700 dark:text-gray-400 mb-2">{activity.description}</p>
-                    <div class="flex flex-wrap justify-between items-center gap-2">
-                        <Button on:click={editActivity} class="bg-sky-400 text-white">Edit</Button>
-                        <Button on:click={() => deleteActivity(activity.id)} class="bg-sky-400 text-white">Delete</Button>
-                        <Button on:click={() => voteActivity(activity.id)} class="bg-sky-400 text-white">Vote</Button>
+                    <div class= "flex flex-col basis-small">
+                        <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-pink">{activity.name}</h5>
+                        <p class="text-gray-700 dark:text-gray-400 mb-2">{activity.description}</p>
+                        <div class="flex flex-wrap justify-between items-center gap-2">
+                            <Button on:click={editActivity} class="bg-sky-400 text-white">Edit</Button>
+                            <Button on:click={() => deleteActivity(activity.id)} class="bg-sky-400 text-white">Delete</Button>
+                            <Button on:click={() => voteActivity(activity.id)} class="bg-sky-400 text-white">Vote</Button>
+                        </div>
+
                     </div>
+                    
                 </Card>
             {/each}
         </div>
@@ -277,9 +281,11 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {#each voteResults as activity}
                     <Card horizontal size='lg' class="bg-slate-100 shadow-md rounded-lg p-4">
-                        <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-pink">{activity.name}</h5>
-                        <p class="text-gray-700 dark:text-gray-400 mb-2">{activity.description}</p>
-                        <p class="text-gray-700 dark:text-gray-400 mb-2">Votes: {activity.votes}</p>
+                        <div class="flex flex-col basis-small">
+                            <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-pink">{activity.name}</h5>
+                            <p class="text-gray-700 dark:text-gray-400 mb-2">{activity.description}</p>
+                            <p class="text-gray-700 dark:text-gray-400 mb-2">Votes: {activity.votes}</p>
+                        </div>
                     </Card>
                 {/each}
             </div>
