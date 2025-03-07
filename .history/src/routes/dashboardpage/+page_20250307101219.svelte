@@ -45,8 +45,8 @@
 
   // User data
   const userData = {
-    name: 'Sophie Martinez',
-    avatar: 'https://i.pravatar.cc/150?img=5',
+    name: 'Alex Johnson',
+    avatar: 'https://i.pravatar.cc/150?img=12',
     stats: {
       totalTrips: 5,
       upcomingTrips: 2,
