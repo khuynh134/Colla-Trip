@@ -22,8 +22,30 @@
 		AlertTriangle
 
     }from 'lucide-svelte';
-	
 
+    //List of categories for dropdown 
+    const items = [
+        { label: 'All Categories', icon: ArrowDownWideNarrow, categoryId: ''},
+        { label: 'Travel', icon: Backpack, categoryId: '4d4b7105d754a06379d81259'},
+        { label: 'Fast Food', icon: UtensilsCrossed, categoryId: '4bf58dd8d48988d16e941735'},
+        { label: 'Arts and Entertainment', icon: Drama, categoryId: '4d4b7104d754a06370d81259'},
+        { label: 'Shopping Mall', icon: ShoppingBag, categoryId: '4bf58dd8d48988d1fd941735'},
+        { label: 'Park', icon: Sun, categoryId: '4bf58dd8d48988d163941735'},
+        { label: 'Museum', icon: House, categoryId: '4bf58dd8d48988d181941735'},
+        { label: 'Nightlife Spot', icon: MoonStar, categoryId: '4d4b7105d754a06376d81259'},
+        { label: 'History Museum', icon: BookOpen, categoryId: '4bf58dd8d48988d190941735'},
+        { label: 'Other', icon: MoreHorizontal, categoryId: ''}
+                
+        ];  
+      // State management for carousel
+      let index = 0; 
+           
+    const trips = [
+        { name: 'Trip 1', location: 'Location 1', description: 'Description 1', image: '/images/boatpic.jpeg'},
+        {name: 'Trip 2', location: 'Location 2', description: 'Description 2', image: '/images/flower.jpeg'},
+        {name: 'Trip 3', location: 'Location 3', description: 'Description 3', image: '/images/mountainandclouds.jpeg'}
+    ];
+	
     //Define the type for a place
     interface Place {
         name: string;
@@ -47,41 +69,15 @@
 
     }
 
-    //List of categories 
-    const items = [
-        { label: 'All Categories', icon: ArrowDownWideNarrow, categoryId: ''},
-        { label: 'Travel', icon: Backpack, categoryId: '4d4b7105d754a06379d81259'},
-        { label: 'Fast Food', icon: UtensilsCrossed, categoryId: '4bf58dd8d48988d16e941735'},
-        { label: 'Arts and Entertainment', icon: Drama, categoryId: '4d4b7104d754a06370d81259'},
-        { label: 'Shopping Mall', icon: ShoppingBag, categoryId: '4bf58dd8d48988d1fd941735'},
-        {label: 'Park', icon: Sun, categoryId: '4bf58dd8d48988d163941735'},
-        {label: 'Museum', icon: House, categoryId: '4bf58dd8d48988d181941735'},
-        {label: 'Nightlife Spot', icon: MoonStar, categoryId: '4d4b7105d754a06376d81259'},
-        {label: 'History Museum', icon: BookOpen, categoryId: '4bf58dd8d48988d190941735'},
-        {label: 'Other', icon: MoreHorizontal, categoryId: ''}
-                
-        ];  
-           
-
-        // State management for carousel
-        let index = 0; 
-           
-        const trips = [
-            { name: 'Trip 1', location: 'Location 1', description: 'Description 1', image: '/images/boatpic.jpeg'},
-            {name: 'Trip 2', location: 'Location 2', description: 'Description 2', image: '/images/flower.jpeg'},
-            {name: 'Trip 3', location: 'Location 3', description: 'Description 3', image: '/images/mountainandclouds.jpeg'}
-        ];
-
-            //State management for map
+            //State management for map set default location to 'Los Angeles, CA'
             let lat = 34.0522;
             let lng = -118.2437;
             let places: Place[] = [];
             let location = 'Los Angeles, CA'; //default location
             
-
+            //Foursquare API key 
             const foursquareApiKey = import.meta.env.VITE_FOURSQUARE_API_KEY;
 
-            //let selectCategory = items[0].label;
             let selectedCategoryId = '';  //selected category Id
             let searchValue = ' '; 
 
@@ -193,14 +189,9 @@
         <!-- Dropdown Menue for Category -->
                 <Dropdown style="position: absolute; top: 60px; z-index: 1000; max-height: 200px; overflow-y: auto; width:auto;">
                     {#each items as { label, icon, categoryId }}
-                    <!-- Note 
-                    <DropdownItem on:click={() => updateCategory(categoryId)}
-                        class={selectedCategoryId === categoryId? 'underline' : ''}>
-                -->
+                
                    <DropdownItem on:click={() => {
-                        //selectedCategoryId =  label;
                         updateCategory(categoryId)
-                        //handleSubmit(new Event('submit'));
 
                     }}
                         
