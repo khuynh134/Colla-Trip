@@ -2,23 +2,23 @@
     import { goto } from '$app/navigation';
     import { Card } from 'flowbite-svelte';
     import Sidebar from '$lib/components/Sidebar.svelte';
-    import { Tabs, TabItem, Modal, Button, Input, Label, Radio, RadioButton } from 'flowbite-svelte';
+    import { Tabs, TabItem, Modal, Button, Input, Label, RadioGroup, RadioButton } from 'flowbite-svelte';
 
-    import { 
-        Luggage,
-        Calendar,
-        Receipt,
-        MapPin,
-        BadgeDollarSign,
-        Vote,
-        User,
-        Clock,
-        Share2,
-        PlusCircle,
-        UserPlus,
-        Mail,
-        Search
-    } from 'lucide-svelte';
+import { 
+    Luggage,
+    Calendar,
+    Receipt,
+    MapPin,
+    BadgeDollarSign,
+    Vote,
+    User,
+    Clock,
+    Share2,
+    PlusCircle,
+    UserPlus,  // Add this
+    Mail,      // Add this
+    Search     // Add this
+} from 'lucide-svelte';
 
     // State management for sidebar
     let sidebarExtended = false;
@@ -102,6 +102,7 @@
         searchResults = [];
     }
 
+
     const packingItems = [
         { name: 'Passport', checked: true },
         { name: 'Clothes', checked: true },
@@ -182,28 +183,35 @@
                             </div>
                         </div>
 
-                        <!-- Button Group - FIXED -->
-                        <div class="flex space-x-3">
-                            <!-- Add Member Button -->
-                            <button 
-                                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2 shadow-sm"
-                                on:click={() => addMemberModalOpen = true}
-                            >
-                                <UserPlus class="w-4 h-4" />
-                                Add Member
-                            </button>
-                            
-                            <!-- Create Poll Button -->
+                       
+    <!-- Add Member Button - NEW -->
+    <div class="flex space-x-3">
+    <button 
+        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2 shadow-sm"
+        on:click={() => addMemberModalOpen = true}
+    >
+        <UserPlus class="w-4 h-4" />
+        Add Member
+    </button>
+    <button class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors flex items-center gap-2 shadow-sm">
+        <Vote class="w-4 h-4" />
+        Create Poll
+    </button>
+    <button class="px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition-colors flex items-center gap-2 shadow-sm">
+        <Share2 class="w-4 h-4" />
+        Share Trip 
+    </button>
+</div>
+                        
                             <button class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors flex items-center gap-2 shadow-sm">
                                 <Vote class="w-4 h-4" />
                                 Create Poll
                             </button>
-                            
-                            <!-- Share Trip Button -->
                             <button class="px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition-colors flex items-center gap-2 shadow-sm">
                                 <Share2 class="w-4 h-4" />
                                 Share Trip 
                             </button>
+                            
                         </div>
                     </div>
 
@@ -371,113 +379,100 @@
             </div>
         </div>
 
-        <!-- Add Member Modal -->
-        <Modal bind:open={addMemberModalOpen} size="md" autoclose={false} class="w-full">
-            <div class="text-center">
-                <UserPlus class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" />
-                <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-                    Invite a member to join "{tripData.title}"
-                </h3>
-                
-                <!-- Invite Method Selection -->
-                <div class="mb-4">
-                    <div class="flex flex-col gap-3">
-                    <label class="flex items-center p-3 rounded-md border border-gray-200 hover:bg-gray-50 cursor-pointer">
-                        <input 
-                        type="radio" 
-                        bind:group={inviteMethod} 
-                        value="email" 
-                        class="text-cyan-600 focus:ring-cyan-500 mr-3"
-                        />
-                        <div class="flex items-center">
-                        <Mail class="w-4 h-4 mr-2 text-gray-600" />
-                        <span class="text-gray-700">Invite by Email</span>
-                        </div>
-                    </label>
-                    
-                    <label class="flex items-center p-3 rounded-md border border-gray-200 hover:bg-gray-50 cursor-pointer">
-                        <input 
-                        type="radio" 
-                        bind:group={inviteMethod} 
-                        value="username" 
-                        class="text-cyan-600 focus:ring-cyan-500 mr-3"
-                        />
-                        <div class="flex items-center">
-                        <User class="w-4 h-4 mr-2 text-gray-600" />
-                        <span class="text-gray-700">Invite by Username</span>
-                        </div>
-                    </label>
+        <!-- Add Member Modal - NEW -->
+<Modal bind:open={addMemberModalOpen} size="md" autoclose={false} class="w-full">
+    <div class="text-center">
+        <UserPlus class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" />
+        <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
+            Invite a member to join "{tripData.title}"
+        </h3>
+        
+        <!-- Invite Method Selection -->
+        <div class="mb-4">
+            <RadioGroup>
+                <RadioButton bind:group={inviteMethod} value="email" class="px-2">
+                    <div class="flex items-center">
+                        <Mail class="w-4 h-4 mr-2" />
+                        <span>Invite by Email</span>
                     </div>
-                </div>
-                
-                <!-- Email Input -->
-                {#if inviteMethod === 'email'}
-                    <div class="mb-4">
-                        <Label for="email" class="mb-2">Email address</Label>
-                        <Input id="email" placeholder="Enter email address" bind:value={emailInput} type="email" required />
+                </RadioButton>
+                <RadioButton bind:group={inviteMethod} value="username" class="px-2">
+                    <div class="flex items-center">
+                        <User class="w-4 h-4 mr-2" />
+                        <span>Invite by Username</span>
                     </div>
-                {/if}
-                
-                <!-- Username Input -->
-                {#if inviteMethod === 'username'}
-                    <div class="mb-4">
-                        <Label for="username" class="mb-2">Username</Label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <Search class="w-4 h-4 text-gray-500" />
-                            </div>
-                            <Input 
-                                id="username" 
-                                placeholder="Search for user" 
-                                bind:value={usernameInput} 
-                                on:input={searchUsers}
-                                class="pl-10"
-                            />
-                        </div>
-                        
-                        <!-- User Search Results -->
-                        {#if searchResults.length > 0}
-                            <div class="mt-2 bg-white border border-gray-200 rounded-md shadow-sm max-h-40 overflow-y-auto">
-                                {#each searchResults as user}
-                                    <div 
-                                        class="flex items-center p-2 hover:bg-gray-50 cursor-pointer"
-                                        on:click={() => selectUser(user)}
-                                    >
-                                        <div class="w-8 h-8 bg-cyan-100 text-cyan-600 rounded-full flex items-center justify-center font-bold mr-2">
-                                            {user.name[0]}
-                                        </div>
-                                        <div>
-                                            <div class="text-sm font-medium">{user.name}</div>
-                                            <div class="text-xs text-gray-500">@{user.username}</div>
-                                        </div>
-                                    </div>
-                                {/each}
-                            </div>
-                        {/if}
-                    </div>
-                {/if}
-                
-                <!-- Optional Message -->
-                <div class="mb-4">
-                    <Label for="message" class="mb-2">Personal message (optional)</Label>
-                    <textarea
-                        id="message"
-                        rows="3"
-                        class="w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-cyan-500 focus:border-cyan-500"
-                        placeholder="Add a personal message to your invitation"
-                        bind:value={inviteMessage}
-                    ></textarea>
-                </div>
-                
-                <div class="flex justify-center gap-4">
-                    <Button color="alternative" on:click={() => addMemberModalOpen = false}>
-                        Cancel
-                    </Button>
-                    <Button color="success" on:click={inviteMember}>
-                        Send Invitation
-                    </Button>
-                </div>
+                </RadioButton>
+            </RadioGroup>
+        </div>
+        
+        <!-- Email Input -->
+        {#if inviteMethod === 'email'}
+            <div class="mb-4">
+                <Label for="email" class="mb-2">Email address</Label>
+                <Input id="email" placeholder="Enter email address" bind:value={emailInput} type="email" required />
             </div>
-        </Modal>
+        {/if}
+        
+        <!-- Username Input -->
+        {#if inviteMethod === 'username'}
+            <div class="mb-4">
+                <Label for="username" class="mb-2">Username</Label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <Search class="w-4 h-4 text-gray-500" />
+                    </div>
+                    <Input 
+                        id="username" 
+                        placeholder="Search for user" 
+                        bind:value={usernameInput} 
+                        on:input={searchUsers}
+                        class="pl-10"
+                    />
+                </div>
+                
+                <!-- User Search Results -->
+                {#if searchResults.length > 0}
+                    <div class="mt-2 bg-white border border-gray-200 rounded-md shadow-sm max-h-40 overflow-y-auto">
+                        {#each searchResults as user}
+                            <div 
+                                class="flex items-center p-2 hover:bg-gray-50 cursor-pointer"
+                                on:click={() => selectUser(user)}
+                            >
+                                <div class="w-8 h-8 bg-cyan-100 text-cyan-600 rounded-full flex items-center justify-center font-bold mr-2">
+                                    {user.name[0]}
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium">{user.name}</div>
+                                    <div class="text-xs text-gray-500">@{user.username}</div>
+                                </div>
+                            </div>
+                        {/each}
+                    </div>
+                {/if}
+            </div>
+        {/if}
+        
+        <!-- Optional Message -->
+        <div class="mb-4">
+            <Label for="message" class="mb-2">Personal message (optional)</Label>
+            <textarea
+                id="message"
+                rows="3"
+                class="w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-cyan-500 focus:border-cyan-500"
+                placeholder="Add a personal message to your invitation"
+                bind:value={inviteMessage}
+            ></textarea>
+        </div>
+        
+        <div class="flex justify-center gap-4">
+            <Button color="alternative" on:click={() => addMemberModalOpen = false}>
+                Cancel
+            </Button>
+            <Button color="success" on:click={inviteMember}>
+                Send Invitation
+            </Button>
+        </div>
+    </div>
+</Modal>
     </div>
 </div>

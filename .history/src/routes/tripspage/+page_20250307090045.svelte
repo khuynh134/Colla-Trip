@@ -2,7 +2,7 @@
     import { goto } from '$app/navigation';
     import { Card } from 'flowbite-svelte';
     import Sidebar from '$lib/components/Sidebar.svelte';
-    import { Tabs, TabItem, Modal, Button, Input, Label, Radio, RadioButton } from 'flowbite-svelte';
+    import { Tabs, TabItem, Modal, Button, Input, Label, RadioGroup, RadioButton } from 'flowbite-svelte';
 
     import { 
         Luggage,
@@ -381,33 +381,20 @@
                 
                 <!-- Invite Method Selection -->
                 <div class="mb-4">
-                    <div class="flex flex-col gap-3">
-                    <label class="flex items-center p-3 rounded-md border border-gray-200 hover:bg-gray-50 cursor-pointer">
-                        <input 
-                        type="radio" 
-                        bind:group={inviteMethod} 
-                        value="email" 
-                        class="text-cyan-600 focus:ring-cyan-500 mr-3"
-                        />
-                        <div class="flex items-center">
-                        <Mail class="w-4 h-4 mr-2 text-gray-600" />
-                        <span class="text-gray-700">Invite by Email</span>
-                        </div>
-                    </label>
-                    
-                    <label class="flex items-center p-3 rounded-md border border-gray-200 hover:bg-gray-50 cursor-pointer">
-                        <input 
-                        type="radio" 
-                        bind:group={inviteMethod} 
-                        value="username" 
-                        class="text-cyan-600 focus:ring-cyan-500 mr-3"
-                        />
-                        <div class="flex items-center">
-                        <User class="w-4 h-4 mr-2 text-gray-600" />
-                        <span class="text-gray-700">Invite by Username</span>
-                        </div>
-                    </label>
-                    </div>
+                    <RadioGroup>
+                        <RadioButton bind:group={inviteMethod} value="email" class="px-2">
+                            <div class="flex items-center">
+                                <Mail class="w-4 h-4 mr-2" />
+                                <span>Invite by Email</span>
+                            </div>
+                        </RadioButton>
+                        <RadioButton bind:group={inviteMethod} value="username" class="px-2">
+                            <div class="flex items-center">
+                                <User class="w-4 h-4 mr-2" />
+                                <span>Invite by Username</span>
+                            </div>
+                        </RadioButton>
+                    </RadioGroup>
                 </div>
                 
                 <!-- Email Input -->
