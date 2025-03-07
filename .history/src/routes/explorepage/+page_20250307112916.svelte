@@ -87,6 +87,8 @@
             region: string;
             postcode: string;
         };
+       
+
     }
 
     //State management for map set default location to 'Los Angeles, CA'
@@ -101,6 +103,7 @@
     let selectedCategoryId = '';  //selected category Id
     let searchValue = ' '; 
     let selectedCategory = 'All Categories'; // For displaying the selected category name
+
              
     //Function to call Foursquare API
     const searchFoursquare = async (searchValue: string, location:string, categoryId?: string,) => {
@@ -206,14 +209,11 @@
     }
 </script>
 
-<!-- Single container with gradient background -->
 <div class="min-h-screen bg-gradient-to-br from-sky-100 via-cyan-200 to-blue-300">
-    
     <!-- Registration Banner for Unregistered Users -->
     {#if showRegistrationBanner}
-        <!-- Full-width banner that sits below the navbar -->
-        <div class="bg-gradient-to-r from-indigo-600 to-blue-500 text-white py-3 w-full relative z-40 shadow-md">
-            <div class="flex flex-col sm:flex-row justify-between items-center px-2 sm:px-4">
+        <div class="bg-gradient-to-r from-indigo-600 to-blue-500 text-white py-3 px-4 sticky top-0 z-50 shadow-md">
+            <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center">
                 <div class="flex items-center mb-3 sm:mb-0">
                     <UserPlus class="w-5 h-5 mr-2" />
                     <p class="font-medium">Create an account to save your trips, plan itineraries, and collaborate with friends!</p>
@@ -236,9 +236,7 @@
         </div>
     {/if}
 
-    <!-- Main content container with proper padding -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <!-- Page Header -->
         <div class="flex flex-col sm:flex-row justify-between items-center mb-8">
             <h1 class="text-4xl font-bold text-gray-800 mb-4 sm:mb-0">
                 <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">Explore</span> Your Next Adventure
@@ -288,11 +286,13 @@
                 
                 <div class="flex-1 flex flex-col sm:flex-row gap-3">
                     <div class="relative flex-1">
+                        <!-- Changed to use Search icon for search field -->
                         <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size="18" />
                         <Search size="md" class="w-full pl-10 rounded-xl border-0 shadow-md py-2.5 text-gray-700 placeholder-gray-400 focus:ring-2 focus:ring-blue-300" bind:value={searchValue} placeholder="Search places... (Ex: coffee)" />
                     </div>
                     
                     <div class="relative flex-1">
+                        <!-- Changed to use MapPin icon for location field -->
                         <MapPin class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size="18" />
                         <Search size="md" class="w-full pl-10 rounded-xl border-0 shadow-md py-2.5 text-gray-700 placeholder-gray-400 focus:ring-2 focus:ring-blue-300" bind:value={location} placeholder="Enter location..." />
                     </div>
