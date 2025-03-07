@@ -11,7 +11,6 @@ export async function load() {
         console.error('Error fetching activities: ', err);
         return {
             activities: [],
-            error: 'Failed to fetch activities',
         };
     }
 }
