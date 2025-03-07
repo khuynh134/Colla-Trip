@@ -37,16 +37,33 @@
     let activities = $state<Activity[]>([]); //Array to store activities 
 
     //Load activities from localStorage
-    onMount(() => {
-        const storedActivities = localStorage.getItem('activities');
-        if( storedActivities) {
-            activities = JSON.parse(storedActivities);
-        }
-        else {
-            //if no local data, use server data 
-            activities = serverActivities; 
+    onMount(async () => {
+        const response = await fetch('/api/activities');
+        const serverActivities = await response.json(); 
+
+        //if database is empty, clear localStorage 
+        if(serverActivities.length === 0) {
+            localStorage.removeItem('activities');
+            activities = []; 
+
+            //log the cleared localStorage
+            console.log('Cleared localStorage:', localStorage.getItem('activities'));
+        } else {
+            //sync local state with server data 
+            const storedActivities = localStorage.getItem('activities');
+            if(storedActivities) {
+                activities = JSON.parse(storedActivities);
+            } else {
+                activities = serverActivities;
+                //sync localStorage with server data
+                syncLocalStorage();
+
+                //log the synced localStorage
+                console.log('Synced localStorage:', localStorage.getItem('activities'));
+            }
         }
     });
+        
 
     //sync activities with localStorage 
     function syncLocalStorage() {
@@ -91,25 +108,34 @@
 
     //function to delete an activity 
     async function deleteActivity(activityId: number) {
-        //Clear voteResults if no activities remain
-        if(activities.length === 0){
-            voteResults = [];
-        }
+        try{
+            //send DELETE request to the server
+            const response = await fetch(`/api/activities`,{
+                method: 'DELETE',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: activityId}),
+            });
 
-        //send a DELETE request to the server 
-        const response = await fetch(`/api/activities/${activityId}`, {
-            method: 'DELETE',
-            headers: {'Content-Type': 'application/json},'},
-            body: JSON.stringify({id: activityId}),
-        });
-        if (response.ok) {
-             //update local state 
-             activities = activities.filter((activity) => activity.id !== activityId);
-             syncLocalStorage(); //sync with localStorage 
-        } else {
-            console.error('Error deleting activity on server');
+            if (response.ok) {
+                //update local state by filtering out deleted activity
+                activities =activities.filter((activity) => activity.id !== activityId);
+
+                //sync localStorage
+                syncLocalStorage(); 
+
+                //clear voteResults if no activities are listed
+                if(activities.length === 0){
+                    voteResults = []; 
+                }
+                console.log('Activity Deleted');
+            } else {
+                const errorData = await response.json(); 
+                console.error('Error deleting activity on server: ', errorData); 
+            }
+        } catch (error) {
+            console.error('Error deleting activity: ', error);
         }
-        console.log('Activity Deleted');
+        
     }
 
     //function to edit an activity 
