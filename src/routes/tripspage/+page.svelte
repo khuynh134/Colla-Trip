@@ -64,6 +64,41 @@
             animateProgress = true;
         }, 300);
     });
+
+    //Function to fetchResults() from the API 
+    export let data: { results?: any[] } = {results: []};
+    let results = data.results ?? []; //If no results, set to empty array 
+
+    async function fetchResults() {
+        const res = await fetch('api/voting-results');
+        results = await res.json();
+    }
+
+    async function deletePolls() {
+        try{
+            const res = await fetch('/api/voting-results', {
+                method: 'DELETE'
+            });
+            if(res.ok){
+                const errorData = await res.json();
+                console.error('Error deleting polls:', errorData);
+                return;
+            }
+            //refresh the results after deletion 
+            await fetchResults();
+            console.log('Polls deleted successfully');
+        } catch (error) {
+            console.error('Error deleting polls:', error);
+        }
+       
+
+
+        
+
+    
+    }
+
+
 </script>
 
 <div class="min-h-screen bg-gradient-to-b from-[#e0f7fa] to-[#b2ebf2]">
@@ -195,7 +230,27 @@
                                 <span class="text-gray-700 group-hover:text-cyan-600 transition-colors font-medium">Polling</span>
                             </span>
                             <div class="bg-white rounded-lg shadow-md p-6 mt-2">
-                                <p class="text-gray-700">Polling details will appear here.</p>
+                                <!-- If results exist-->
+                                {#if results && results.length}
+                                    <div class="mt-4">
+                                        <h3 class="text-lg font-bold">Top 3 Activities</h3>
+                                        <h1 class="text-base font-thin text-gray-800">Polling results:</h1>
+                                        <ul class="mt-4">
+                                            {#each results as activity}
+                                                <li>{activity.name}: {activity.votes} votes</li>
+                                            {/each}
+                                        </ul>
+                                    </div>
+                                {/if}
+                                {#if !results || results.length === 0}
+                                    <p class="text-gray-700">Polling details will appear here.</p>
+                                {/if}
+
+                                <!-- Button to delete polls -->
+                                 <button class="text-cyan-600 hover:text-cyan-700 text-sm mt-2"on:click={deletePolls}>
+                                    Delete Polls
+                                 </button>
+
                             </div>
                         </TabItem>
                     </Tabs>
