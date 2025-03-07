@@ -1,7 +1,14 @@
 <script lang="ts">
     import { Card , Button, GradientButton } from 'flowbite-svelte';
+    import Sidebar from '$lib/components/Sidebar.svelte';
     import { onMount } from 'svelte';
     import { enhance } from '$app/forms';
+
+    // Sidebar state
+    let sidebarExtended = $state(false);
+    let sidebarWidth = $state('80px');
+    let createFormOpen = $state(false);
+
 	
 
     //use $props() to declare props
@@ -84,10 +91,6 @@
 
     //function to delete an activity 
     async function deleteActivity(activityId: number) {
-        //update local state 
-        activities = activities.filter((activity) => activity.id !== activityId);
-        syncLocalStorage(); //sync with localStorage 
-
         //Clear voteResults if no activities remain
         if(activities.length === 0){
             voteResults = [];
@@ -99,7 +102,11 @@
             headers: {'Content-Type': 'application/json},'},
             body: JSON.stringify({id: activityId}),
         });
-        if (!response.ok) {
+        if (response.ok) {
+             //update local state 
+             activities = activities.filter((activity) => activity.id !== activityId);
+             syncLocalStorage(); //sync with localStorage 
+        } else {
             console.error('Error deleting activity on server');
         }
         console.log('Activity Deleted');
@@ -173,6 +180,9 @@
 
 <div class="min-h-screen bg-gradient-to-tr from-sky-200 via-cyan-400 to-sky-500/80">
     <div class="container mx-auto p-3 m-5">
+    <!-- Sidebar -->
+    <Sidebar bind:sidebarExtended bind:sidebarWidth bind:createFormOpen />
+
     <!-- Activity Title -->
      <h1 class="text-2xl sm:text-3xl font-bold text-center">Activites Polling</h1>
 
