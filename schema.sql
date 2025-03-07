@@ -11,3 +11,12 @@ CREATE TABLE users (
     profile JSONB,
     roles VARCHAR(50) [] DEFAULT ARRAY['user'] 
 ); 
+
+CREATE TABLE activities (
+    id bigserial PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    votes INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+); 
