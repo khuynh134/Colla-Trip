@@ -3,6 +3,7 @@
     import Sidebar from '$lib/components/Sidebar.svelte';
     import { onMount } from 'svelte';
     import { enhance } from '$app/forms';
+    import { Datepicker } from 'flowbite-svelte'; 
 
     // Sidebar state
     let sidebarExtended = $state(false);
@@ -23,11 +24,14 @@
     //local state to store user input 
     let userInputActivityName = $state(''); //User input for activity name
     let userInputActivityDescript = $state(''); //User input for activity description 
-    
+
+    let userSelectedActivityDate = $state<Date | null>(null); //User input for activity date 
+
     //define the Activity type 
     type Activity = {
         id: number;
         name: string;
+        date?: string | Date; 
         description: string;
         votes: number;
         location?: string;
@@ -54,7 +58,10 @@
             if(storedActivities) {
                 activities = JSON.parse(storedActivities);
             } else {
-                activities = serverActivities;
+                activities = serverActivities.map((activity: Activity) => ({
+                    ...activity,
+                    date: activity.date ? new Date(activity.date) : null
+                }))
                 //sync localStorage with server data
                 syncLocalStorage();
 
@@ -78,7 +85,9 @@
                 id: Date.now(),
                 name: userInputActivityName,
                 description: userInputActivityDescript,
-                votes: 0
+                votes: 0,
+                date: userSelectedActivityDate || new Date(),
+
             };
             //update local state 
             activities = [...activities, newActivity];
@@ -100,6 +109,10 @@
             if(!response.ok) {
                 console.log('Error creating activity on server');
             }
+        }
+
+        if(!userSelectedActivityDate){
+            alert('Please select a date for the activity'); 
         }
       
         console.log('Activity Name: ', userInputActivityName);
@@ -181,6 +194,27 @@
         console.log('Activity Results');
     }
 
+    //clear polling results
+    async function clearResults(event: MouseEvent) {
+        const res = await fetch('/api/activities', {
+            method: 'DELETE',
+            headers: {'Content-Type': 'application/json'},
+        });
+
+        if(res.ok){
+            voteResults = [];
+            activities = activities.map(activity => ({...activity, votes: 0}));
+            syncLocalStorage();
+            console.log('Polling Results Cleared');
+            alert('Polling Results Cleared');
+        } else {
+            console.error('Error clearing polling results');
+        }
+        
+        
+        
+    }
+
     //Function to handle user input for activity's name 
     function handleActivityName(event: Event) {
         if (event.target) {
@@ -215,7 +249,7 @@
 
      <!-- Activity Creation Form  -->
       <div class="flex justify-center p-3.5">
-        <Card horizontal size='lg' class= "w-full max-w-lg bg-slate-100">
+        <Card horizontal size='lg' class= "w-full max-w-lg bg-slate-100/55">
           <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-pink">Activity Name: </h5>
           <form method="POST" action="?/create" use:enhance>
                 <input 
@@ -226,6 +260,10 @@
                     bind:value={userInputActivityName}
                     required
                 />
+                <!-- Date Picker -->
+                <Datepicker bind:value={userSelectedActivityDate} />
+                 <p class="mt-4">Selected date: {userSelectedActivityDate ? userSelectedActivityDate.toLocaleDateString() : 'None'}</p>
+                
                 <p class="text-gray-700 dark:text-gray-400 mb-2 font-bold">Activity Description: </p>
                 <textarea
                     name="activityDescription"
@@ -233,7 +271,7 @@
                     placeholder= "Enter Activity Description"
                     bind:value={userInputActivityDescript}
                     required 
-                    ></textarea>
+                ></textarea>
                 <!-- Create New Activity Button-->
                  <GradientButton type="submit" on:click={handleCreateActivity} class="rounded-xl whitespace-nowrap border border-sky-400 bg-sky-400 px-5 py-2.5 text-center text-sm font-medium text-white shadow-sm transition-all
                     hover:border-sky-700 hover:bg-sky-700 focus:ring focus:ring-primary-200 disabled:cursor-not-allowed disabled:border-primary-300 disabled:bg-primary-300">
@@ -251,14 +289,22 @@
         <!-- Display Created Activities -->
          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {#each activities as activity}
-                <Card horizontal size='lg' class="bg-slate-100 shadow-md rounded-lg p-4">
+                <Card horizontal size='lg' class="bg-slate-100/55 shadow-md rounded-lg p-4">
                     <div class= "flex flex-col basis-small">
                         <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-pink">{activity.name}</h5>
+                         
+                        <p class="text-gray-700 dark:text-gray-400 mb-2">Date: {activity.date ? new Date(activity.date).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        }) : 'Invalid Date'}</p>
+                       
                         <p class="text-gray-700 dark:text-gray-400 mb-2">{activity.description}</p>
                         <div class="flex flex-wrap justify-between items-center gap-2">
-                            <Button on:click={editActivity} class="bg-sky-400 text-white">Edit</Button>
-                            <Button on:click={() => deleteActivity(activity.id)} class="bg-sky-400 text-white">Delete</Button>
-                            <Button on:click={() => voteActivity(activity.id)} class="bg-sky-400 text-white">Vote</Button>
+                            <Button on:click={editActivity} class="bg-sky-400 text-white hover:border-sky-700 hover:bg-sky-700">Edit</Button>
+                            <Button on:click={() => deleteActivity(activity.id)} class="bg-sky-400 text-white hover:border-sky-700 hover:bg-sky-700">Delete</Button>
+                            <Button on:click={() => voteActivity(activity.id)} class="bg-sky-400 text-white hover:border-sky-700 hover:bg-sky-700 ">Vote</Button>
                         </div>
 
                     </div>
@@ -268,7 +314,11 @@
         </div>
       
         <!-- Display Polling Results -->
-        <div class="flex justify-center p-3.5">
+        <div class="flex justify-center p-3.5 m-5 px-8 gap-4">
+            <GradientButton on:click={(event) => clearResults(event)} class="rounded-xl whitespace-nowrap border border-sky-400 bg-sky-400 px-5 py-2.5 text-center text-sm font-medium text-white shadow-sm transition-all
+                hover:border-sky-700 hover:bg-sky-700 focus:ring focus:ring-primary-200 disabled:cursor-not-allowed disabled:border-primary-300 disabled:bg-primary-300">
+                Clear Polling Results
+            </GradientButton>
             <GradientButton on:click={(event) => viewResults(event)} class="rounded-xl whitespace-nowrap border border-sky-400 bg-sky-400 px-5 py-2.5 text-center text-sm font-medium text-white shadow-sm transition-all
                 hover:border-sky-700 hover:bg-sky-700 focus:ring focus:ring-primary-200 disabled:cursor-not-allowed disabled:border-primary-300 disabled:bg-primary-300">
                 View Polling Results
@@ -280,7 +330,7 @@
             <h2 class="text-2xl font-bold text-center mb-4"> Vote Results</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {#each voteResults as activity}
-                    <Card horizontal size='lg' class="bg-slate-100 shadow-md rounded-lg p-4">
+                    <Card horizontal size='lg' class="bg-slate-100/55 shadow-md rounded-lg p-4">
                         <div class="flex flex-col basis-small">
                             <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-pink">{activity.name}</h5>
                             <p class="text-gray-700 dark:text-gray-400 mb-2">{activity.description}</p>

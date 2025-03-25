@@ -4,6 +4,7 @@
     import Sidebar from '$lib/components/Sidebar.svelte';
     import { Tabs, TabItem, Modal, Button, Input, Label, Radio, RadioButton } from 'flowbite-svelte';
 
+
     import { 
         Luggage,
         Calendar,
@@ -30,8 +31,15 @@
     let inviteMethod = 'email';
     let emailInput = '';
     let usernameInput = '';
-    let searchResults = [];
-    let inviteMessage = '';
+    type TripUser = {
+        id: number;
+        username: string;
+        name: string;
+        avatar: string;
+    };
+    
+    let searchResults = $state<TripUser[]>([]);
+    let inviteMessage = $state('');
 
      // Function to handle member invitation
      async function inviteMember() {
@@ -136,8 +144,12 @@
     
     // For the progress bar animation
     import { onMount } from 'svelte';
+	import { stringify } from 'postcss';
     let animateProgress = false;
-    
+
+    //Vote results
+    let voteResults = $state<{ name: string; votes: number }[] > ([]);
+
     onMount(() => {
         // Trigger animation after component mounts
         setTimeout(() => {
@@ -194,7 +206,9 @@
                             </button>
                             
                             <!-- Create Poll Button -->
-                            <button class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors flex items-center gap-2 shadow-sm">
+                            <button class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors flex items-center gap-2 shadow-sm"
+                                on:click={() => goto('/activitypage')}
+                                >
                                 <Vote class="w-4 h-4" />
                                 Create Poll
                             </button>
@@ -288,7 +302,21 @@
                                 <span class="text-gray-700 group-hover:text-cyan-600 transition-colors font-medium">Polling</span>
                             </span>
                             <div class="bg-white rounded-lg shadow-md p-6 mt-2">
-                                <p class="text-gray-700">Polling details will appear here.</p>
+                                <!-- Display vote results -->
+                                 {#if voteResults.length > 0}
+                                    <div class="space-y-4">
+                                        <h3 class="text-lg font-semibold text-gray-800">Vote Results</h3>
+                                        {#each voteResults as result}
+                                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-md">
+                                                <span class="text-gray-700">{result.name}</span>
+                                                <span class="text-gray-600">{result.votes} votes</span>
+                                            </div>
+                                        {/each}
+                                    </div>
+                                 {:else}
+                                    <p class="text-gray-700">Polling details will appear here.</p>
+                                 {/if}
+                                
                             </div>
                         </TabItem>
                     </Tabs>
