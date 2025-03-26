@@ -2,7 +2,7 @@
   import { Card } from 'flowbite-svelte';
   import Sidebar from '$lib/components/Sidebar.svelte';
   import { onMount } from 'svelte';
-  import { user as userStore, isAuthenticated } from '$lib/stores/authStore';
+  import { user, isAuthenticated } from '$lib/stores/authStore';
   import { goto } from '$app/navigation';
   
   // State management for sidebar only
@@ -13,7 +13,7 @@
     // Redirect if not logged in (backup to layout protection)
     onMount(() => {
         if (!$isAuthenticated) {
-            goto('/loginpage');
+            goto('/login');
         }
     });
   // Sample trip data for recent trips
@@ -115,6 +115,14 @@
   }
 </script>
 
+<div class="dashboard-container">
+  {#if $isAuthenticated && $user}
+      <h1>Welcome, {$user.displayName || $user.email}!</h1>
+      <!-- Your dashboard content -->
+  {:else}
+      <p>Loading...</p>
+  {/if}
+</div>
 
 <div class="min-h-screen bg-gray-50">
   <Sidebar 
@@ -136,7 +144,7 @@
             <img src={userData.avatar} alt="User avatar" class="h-12 w-12 rounded-full" />
           </div>
           <div>
-            <h1>Welcome, {$userStore ? ($userStore.displayName || $userStore.email) : 'there'}!</h1>
+            <h1 class="text-2xl sm:text-3xl font-bold">Welcome Back, {userData.name}</h1>
             <p class="text-gray-600 mt-1">Ready to plan your next adventure?</p>
           </div>
         </div>
@@ -256,10 +264,7 @@
           <h3 class="text-xl font-semibold mb-6">Recent Trips</h3>
           <div class="space-y-4">
             {#each recentTrips as trip}
-              <div class="flex items-center border-b border-gray-100 pb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"  on:click={() => goToTripDetail(trip.id)}
-                on:keydown={(e) => e.key === 'Enter' && goToTripDetail(trip.id)}
-                tabindex="0"
-                role="button">
+              <div class="flex items-center border-b border-gray-100 pb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors" on:click={() => goToTripDetail(trip.id)}>
                 <div class="h-16 w-16 rounded-lg bg-gray-200 mr-4 overflow-hidden flex-shrink-0">
                   <img src={trip.image} alt={trip.destination} class="h-full w-full object-cover" />
                 </div>

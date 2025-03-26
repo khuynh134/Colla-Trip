@@ -52,7 +52,7 @@
       event.preventDefault();
       closeCreateForm();
     }
-  
+    // Add this function in your script section
 async function handleAuthButton(): Promise<void> {
   if ($isAuthenticated) {
     // User is logged in, log them out
@@ -172,10 +172,10 @@ async function handleAuthButton(): Promise<void> {
     <!-- Add this at the bottom of your sidebar, before the closing </nav> tag -->
 <div class="mt-auto mb-8">
   <a 
-  href={$isAuthenticated ? "/logout" : "/loginpage"} 
-  on:click|preventDefault={handleAuthButton} 
-  class="flex items-center p-3 hover:bg-blue-600 rounded-lg transition-colors"
->
+    href="#" 
+    on:click|preventDefault={handleAuthButton} 
+    class="flex items-center p-3 hover:bg-blue-600 rounded-lg transition-colors"
+  >
     <div>
       {#if $isAuthenticated}
         <LogOut class="h-6 w-6" aria-label="Log Out" />
