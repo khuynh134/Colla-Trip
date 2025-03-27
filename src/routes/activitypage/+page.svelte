@@ -33,7 +33,7 @@
     type Activity = {
         id: number;
         name: string;
-        date?: string | Date; 
+        activity_date: string | Date; 
         description: string;
         votes: number;
         location?: string;
@@ -54,47 +54,50 @@
         }
         
     });
-        
+    
+    //Convert DATE to YYYY-MM-DD format for PostgreSQL
+    function formatDateForDB(date: Date): string {
+        return date.toISOString().split('T')[0];
+    }
 
     //Function to create a new activity 
     async function createActivity() {
-        //Check if user input is not empty, then add activity to the activities array 
-        if (userInputActivityName && userInputActivityDescript) {
-            const newActivity: Activity = {
-                id: Date.now(),
+        if(!userSelectedActivityDate){
+            alert('Please select a date for the activity'); 
+            return;
+        }
+        
+        try{
+            const newActivity = {
                 name: userInputActivityName,
                 description: userInputActivityDescript,
-                votes: 0,
-                date: userSelectedActivityDate || new Date(),
-
+                activity_date: formatDateForDB(userSelectedActivityDate), //format date for PostgreSQL
+                
             };
-            //update local state 
-            activities = [...activities, newActivity];
 
-            //Reset user input fields
-            userInputActivityName = '';
-            userInputActivityDescript = ''; 
-
-            //Send a POST request to the server, fetching all activities 
             const response = await fetch('/api/activities', {
                 method: 'POST',
-                headers: {
-                    'Content-Type' : 'application/json',
-                },
+                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(newActivity),
             });
 
             if(!response.ok) {
-                console.log('Error creating activity on server');
+                throw new Error('Failed to create activity');
             }
-        }
 
-        if(!userSelectedActivityDate){
-            alert('Please select a date for the activity'); 
+            const createdActivity = await response.json(); 
+            activities = [...activities, createdActivity]; //update local state with new activity
+
+            //Reset user input fields
+            userInputActivityName = '';
+            userInputActivityDescript = '';
+            userSelectedActivityDate = null; //reset date picker
+            console.log('Activity Created');
+        } catch (error) {
+            console.error('Create activity error: ', error);
+            alert('Failed to create activity');
+               
         }
-      
-        console.log('Activity Name: ', userInputActivityName);
-        console.log('Activity Description: ', userInputActivityDescript); 
     }
 
     //function to delete an activity 
@@ -169,17 +172,14 @@
 
             const updatedActivity = await response.json(); 
 
+            //update specific activity in the array 
             activities = activities.map(activity =>
-                activity.id === activityId ? {...activity, votes: updatedActivity.votes } : activity 
+                activity.id === updatedActivity.id ? updatedActivity : activity 
                 );
             console.log('Voted on Activity');
         } catch (error) {
             console.error('Error voting on activity: ', error);
-
-            //revert local state if needed 
-            activities = activities.map(activity =>
-                activity.id === activityId ? {...activity, votes: Math.max(0, activity.votes - 1)} : activity
-            );
+            //Display error message to the user
             alert('Vote failed: ${error.message}');
         }
     }
@@ -249,7 +249,10 @@
                     required
                 />
                 <!-- Date Picker -->
-                <Datepicker bind:value={userSelectedActivityDate} />
+                <Datepicker 
+                    bind:value={userSelectedActivityDate}
+                    dateFormat={{ year: 'numeric', month: '2-digit', day: '2-digit' }}
+                     />
                  <p class="mt-4">Selected date: {userSelectedActivityDate ? userSelectedActivityDate.toLocaleDateString() : 'None'}</p>
                 
                 <p class="text-gray-700 dark:text-gray-400 mb-2 font-bold">Activity Description: </p>
@@ -281,12 +284,17 @@
                     <div class= "flex flex-col basis-small">
                         <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-pink">Activity's Name: {activity.name}</h5>
                          
+                        <!-- 
                         <p class="text-gray-700 dark:text-gray-400 mb-2">Date: {activity.date ? new Date(activity.date).toLocaleDateString('en-US', {
                             weekday: 'long',
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric'
                         }) : 'Invalid Date'}</p>
+                        -->
+                        <div>
+                            <p>Activity Date: {activity.activity_date}</p>
+                        </div>
                        
                         <p class="text-gray-700 dark:text-gray-400 mb-2">Activity's Details: {activity.description}</p>
                         <div class="flex flex-wrap justify-between items-center gap-2">

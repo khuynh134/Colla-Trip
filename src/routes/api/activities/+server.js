@@ -28,16 +28,21 @@ export async function GET({ url }) {
 //POST: create a new activity 
 export async function POST({ request }) {
     try{
-        const { name, description } = await request.json(); //parse JSON body 
+        const { name, description, activity_date } = await request.json(); //parse JSON body 
+        //Validate date format
+        if( !/^\d{4}-\d{2}-\d{2}$/.test(activity_date)){
+            return json({ error: 'Invalid date format. Use YYYY-MM-DD.', status: 400 });
+        }
+        //validate input
         if (!name || !description) {
             return json({error: 'Name and description are required', status: 400});
             
         }
 
         const [activity] = await sql`
-            INSERT INTO activities (name, description, votes)
-            VALUES (${name}, ${description}, 0)
-            RETURNING *
+            INSERT INTO activities (name, description, votes, activity_date)
+            VALUES (${name}, ${description}, 0, ${activity_date}::date )
+            RETURNING id, name, description, votes, activity_date
             `;
             return json(activity);
     }catch (err) {
@@ -81,9 +86,6 @@ export async function DELETE({ request }) {
 export async function PUT({ request }) {
     try {
         const { id, vote } = await request.json(); //parse JSON body 
-        if(!id || vote === undefined) {
-            return json({error: 'ID and vote are required', status: 400});
-        }
 
         //Validate input
         if(!id || typeof vote !== 'number'){
