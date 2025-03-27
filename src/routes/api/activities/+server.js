@@ -56,9 +56,18 @@ export async function DELETE({ request }) {
         if (!id) {
             return json({error: 'ID is required', status: 400});
         }
+
+        const result = await sql`
+            DELETE FROM activities 
+            WHERE id = ${id}
+            RETURNING id
+            `;
+            
+        if (result.length === 0) {
+            return json({ error: 'Activity not found' }, {status: 404 });
+        }
         
-        await sql `DELETE FROM activities WHERE id = ${id}`;
-        return json({ success: true });
+        return json({ success: true, deletedId: id });
     } catch (err) {
         console.error('Error deleting activity:', err);
         return json({
@@ -76,18 +85,25 @@ export async function PUT({ request }) {
             return json({error: 'ID and vote are required', status: 400});
         }
 
+        //Validate input
+        if(!id || typeof vote !== 'number'){
+            return json({ error: 'Invalid request body' }, { status: 400});
+        }
+
         const [activity] = await sql`
-            UPDATE activities
-            SET votes = votes + 1
-            WHERE id = ${id}
-            RETURNING *
-            `;
+                UPDATE activities
+                SET votes = votes + ${vote}
+                WHERE id = ${id}
+                RETURNING *
+                `;
+        ;
+           
             if(!activity){
                 return json({ error: 'Activity not found', status: 404});
             }
             return json(activity);
-    } catch (err) {
-        console.error('Error voting for activity:' , err);
+    } catch (error) {
+        console.error('Error voting for activity:' , error);
         return json({
             error: 'Failed to vote for activity',
             status: 500,

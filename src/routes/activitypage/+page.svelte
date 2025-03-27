@@ -26,6 +26,8 @@
     let userInputActivityDescript = $state(''); //User input for activity description 
 
     let userSelectedActivityDate = $state<Date | null>(null); //User input for activity date 
+    
+    let userHighlightedActivity = $state(''); //User assigned activity as highlight 
 
     //define the Activity type 
     type Activity = {
@@ -35,6 +37,7 @@
         description: string;
         votes: number;
         location?: string;
+        highlighted?: boolean; // Indicates if the activity is highlighted
     };
 
     //local state for activities (synced with localStorage) 
@@ -42,40 +45,16 @@
 
     //Load activities from localStorage
     onMount(async () => {
-        const response = await fetch('/api/activities');
-        const serverActivities = await response.json(); 
-
-        //if database is empty, clear localStorage 
-        if(serverActivities.length === 0) {
-            localStorage.removeItem('activities');
-            activities = []; 
-
-            //log the cleared localStorage
-            console.log('Cleared localStorage:', localStorage.getItem('activities'));
-        } else {
-            //sync local state with server data 
-            const storedActivities = localStorage.getItem('activities');
-            if(storedActivities) {
-                activities = JSON.parse(storedActivities);
-            } else {
-                activities = serverActivities.map((activity: Activity) => ({
-                    ...activity,
-                    date: activity.date ? new Date(activity.date) : null
-                }))
-                //sync localStorage with server data
-                syncLocalStorage();
-
-                //log the synced localStorage
-                console.log('Synced localStorage:', localStorage.getItem('activities'));
-            }
+        try{
+            const response = await fetch('/api/activities'); 
+            const serverActivities = await response.json(); 
+            activities = serverActivities; 
+        } catch (error) {
+            console.error('Failed to load activities: ', error);
         }
+        
     });
         
-
-    //sync activities with localStorage 
-    function syncLocalStorage() {
-        localStorage.setItem('activities', JSON.stringify(activities));
-    }
 
     //Function to create a new activity 
     async function createActivity() {
@@ -91,7 +70,6 @@
             };
             //update local state 
             activities = [...activities, newActivity];
-            syncLocalStorage(); //sync with localStorage 
 
             //Reset user input fields
             userInputActivityName = '';
@@ -133,9 +111,6 @@
                 //update local state by filtering out deleted activity
                 activities =activities.filter((activity) => activity.id !== activityId);
 
-                //sync localStorage
-                syncLocalStorage(); 
-
                 //clear voteResults if no activities are listed
                 if(activities.length === 0){
                     voteResults = []; 
@@ -156,33 +131,57 @@
         console.log('Activity Edited');
     }
 
-    //function to view an activity 
-    function viewActivity() {
-        console.log('Activity Viewed');
+    //function to highlight an activity 
+    async function toggleHighlight(activityId: number, currentStatus: boolean) {
+        try{
+            //send a PUT request to the server 
+            const response = await fetch('/api/highlights', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: activityId, highlight: !currentStatus}),
+            });
+            if(!response.ok) {
+                throw new Error('Failed to update highlight status');
+            }
+            //Update local state 
+            activities = activities.map(a => 
+                a.id === activityId ? {...a, highlighted: !currentStatus} : a
+            ); 
+        } catch (error) {
+            console.error('Error toggling highlight status: ', error);
+        }
+        
     }
 
     //Function to vote on an activity 
     async function voteActivity(activityId: number) {
-        //update local state 
-        activities = activities.map((activity => {
-            if (activity.id === activityId){
-                return {...activity, votes: activity.votes + 1};
+        try {
+            const response = await fetch(`/api/activities`,{
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: activityId, vote: 1})
+            });
+
+            if( !response.ok){
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Vote failed');
             }
-            return activity;
-        }))
-        syncLocalStorage(); //sync with localStorage 
 
-        //send a PUT request to the server, fetch all activities sorted by votes
-        const response = await fetch(`/api/activities`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json'},
-            body: JSON.stringify({id: activityId, vote: 1})
-        });
-        if(!response.ok) {
-            console.error('Error voting on activity on server');
+            const updatedActivity = await response.json(); 
+
+            activities = activities.map(activity =>
+                activity.id === activityId ? {...activity, votes: updatedActivity.votes } : activity 
+                );
+            console.log('Voted on Activity');
+        } catch (error) {
+            console.error('Error voting on activity: ', error);
+
+            //revert local state if needed 
+            activities = activities.map(activity =>
+                activity.id === activityId ? {...activity, votes: Math.max(0, activity.votes - 1)} : activity
+            );
+            alert('Vote failed: ${error.message}');
         }
-
-        console.log('Activity Voted');
     }
 
     //Local state to store vote results
@@ -203,25 +202,14 @@
 
         if(res.ok){
             voteResults = [];
-            activities = activities.map(activity => ({...activity, votes: 0}));
-            syncLocalStorage();
             console.log('Polling Results Cleared');
             alert('Polling Results Cleared');
         } else {
             console.error('Error clearing polling results');
         }
         
-        
-        
     }
-
-    //Function to handle user input for activity's name 
-    function handleActivityName(event: Event) {
-        if (event.target) {
-            userInputActivityName = (event.target as HTMLInputElement).value;
-        }
-
-    }
+    
 
     function handleActivityDescript(event: Event){
         if(event.target) {
@@ -244,7 +232,7 @@
     <Sidebar bind:sidebarExtended bind:sidebarWidth bind:createFormOpen />
 
     <!-- Activity Title -->
-     <h1 class="text-2xl sm:text-3xl font-bold text-center">Activites Polling</h1>
+     <h1 class="text-2xl sm:text-3xl font-bold text-center">Activities Polling</h1>
 
 
      <!-- Activity Creation Form  -->
@@ -291,7 +279,7 @@
             {#each activities as activity}
                 <Card horizontal size='lg' class="bg-slate-100/55 shadow-md rounded-lg p-4">
                     <div class= "flex flex-col basis-small">
-                        <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-pink">{activity.name}</h5>
+                        <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-pink">Activity's Name: {activity.name}</h5>
                          
                         <p class="text-gray-700 dark:text-gray-400 mb-2">Date: {activity.date ? new Date(activity.date).toLocaleDateString('en-US', {
                             weekday: 'long',
@@ -300,13 +288,13 @@
                             day: 'numeric'
                         }) : 'Invalid Date'}</p>
                        
-                        <p class="text-gray-700 dark:text-gray-400 mb-2">{activity.description}</p>
+                        <p class="text-gray-700 dark:text-gray-400 mb-2">Activity's Details: {activity.description}</p>
                         <div class="flex flex-wrap justify-between items-center gap-2">
                             <Button on:click={editActivity} class="bg-sky-400 text-white hover:border-sky-700 hover:bg-sky-700">Edit</Button>
                             <Button on:click={() => deleteActivity(activity.id)} class="bg-sky-400 text-white hover:border-sky-700 hover:bg-sky-700">Delete</Button>
                             <Button on:click={() => voteActivity(activity.id)} class="bg-sky-400 text-white hover:border-sky-700 hover:bg-sky-700 ">Vote</Button>
                         </div>
-
+ 
                     </div>
                     
                 </Card>

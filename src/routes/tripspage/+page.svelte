@@ -1,8 +1,9 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import { Card } from 'flowbite-svelte';
+    import { A, Card } from 'flowbite-svelte';
     import Sidebar from '$lib/components/Sidebar.svelte';
     import { Tabs, TabItem, Modal, Button, Input, Label, Radio, RadioButton } from 'flowbite-svelte';
+    import {writable} from 'svelte/store'; 
 
 
     import { 
@@ -145,16 +146,105 @@
     // For the progress bar animation
     import { onMount } from 'svelte';
 	import { stringify } from 'postcss';
+
     let animateProgress = false;
+    type TripHighlight = { name: string };
+    let tripHighlights = $state<TripHighlight[]>([]); // Trip highlights from activity page to be displayed here in trip page
+
+    async function loadHighlights() {
+        //API call to get trip highlights 
+        try{
+            const res = await fetch('/api/highlights');
+            if(res.ok){
+                tripHighlights = await res.json();
+            }
+            else{
+                throw new Error('Failed to fetch trip highlights');
+            }
+        } catch (error) {
+            console.error('Error fetching trip highlights:', error);
+            alert('An error occurred. Please try again.');
+        }
+    }
 
     //Vote results
-    let voteResults = $state<{ name: string; votes: number }[] > ([]);
+    let voteResults = $state<Array<{ id: number, name: string, votes: number }>>([]);
+    let isLoading = $state(false);
+    let error = $state<string | null>(null); 
+    let pollInterval = $state<NodeJS.Timeout | null>(null); 
+
+    //Fetch results from API 
+    async function loadVoteResults() {
+        try{
+            isLoading = true;
+            error = null; 
+
+            const response = await fetch('/api/voting-results?t=' + Date.now());//add timestamp to prevent caching 
+
+            if(!response.ok){
+                throw new Error('HTTP error! status: ${response.status}');
+            }
+            const data = await response.json(); 
+
+            if(!Array.isArray(data)){
+                throw new Error('Invalid data format from server');
+            } 
+            voteResults = data;
+
+        } catch (err) {
+            
+            console.error('Error fetching voting results:', err);
+        } finally {
+            isLoading = false; 
+        }
+    }
+
+    let pendingVotes = $state(0);
+
+    async function voteForActivity(activityId: number) {
+        try {
+            const response = await fetch(`/api/activities`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: activityId, vote: 1})
+        }); 
+        if(!response.ok) {
+            const errorData = await response.json(); 
+            throw new Error(errorData.error || 'Failed to vote');
+        }
+        //after voting, refresh the results
+        await loadVoteResults();
+        if( pollInterval) clearInterval(pollInterval);
+        pollInterval = setInterval(loadVoteResults, 5000);
+        } catch (error) {
+            console.error('Error voting for activity:', error);
+            alert('An error occurred. Please try again.');
+            
+        } finally {
+            pendingVotes = pendingVotes - 1; 
+        }
+    }
 
     onMount(() => {
+        // Load voting results asynchronously
+        loadVoteResults(); // initial load
+
+        // Set up polling interval to poll every 5 seconds
+        pollInterval = setInterval(loadVoteResults, 5000);
+
+        // Load highlighted activities asynchronously
+        loadHighlights();
+
         // Trigger animation after component mounts
         setTimeout(() => {
             animateProgress = true;
         }, 300);
+
+        // Cleanup function to clear polling interval
+        return () => {
+            if (pollInterval) clearInterval(pollInterval);
+        };
     });
 </script>
 
@@ -199,7 +289,7 @@
                             <!-- Add Member Button -->
                             <button 
                                 class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2 shadow-sm"
-                                on:click={() => addMemberModalOpen = true}
+                                onclick={() => addMemberModalOpen = true}
                             >
                                 <UserPlus class="w-4 h-4" />
                                 Add Member
@@ -207,7 +297,7 @@
                             
                             <!-- Create Poll Button -->
                             <button class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors flex items-center gap-2 shadow-sm"
-                                on:click={() => goto('/activitypage')}
+                                onclick={() => goto('/activitypage')}
                                 >
                                 <Vote class="w-4 h-4" />
                                 Create Poll
@@ -302,27 +392,58 @@
                                 <span class="text-gray-700 group-hover:text-cyan-600 transition-colors font-medium">Polling</span>
                             </span>
                             <div class="bg-white rounded-lg shadow-md p-6 mt-2">
-                                <!-- Display vote results -->
-                                 {#if voteResults.length > 0}
+                                {#if isLoading && voteResults.length === 0}
+                                    <div class="animate-pulse space-y-4">
+                                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                                        {#each Array(3) as _}
+                                            <div class="h-12 bg-gray-100 rounded-md"></div>
+                                        {/each}
+                                    </div>
+                                {:else if error }
+                                    <div class="text-red-500 p-4 bg-red-50 rounded-md">
+                                        {error}
+                                        <button onclick={loadVoteResults} class="mt-2 px-4 py-2 bg-red-500 text-white rounded">
+                                            Retry loading
+                                        </button>
+                                    </div>
+                                {:else if voteResults.length > 0}
                                     <div class="space-y-4">
                                         <h3 class="text-lg font-semibold text-gray-800">Vote Results</h3>
                                         {#each voteResults as result}
                                             <div class="flex items-center justify-between p-4 bg-gray-50 rounded-md">
                                                 <span class="text-gray-700">{result.name}</span>
-                                                <span class="text-gray-600">{result.votes} votes</span>
+                                                <button 
+                                                    onclick={() => voteForActivity(result.votes)}
+                                                    class="text-sky-500 hover:text-sky-700"
+                                                >
+                                                    <span class="text-gray-500">{result.votes}</span>
+                                                </button>
+                                                
                                             </div>
                                         {/each}
                                     </div>
-                                 {:else}
+                                {:else}
                                     <p class="text-gray-700">Polling details will appear here.</p>
-                                 {/if}
-                                
+                                {/if}
+
+                                <!-- Refresh Button -->
+                            <button
+                                 onclick={loadVoteResults}
+                                class="my-4 px-4 py-2 bg-sky-500 text-cyan-600 rounded  hover:bg-sky-600 
+                                transition-colors disabled:opacity-50"
+                                disabled={isLoading}
+                                aria-label="Refresh vote results"
+                            >
+                                    {isLoading ? 'Loading...' : 'Refresh Results'}
+                            </button>
+                                    
                             </div>
                         </TabItem>
                     </Tabs>
                 </div>
             </div>
         </div>
+
 
         <!-- Widgets Section -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -380,12 +501,12 @@
                         <MapPin class="w-6 h-6 text-cyan-600" />
                     </div>
                     <div class="space-y-3">
-                        {#each tripData.highlights as highlight, i}
+                        {#each tripHighlights as highlight, i}
                             <div class="flex items-center gap-3">
                                 <div class="flex-shrink-0 w-8 h-8 bg-cyan-100 text-cyan-600 rounded-full flex items-center justify-center font-bold">
                                     {i + 1}
                                 </div>
-                                <span class="text-gray-700">{highlight}</span>
+                                <span class="text-gray-700">{highlight.name}</span>
                             </div>
                         {/each}
                     </div>
@@ -469,7 +590,7 @@
                                 {#each searchResults as user}
                                     <div 
                                         class="flex items-center p-2 hover:bg-gray-50 cursor-pointer"
-                                        on:click={() => selectUser(user)}
+                                        onclick={() => selectUser(user)}
                                     >
                                         <div class="w-8 h-8 bg-cyan-100 text-cyan-600 rounded-full flex items-center justify-center font-bold mr-2">
                                             {user.name[0]}

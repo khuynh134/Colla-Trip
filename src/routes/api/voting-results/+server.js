@@ -5,10 +5,10 @@ import sql from '$lib/server/database.js'; //Import the PostgreSQL client
 export async function GET() {
     try {
         const results = await sql`
-            SELECT name, votes 
+            SELECT id, name, votes, description
             FROM activities
             ORDER BY votes DESC
-            LIMIT 3
+            
             `;
         return json(results);
     } catch (error) {
