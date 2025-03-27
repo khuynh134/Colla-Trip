@@ -2,6 +2,7 @@
     import { Search, Button, Dropdown, DropdownItem, type InputType } from 'flowbite-svelte';
     import { Map, TileLayer, Marker, Popup } from 'sveaflet';
     import { goto } from '$app/navigation'; // Import for navigation
+    import { browser } from '$app/environment';
  
     import { 
         Search as SearchIcon,
@@ -25,6 +26,17 @@
         MapPin
 
     } from 'lucide-svelte';
+    // Add this to your script section
+import { browser } from '$app/environment';
+
+// Then, wrap your map-related code with a browser check
+let mapComponent;
+if (browser) {
+  // Only initialize map/Leaflet when in browser environment
+  mapComponent = true;
+} else {
+  mapComponent = false;
+}
 
     // Mock authentication state - replace with your actual auth check
     let isAuthenticated = false; // Set to false to test the registration button
@@ -33,7 +45,7 @@
     function handleRegister() {
         // Redirect to registration page
         // Replace '/register' with your actual registration route
-        goto('/signuppage');
+        goto('/register');
     }
 
     // Function to handle demo mode for unregistered users
@@ -205,6 +217,29 @@
         isLoading = false;
     }
 </script>
+
+{#if browser}
+  <!-- Only render the map component when in a browser environment -->
+  <div style="height:400px; position: relative; z-index: 1; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+    <Map options={{ center: [lat, lng], zoom: 13 }}> 
+      <TileLayer url={'https://tile.openstreetmap.org/{z}/{x}/{y}.png'} />
+      {#each places as place}
+        {#if place.geocodes && place.geocodes.main}
+          <Marker latLng={[place.geocodes.main.latitude, place.geocodes.main.longitude]}>
+            <Popup>
+              <!-- Popup content -->
+            </Popup>
+          </Marker>
+        {/if}
+      {/each}
+    </Map>
+  </div>
+{:else}
+  <!-- Optional placeholder for when map can't be shown during SSR -->
+  <div style="height:400px; display: flex; align-items: center; justify-content: center; background-color: #f0f0f0; border-radius: 0.75rem;">
+    <p>Map loading...</p>
+  </div>
+{/if}
 
 <!-- Single container with gradient background -->
 <div class="min-h-screen bg-gradient-to-br from-sky-100 via-cyan-200 to-blue-300">

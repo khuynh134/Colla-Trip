@@ -33,7 +33,7 @@
     function handleRegister() {
         // Redirect to registration page
         // Replace '/register' with your actual registration route
-        goto('/signuppage');
+        goto('/register');
     }
 
     // Function to handle demo mode for unregistered users

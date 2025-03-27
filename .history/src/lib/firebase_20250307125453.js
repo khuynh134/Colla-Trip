@@ -1,11 +1,5 @@
 import { initializeApp, getApps } from "firebase/app";
-import { 
-    getAuth, 
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    signOut,
-    onAuthStateChanged
-} from "firebase/auth";
+import { getAuth } from "firebase/auth"; 
 
 import {
     PUBLIC_FIREBASE_API_KEY,
@@ -29,13 +23,4 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app); 
 
-
-// Export everything we'll need
-export { 
-    app, 
-    auth, 
-    signInWithEmailAndPassword, 
-    createUserWithEmailAndPassword,
-    signOut,
-    onAuthStateChanged
-};
+export { app, auth}; 

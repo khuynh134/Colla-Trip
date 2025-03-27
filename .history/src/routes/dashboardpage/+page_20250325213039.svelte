@@ -256,10 +256,7 @@
           <h3 class="text-xl font-semibold mb-6">Recent Trips</h3>
           <div class="space-y-4">
             {#each recentTrips as trip}
-              <div class="flex items-center border-b border-gray-100 pb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"  on:click={() => goToTripDetail(trip.id)}
-                on:keydown={(e) => e.key === 'Enter' && goToTripDetail(trip.id)}
-                tabindex="0"
-                role="button">
+              <div class="flex items-center border-b border-gray-100 pb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors" on:click={() => goToTripDetail(trip.id)}>
                 <div class="h-16 w-16 rounded-lg bg-gray-200 mr-4 overflow-hidden flex-shrink-0">
                   <img src={trip.image} alt={trip.destination} class="h-full w-full object-cover" />
                 </div>
