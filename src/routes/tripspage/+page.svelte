@@ -4,6 +4,7 @@
     import Sidebar from '$lib/components/Sidebar.svelte';
     import { Tabs, TabItem, Modal, Button, Input, Label, Radio, RadioButton } from 'flowbite-svelte';
     import {writable} from 'svelte/store'; 
+    import PackingListForm from './PackingList/PackingListForm.svelte';
 
 
     import { 
@@ -19,19 +20,20 @@
         PlusCircle,
         UserPlus,
         Mail,
-        Search
+        Search,
+        Trash
     } from 'lucide-svelte';
 
     // State management for sidebar
-    let sidebarExtended = false;
-    let sidebarWidth = '80px';
-    let createFormOpen = false;
+    let sidebarExtended = $state(false);
+    let sidebarWidth = $state('80px');
+    let createFormOpen = $state(false);
 
     // Add Member Modal state
-    let addMemberModalOpen = false;
-    let inviteMethod = 'email';
-    let emailInput = '';
-    let usernameInput = '';
+    let addMemberModalOpen = $state(false);
+    let inviteMethod = $state('email');
+    let emailInput = $state('');
+    let usernameInput = $state('');
     type TripUser = {
         id: number;
         username: string;
@@ -111,16 +113,107 @@
         searchResults = [];
     }
 
+    //states for packing list 
+    let packingList = $state<Array<{ 
+        id: number, 
+        name: string,
+        quantity: number,
+        created_by: string 
+    }>>([]);
+
+    let newItemName = $state(''); // Declare newItemName
+    let newItemQuantity = $state(1); // Declare newItemQuantity with a default value
+    let creatorName = $state(''); // Declare creatorName
+
+
+    let packingListLoading = $state(false);
+    let packingListError = $state<string | null>(null);
+    let packingListEmpty = $state(false);
+
+    //fetch packing list from API 
+    async function loadPackingList() {
+        try {
+            packingListLoading = true; 
+            packingListError = null;
+            const response = await fetch('/api/packing-list');
+            if (!response.ok) throw new Error('Failed to load packing list items');
+            packingList = await response.json(); 
+            
+        } catch (error) {
+            packingListError = 'Failed to load packing list: ${error.message}';
+            console.error('Error fetching packing list:', error);
+        } finally {
+            packingListLoading = false; 
+        }
+    }
+    
+
+    async function addItem() {
+        try {
+            const response = await fetch('/api/packing-list', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: newItemName,
+                    quantity: newItemQuantity,
+                    created_by: creatorName
+                })
+            });
+
+            if (!response.ok) throw new Error('Error adding item to packing list');
+
+            const newItem = await response.json();
+            packingList = [newItem, ...packingList];
+
+            newItemName = '';
+            newItemQuantity = 1;
+            creatorName
+        } catch (error) {
+            console.error('Error adding item:', error);
+            packingListError = 'Failed to add item. Please try again.';
+        } finally {
+            packingListLoading = false;
+        }
+    }
+   
+    async function deleteItem(itemId: number) {
+        try {
+            const response = await fetch(`/api/packing-list`, {
+                method: 'DELETE'
+            });
+            if (!response.ok) {
+                throw new Error('Failed to delete item');
+            }
+            // Remove the item from the packing list
+            packingList = packingList.filter(item => item.id !== itemId);
+        } catch (error) {
+            console.error('Error deleting item:', error);
+            packingListError = 'Failed to delete item. Please try again.';
+        } finally {
+            packingListLoading = false; 
+        }
+    }
+
+
+    // Mock packing items
     const packingItems = [
-        { name: 'Passport', checked: true },
-        { name: 'Clothes', checked: true },
-        { name: 'Toiletries', checked: false },
-        { name: 'Medications', checked: true },
-        { name: 'Phone Charger', checked: false },
-        { name: 'Camera', checked: false },
-        { name: 'Travel Adapter', checked: false }
+        { id: 1, name: 'Passport', checked: true },
+        { id: 2, name: 'Clothes', checked: true },
+        { id: 3, name: 'Toiletries', checked: false },
+        { id: 4, name: 'Medications', checked: true },
+        { id: 5, name: 'Phone Charger', checked: false },
+        { id: 6, name: 'Camera', checked: false },
+        { id: 7, name: 'Travel Adapter', checked: false }
     ];
 
+    // Add Items to packingItem list 
+    function addPackingItem() {
+        const newId = packingItems.length > 0 ? Math.max(...packingItems.map(item => item.id || 0)) + 1 : 1;
+        packingItems.push({ id: newId, name: '', checked: false }); 
+    }
+    
     // State for polling notifications
     let pollNotifications = 3;
     
@@ -146,8 +239,9 @@
     // For the progress bar animation
     import { onMount } from 'svelte';
 	import { stringify } from 'postcss';
+	
 
-    let animateProgress = false;
+    let animateProgress = $state(false);
     type TripHighlight = { name: string };
     let tripHighlights = $state<TripHighlight[]>([]); // Trip highlights from activity page to be displayed here in trip page
 
@@ -267,6 +361,7 @@
     }
 
     onMount(() => {
+        
         //Load trip schedule 
         loadSchedule(); 
         // Load voting results asynchronously
@@ -371,32 +466,6 @@
                                     </button>
                                 </div>
                                 
-                                <!-- 
-                                <div class="space-y-4">
-                                    <div class="border-l-4 border-cyan-500 pl-4 py-2">
-                                        <div class="text-sm text-gray-500">Day 1 - June 15</div>
-                                        <div class="text-gray-800 font-medium">Arrive at Narita Airport</div>
-                                        <div class="text-gray-600 text-sm">Check in at hotel in Shinjuku</div>
-                                    </div>
-                                    
-                                    <div class="border-l-4 border-cyan-500 pl-4 py-2">
-                                        <div class="text-sm text-gray-500">Day 2 - June 16</div>
-                                        <div class="text-gray-800 font-medium">Tokyo Disneyland</div>
-                                        <div class="text-gray-600 text-sm">Full day at the park</div>
-                                    </div>
-                                    
-                                    <div class="border-l-4 border-cyan-500 pl-4 py-2">
-                                        <div class="text-sm text-gray-500">Day 3 - June 17</div>
-                                        <div class="text-gray-800 font-medium">Shibuya & Harajuku</div>
-                                        <div class="text-gray-600 text-sm">Shopping and exploring</div>
-                                    </div>
-                                    
-                                    <button class="text-cyan-600 hover:text-cyan-700 text-sm mt-2">
-                                        View full schedule
-                                    </button>
-                                </div>
-                                -->
-
                                 <div class="space-y-6">
                                     {#each tripSchedule as event, index}
                                         <div class="border-l-4 border-cyan-500 pl-4 py-2 relative">
@@ -451,9 +520,56 @@
                                 <Luggage class="w-5 h-5 text-gray-500 group-hover:text-cyan-600 transition-colors"/>
                                 <span class="text-gray-700 group-hover:text-cyan-600 transition-colors font-medium">Packing</span>
                             </span>
-                            <div class="bg-white rounded-lg shadow-md p-6 mt-2">
-                                <p class="text-gray-700">Packing list details will appear here.</p>
-                            </div>
+                        
+                            {#if packingListError}
+                                <div class="bg-red-50 text-red-500 p-4 rounded-md">
+                                    {packingListError}
+                                    <button onclick={loadPackingList} class="mt-2 px-4 py-2 bg-red-500 text-white rounded">
+                                        Retry loading
+                                    </button>
+                                </div>
+                            {:else if packingListLoading}
+                                <div class="animate-pulse space-y-4">
+                                    <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                                    {#each Array(3) as _}
+                                        <div class="h-12 bg-gray-100 rounded-md"></div>
+                                    {/each}
+                                </div>
+                                {:else}
+                                    <div class="bg-white rounded-lg shadow-md p-6 mt-2 space-y-4">
+                                        {#if packingListEmpty}
+                                            <p class="text-gray-500">No items in the packing list.</p>
+                                        {:else}
+                                            <ul class="space-y-3">
+                                                {#each packingList as item (item.id)}
+                                                    <li class= "flex justify-between items-center p-3 bg-gray-50 rounded">
+                                                        <div>
+                                                            <span class="font-medium">{item.name}</span>
+                                                            <span class="text-sm text-gray-500 ml-2">x({item.quantity})</span>
+                                                            <span class="text-xs text-gray-400 ml-2">added by {item.created_by}</span>
+                                                        </div>
+                                                        <button
+                                                            onclick={() => deleteItem(item.id)}
+                                                            class="text-red-500 hover:text-red-700"
+                                                        >
+                                                           <Trash class="w-4 h-4" />
+                                                        </button> 
+
+                                                    </li>
+                                                {/each}
+                                            </ul>
+                                        {/if}
+
+                                        <PackingListForm
+                                            bind:newItemName
+                                            bind:newItemQuantity
+                                            bind:creatorName
+                                            on:submit={addItem}
+                                            
+                                        />
+                                    </div>
+                            {/if}
+              
                         </TabItem>
 
                         <!-- Polling Tab -->
@@ -556,7 +672,7 @@
                         <Luggage class="w-6 h-6 text-cyan-600" />
                     </div>
                     <div class="space-y-3">
-                        {#each packingItems as item}
+                        {#each packingItems as item (item.id)}
                             <label class="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded-md transition-colors">
                                 <input type="checkbox" bind:checked={item.checked} class="rounded text-cyan-600 focus:ring-cyan-500" />
                                 <span class="ml-2 text-gray-700 {item.checked ? 'line-through text-gray-400' : ''}">

@@ -40,10 +40,10 @@
         highlighted?: boolean; // Indicates if the activity is highlighted
     };
 
-    //local state for activities (synced with localStorage) 
+    //use $state() to declare state variables
     let activities = $state<Activity[]>([]); //Array to store activities 
 
-    //Load activities from localStorage
+    
     onMount(async () => {
         try{
             const response = await fetch('/api/activities'); 
