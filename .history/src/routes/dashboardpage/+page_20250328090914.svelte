@@ -5,12 +5,11 @@
   import { user as userStore, isAuthenticated } from '$lib/stores/authStore';
   import { goto } from '$app/navigation';
   import { createFormOpen } from '$lib/stores/createFormStore';
-
   
   // State management for sidebar only
   let sidebarExtended = false;
   let sidebarWidth = '80px';
-
+  let createFormOpen = false;
 
     // Redirect if not logged in (backup to layout protection)
     onMount(() => {
@@ -18,10 +17,6 @@
             goto('/loginpage');
         }
     });
-
-    function handleCreateClick() {
-  createFormOpen.set(true);
-}
   // Sample trip data for recent trips
   const recentTrips = [
     { 
@@ -126,7 +121,7 @@
   <Sidebar 
     bind:sidebarExtended 
     bind:sidebarWidth 
-   
+    bind:createFormOpen
   />
 
   <!-- Main Content -->
@@ -164,14 +159,7 @@
       <!-- Quick Action Cards -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         {#each quickActions as action}
-        <Card
-        class="p-4 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-        on:click={() => {
-          if (action.title === 'New Trip') {
-            createFormOpen.set(true);
-          }
-        }}
-      >
+          <Card class="p-4 shadow-md hover:shadow-lg transition-shadow cursor-pointer">
             <div class="flex flex-col items-center text-center">
               <div class="{action.color} text-white p-3 rounded-lg mb-3">
                 {#if action.icon === 'plus'}

@@ -4,13 +4,12 @@
   import { onMount } from 'svelte';
   import { user as userStore, isAuthenticated } from '$lib/stores/authStore';
   import { goto } from '$app/navigation';
-  import { createFormOpen } from '$lib/stores/createFormStore';
 
   
   // State management for sidebar only
   let sidebarExtended = false;
   let sidebarWidth = '80px';
-
+  let createFormOpen = false;
 
     // Redirect if not logged in (backup to layout protection)
     onMount(() => {
@@ -18,10 +17,6 @@
             goto('/loginpage');
         }
     });
-
-    function handleCreateClick() {
-  createFormOpen.set(true);
-}
   // Sample trip data for recent trips
   const recentTrips = [
     { 
@@ -126,7 +121,7 @@
   <Sidebar 
     bind:sidebarExtended 
     bind:sidebarWidth 
-   
+    bind:createFormOpen
   />
 
   <!-- Main Content -->

@@ -18,10 +18,6 @@
             goto('/loginpage');
         }
     });
-
-    function handleCreateClick() {
-  createFormOpen.set(true);
-}
   // Sample trip data for recent trips
   const recentTrips = [
     { 
@@ -126,7 +122,7 @@
   <Sidebar 
     bind:sidebarExtended 
     bind:sidebarWidth 
-   
+    bind:createFormOpen
   />
 
   <!-- Main Content -->

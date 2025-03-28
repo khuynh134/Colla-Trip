@@ -18,10 +18,6 @@
             goto('/loginpage');
         }
     });
-
-    function handleCreateClick() {
-  createFormOpen.set(true);
-}
   // Sample trip data for recent trips
   const recentTrips = [
     { 

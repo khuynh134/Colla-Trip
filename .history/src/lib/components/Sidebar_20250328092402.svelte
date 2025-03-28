@@ -30,13 +30,13 @@
     }
   
     function handleCreateTripClick(event: MouseEvent): void {
-       event.preventDefault();
-       createFormOpen.set(true);
+      event.preventDefault();
+      createFormOpen = true;
     }
 
     function closeCreateForm(): void {
-      createFormOpen.set(false);
-      invitedMembers = [''];}
+      createFormOpen = false;
+    }
 
     function addNewMemberField(): void {
       if (invitedMembers[invitedMembers.length - 1].trim() !== '') {
@@ -195,10 +195,10 @@ async function handleAuthButton(): Promise<void> {
  <!-- Create Trip Form Panel -->
  <div 
  class="fixed inset-0 flex items-center justify-center z-50"
- style="visibility: {$createFormOpen ? 'visible' : 'hidden'};"
+ style="visibility: {createFormOpen ? 'visible' : 'hidden'};"
  >
  <div 
-   class="bg-white rounded-lg shadow-lg w-[500px] transform transition-transform duration-300 ease-in-out {$createFormOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}"
+   class="bg-white rounded-lg shadow-lg w-[500px] transform transition-transform duration-300 ease-in-out {createFormOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}"
  >
    <div class="p-6">
      <!-- Form Header -->
@@ -300,7 +300,7 @@ async function handleAuthButton(): Promise<void> {
  
 
 <!-- Overlay -->
-{#if $createFormOpen}
+{#if createFormOpen}
   <button 
     type="button"
     class="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-40 cursor-default"
