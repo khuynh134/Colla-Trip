@@ -400,7 +400,7 @@
             <div class="bg-white/30 p-4 rounded-xl backdrop-blur-sm border border-white/50 shadow-lg overflow-hidden">
                 <h3 class="text-xl font-bold mb-4 text-gray-800">Interactive Map</h3>
                 <div style="height:400px; position: relative; z-index: 1; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                    <Map options={{ center: [lat, lng], zoom: 13 }}> 
+                    <Map options={{ center: [lat, lng], zoom: 20 }}> 
                         <TileLayer url={'https://tile.openstreetmap.org/{z}/{x}/{y}.png'} />
                         {#each places as place}
                             <Marker latLng={[place.geocodes.main.latitude, place.geocodes.main.longitude]}>
