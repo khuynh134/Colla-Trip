@@ -60,6 +60,12 @@
         return date.toISOString().split('T')[0];
     }
 
+    //Date formatting function to display
+    function formatDisplayDate(dateString: string | Date): string {
+        const date = new Date(dateString);
+        return `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}-${date.getFullYear()}`;// Return the formatted date as a string
+    }
+
     //Function to create a new activity 
     async function createActivity() {
         if(!userSelectedActivityDate){
@@ -253,7 +259,7 @@
                     bind:value={userSelectedActivityDate}
                     dateFormat={{ year: 'numeric', month: '2-digit', day: '2-digit' }}
                      />
-                 <p class="mt-4">Selected date: {userSelectedActivityDate ? userSelectedActivityDate.toLocaleDateString() : 'None'}</p>
+                 <p class="mt-4">Selected date: {userSelectedActivityDate ? formatDisplayDate(userSelectedActivityDate) : 'None'}</p>
                 
                 <p class="text-gray-700 dark:text-gray-400 mb-2 font-bold">Activity Description: </p>
                 <textarea
@@ -284,16 +290,8 @@
                     <div class= "flex flex-col basis-small">
                         <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-pink">Activity's Name: {activity.name}</h5>
                          
-                        <!-- 
-                        <p class="text-gray-700 dark:text-gray-400 mb-2">Date: {activity.date ? new Date(activity.date).toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                        }) : 'Invalid Date'}</p>
-                        -->
                         <div>
-                            <p>Activity Date: {activity.activity_date}</p>
+                            <p>Activity Date: {formatDisplayDate(activity.activity_date)}</p>
                         </div>
                        
                         <p class="text-gray-700 dark:text-gray-400 mb-2">Activity's Details: {activity.description}</p>

@@ -225,8 +225,50 @@
             pendingVotes = pendingVotes - 1; 
         }
     }
+    //formatting the date 
+    function formatDate(dateString: string){
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
+
+
+    //states for trip schedule
+    let tripSchedule = $state<Array<{
+        id: number;
+        title: string;
+        description: string;
+        date: string;
+        votes: number;
+    }>>([]);
+    let scheduleLoading = $state(false);
+    let scheduleError = $state<string | null>(null);
+  
+    //Load trip schedule in Schedule Tab 
+    async function loadSchedule() {
+        try {
+            scheduleLoading = true; 
+            const response = await fetch('/api/schedule');
+            if (!response.ok) {
+                throw new Error('Failed to load schedule: ${response.status}');
+            }
+            tripSchedule = await response.json(); 
+            // Process and display the schedule data
+        } catch (error) {
+            scheduleError = 'Failed to load schedule: ${error.message}';
+            console.error('Error fetching schedule:', error);
+        } finally {
+            scheduleLoading = false; 
+        }
+
+    }
 
     onMount(() => {
+        //Load trip schedule 
+        loadSchedule(); 
         // Load voting results asynchronously
         loadVoteResults(); // initial load
 
@@ -329,6 +371,7 @@
                                     </button>
                                 </div>
                                 
+                                <!-- 
                                 <div class="space-y-4">
                                     <div class="border-l-4 border-cyan-500 pl-4 py-2">
                                         <div class="text-sm text-gray-500">Day 1 - June 15</div>
@@ -351,6 +394,42 @@
                                     <button class="text-cyan-600 hover:text-cyan-700 text-sm mt-2">
                                         View full schedule
                                     </button>
+                                </div>
+                                -->
+
+                                <div class="space-y-6">
+                                    {#each tripSchedule as event, index}
+                                        <div class="border-l-4 border-cyan-500 pl-4 py-2 relative">
+                                            <!-- Timeline dot -->
+                                            <div class="absolute w-3 h-3 bg-cyan-500 rounded-full -left-1.5 top-5"></div>
+
+                                            <!-- Day number and date -->
+                                             <div class="text-sm text-gray-500">
+                                                Event { index + 1 } - { formatDate(event.date)}
+                                             </div>
+
+                                            <!-- Activity title -->
+                                             <div class="text-gray-800 font-medium mt-1">
+                                                {event.title}
+                                             </div>
+
+                                            <!-- Activity description -->
+                                            <div class="text-gray-600 text-sm mt-1">
+                                                {event.description}
+                                             </div>
+
+                                             <!-- Votes -->
+                                            <div class="text-xs text-cyan-600 mt-1">
+                                                {event.votes} {event.votes === 1 ? 'vote' : 'votes'}
+                                            </div>
+                                        
+                                        </div>
+                                    {:else}
+                                        <div class="text-gray-500">No events scheduled yet. 
+                                            Add dates to activities in 'create poll' to see them here. 
+                                        </div>
+
+                                    {/each}
                                 </div>
                             </div>
                         </TabItem>
@@ -428,7 +507,7 @@
 
                                 <!-- Refresh Button -->
                             <button
-                                 onclick={loadVoteResults}
+                                onclick={loadVoteResults}
                                 class="my-4 px-4 py-2 bg-sky-500 text-cyan-600 rounded  hover:bg-sky-600 
                                 transition-colors disabled:opacity-50"
                                 disabled={isLoading}
