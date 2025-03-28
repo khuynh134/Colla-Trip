@@ -124,7 +124,7 @@
             <!-- Login button - Flush to the right edge -->
             <button 
                 on:click={toggleLogin} 
-                class="ml-4 mr-0 bg-white text-[#3598db] px-3 py-1 rounded hover:bg-gray-100 transition-colors font-bold"
+                class="ml-4 mr-0 bg-white text-[#3598db] px-3 py-1 rounded hover:bg-gray-100 transition-colors font-medium"
             >
                 {$isAuthenticated ? 'Log Out' : 'Log In'}
             </button>

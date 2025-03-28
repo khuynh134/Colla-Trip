@@ -99,7 +99,14 @@
             {#if $isAuthenticated}
             <button 
                 on:click={goToDashboard}
-                class="absolute left-1/2 transform -translate-x-1/2 bg-white text-[#3598db] px-20 py-1.5 rounded hover:bg-gray-100 transition-colors font-bold"
+                class="ml-4 px-4 py-2 bg-white text-blue-600 rounded-lg shadow-md 
+                       border-2 border-transparent 
+                       bg-clip-padding 
+                       hover:bg-gray-100 
+                       transition-all text-sm font-medium
+                       bg-gradient-to-r from-blue-500 to-cyan-500 
+                       hover:from-blue-600 hover:to-cyan-600 
+                       background-origin-border"
             >
                 Dashboard
             </button>
@@ -124,7 +131,7 @@
             <!-- Login button - Flush to the right edge -->
             <button 
                 on:click={toggleLogin} 
-                class="ml-4 mr-0 bg-white text-[#3598db] px-3 py-1 rounded hover:bg-gray-100 transition-colors font-bold"
+                class="ml-4 mr-0 bg-white text-[#3598db] px-3 py-1 rounded hover:bg-gray-100 transition-colors font-medium"
             >
                 {$isAuthenticated ? 'Log Out' : 'Log In'}
             </button>

@@ -99,11 +99,11 @@
             {#if $isAuthenticated}
             <button 
                 on:click={goToDashboard}
-                class="absolute left-1/2 transform -translate-x-1/2 bg-white text-[#3598db] px-20 py-1.5 rounded hover:bg-gray-100 transition-colors font-bold"
+                class="absolute left-1/2 transform -translate-x-1/2 bg-white text-[#3598db] px-6 py-1.5 rounded hover:bg-gray-100 transition-colors font-bold"
             >
                 Dashboard
             </button>
-            {/if}
+            {/if>}
         </div>
         
         <!-- Center area - grows to fill space -->
@@ -124,7 +124,7 @@
             <!-- Login button - Flush to the right edge -->
             <button 
                 on:click={toggleLogin} 
-                class="ml-4 mr-0 bg-white text-[#3598db] px-3 py-1 rounded hover:bg-gray-100 transition-colors font-bold"
+                class="ml-4 mr-0 bg-white text-[#3598db] px-3 py-1 rounded hover:bg-gray-100 transition-colors font-medium"
             >
                 {$isAuthenticated ? 'Log Out' : 'Log In'}
             </button>

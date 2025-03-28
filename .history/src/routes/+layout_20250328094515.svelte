@@ -45,12 +45,6 @@
 			goto('/loginpage');
 		}
 	}
-
-
-	// Function to navigate to dashboard
-	function goToDashboard() {
-		goto('/dashboardpage');
-	}
 </script>
 
 <style>
@@ -88,64 +82,45 @@
 <nav class="amazon-style-nav bg-[#3598db] text-white fixed top-0 left-0 right-0 z-50">
     <!-- Upper Nav - Main Navigation -->
     <div class="flex items-center h-14 px-2">
-        <!-- Logo and Dashboard Container -->
-        <div class="flex items-center">
-            <a href="/" class="flex items-center pl-0">
-                <img src="/Colla-TripLogo-rem.png" alt="Colla-Trip Logo" class="logo-img mr-2" />
-                <span class="text-white text-xl font-bold whitespace-nowrap">Colla-Trip</span>
-            </a>
-
-            <!-- Dashboard Button (only show when authenticated) -->
-            {#if $isAuthenticated}
-            <button 
-                on:click={goToDashboard}
-                class="absolute left-1/2 transform -translate-x-1/2 bg-white text-[#3598db] px-20 py-1.5 rounded hover:bg-gray-100 transition-colors font-bold"
-            >
-                Dashboard
-            </button>
-            {/if}
-        </div>
+        <!-- Logo - Flush to the left edge -->
+        <a href="/" class="flex items-center pl-0">
+            <img src="/Colla-TripLogo-rem.png" alt="Colla-Trip Logo" class="logo-img mr-2" />
+            <span class="text-white text-xl font-bold whitespace-nowrap">Colla-Trip</span>
+        </a>
         
         <!-- Center area - grows to fill space -->
         <div class="flex-grow"></div>
         
-        <!-- Nav content on the right -->
-        <div class="flex items-center">
-            <!-- Nav links - right aligned with minimal spacing -->
-            {#if !$isAuthenticated}
-                <ul class="nav-links hidden md:flex items-center h-full">
-                    <li><a href="/" class="px-3 py-2 inline-block text-white hover:bg-[#2b85c3] transition-colors">Home</a></li>
-                    <li><a href="/explorepage" class="px-3 py-2 inline-block text-white hover:bg-[#2b85c3] transition-colors">Explore</a></li>
-                    <li><a href="/aboutpage" class="px-3 py-2 inline-block text-white hover:bg-[#2b85c3] transition-colors">About</a></li>
-                    <li><a href="/contactpage" class="px-3 py-2 inline-block text-white hover:bg-[#2b85c3] transition-colors">Contact Us</a></li>
-                </ul>
-            {/if}
-            
-            <!-- Login button - Flush to the right edge -->
-            <button 
-                on:click={toggleLogin} 
-                class="ml-4 mr-0 bg-white text-[#3598db] px-3 py-1 rounded hover:bg-gray-100 transition-colors font-bold"
-            >
-                {$isAuthenticated ? 'Log Out' : 'Log In'}
-            </button>
-            
-            <!-- Mobile hamburger menu -->
-            {#if !$isAuthenticated}
-                <button 
-                    class="md:hidden ml-3 p-2"
-                    on:click={() => isMenuOpen = !isMenuOpen}
-                    aria-label="Toggle menu"
-                >
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                    </svg>
-                </button>
-            {/if}
-        </div>
+        <!-- Nav links - right aligned with minimal spacing -->
+        <ul class="nav-links hidden md:flex items-center h-full">
+            <li><a href="/" class="px-3 py-2 inline-block text-white hover:bg-[#2b85c3] transition-colors">Home</a></li>
+            <li><a href="/explorepage" class="px-3 py-2 inline-block text-white hover:bg-[#2b85c3] transition-colors">Explore</a></li>
+            <li><a href="/aboutpage" class="px-3 py-2 inline-block text-white hover:bg-[#2b85c3] transition-colors">About</a></li>
+            <li><a href="/contactpage" class="px-3 py-2 inline-block text-white hover:bg-[#2b85c3] transition-colors">Contact Us</a></li>
+        </ul>
+        
+        <!-- Login button - Flush to the right edge -->
+        <button 
+            on:click={toggleLogin} 
+            class="ml-4 mr-0 bg-white text-[#3598db] px-3 py-1 rounded hover:bg-gray-100 transition-colors font-medium"
+        >
+            {$isAuthenticated ? 'Log Out' : 'Log In'}
+        </button>
+        
+        <!-- Mobile hamburger menu -->
+        <button 
+            class="md:hidden ml-3 p-2"
+            on:click={() => isMenuOpen = !isMenuOpen}
+            aria-label="Toggle menu"
+        >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+        </button>
     </div>
     
     <!-- Mobile Menu Dropdown -->
-    {#if !$isAuthenticated && isMenuOpen}
+    {#if isMenuOpen}
         <div class="md:hidden bg-[#3598db] w-full border-t border-[#2b85c3]">
             <div class="flex flex-col">
                 <a href="/" class="px-4 py-3 text-white hover:bg-[#2b85c3] transition-colors border-b border-[#2b85c3]">Home</a>
@@ -155,6 +130,8 @@
             </div>
         </div>
     {/if}
+
+  
 </nav>
 
 <div class="pt-14">

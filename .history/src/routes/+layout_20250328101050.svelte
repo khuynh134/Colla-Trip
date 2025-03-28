@@ -97,13 +97,24 @@
 
             <!-- Dashboard Button (only show when authenticated) -->
             {#if $isAuthenticated}
-            <button 
-                on:click={goToDashboard}
-                class="absolute left-1/2 transform -translate-x-1/2 bg-white text-[#3598db] px-20 py-1.5 rounded hover:bg-gray-100 transition-colors font-bold"
-            >
-                Dashboard
-            </button>
-            {/if}
+<button 
+    on:click={goToDashboard}
+    class="absolute left-1/2 transform -translate-x-1/2 
+           bg-white text-[#3598db] 
+           px-6 py-1.5 
+           rounded 
+           hover:bg-gray-100 
+           transition-colors 
+           font-bold
+           border-2 
+           border-transparent 
+           bg-origin-border 
+           bg-gradient-to-r from-blue-500 to-cyan-500 
+           bg-clip-padding"
+>
+    Dashboard
+</button>
+{/if}
         </div>
         
         <!-- Center area - grows to fill space -->
@@ -124,7 +135,7 @@
             <!-- Login button - Flush to the right edge -->
             <button 
                 on:click={toggleLogin} 
-                class="ml-4 mr-0 bg-white text-[#3598db] px-3 py-1 rounded hover:bg-gray-100 transition-colors font-bold"
+                class="ml-4 mr-0 bg-white text-[#3598db] px-3 py-1 rounded hover:bg-gray-100 transition-colors font-medium"
             >
                 {$isAuthenticated ? 'Log Out' : 'Log In'}
             </button>
