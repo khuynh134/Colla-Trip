@@ -20,7 +20,3 @@ CREATE TABLE activities (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ); 
-
-CREATE TABLE trips (
-    
-)

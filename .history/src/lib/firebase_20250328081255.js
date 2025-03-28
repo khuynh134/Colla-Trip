@@ -53,7 +53,6 @@ try {
 }
 
 // Initialize Auth with logging
-/** @type {import('firebase/auth').Auth} */
 let auth;
 try {
     auth = getAuth(app);

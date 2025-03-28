@@ -1,12 +1,10 @@
 import { writable } from 'svelte/store';
 import { 
+    auth, 
     onAuthStateChanged, 
-    signOut as firebaseSignOut,
-    type User as FirebaseUser
-} from 'firebase/auth';
-
-// Import auth from your firebase file
-import { auth } from '$lib/firebase';
+    signOut as firebaseSignOut 
+} from '$lib/firebase';
+import type { User as FirebaseUser, Auth } from 'firebase/auth';
 
 // Define a type for our user store
 interface User {
@@ -15,6 +13,9 @@ interface User {
     displayName: string | null;
     photoURL: string | null;
 }
+
+// Explicitly type the auth variable
+const firebaseAuth: Auth = auth;
 
 // This keeps track of the current user
 export const user = writable<User | null>(null);
@@ -29,8 +30,7 @@ export const isLoading = writable<boolean>(true);
 if (typeof window !== 'undefined') {
     // This sets up a listener that Firebase provides
     // It will run whenever the login status changes
-    // Use the any type to avoid TypeScript errors with auth
-    onAuthStateChanged(auth as any, (firebaseUser: FirebaseUser | null) => {
+    onAuthStateChanged(firebaseAuth, (firebaseUser: FirebaseUser | null) => {
         console.log("Auth state changed:", firebaseUser ? `User: ${firebaseUser.email}` : "No user");
         isLoading.set(false);
         
@@ -54,8 +54,7 @@ if (typeof window !== 'undefined') {
 // A helper function to log out
 export async function logout() {
     try {
-        // Use the any type to avoid TypeScript errors
-        await firebaseSignOut(auth as any);
+        await firebaseSignOut(firebaseAuth);
         return { success: true };
     } catch (error) {
         console.error("Logout error:", error);
