@@ -288,12 +288,12 @@
                 
                 <div class="flex-1 flex flex-col sm:flex-row gap-3">
                     <div class="relative flex-1">
-                        <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size="18" />
+                        
                         <Search size="md" class="w-full pl-10 rounded-xl border-0 shadow-md py-2.5 text-gray-700 placeholder-gray-400 focus:ring-2 focus:ring-blue-300" bind:value={searchValue} placeholder="Search places... (Ex: coffee)" />
                     </div>
                     
                     <div class="relative flex-1">
-                        <MapPin class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size="18" />
+                        
                         <Search size="md" class="w-full pl-10 rounded-xl border-0 shadow-md py-2.5 text-gray-700 placeholder-gray-400 focus:ring-2 focus:ring-blue-300" bind:value={location} placeholder="Enter location..." />
                     </div>
                     
