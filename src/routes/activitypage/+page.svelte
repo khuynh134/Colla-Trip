@@ -40,7 +40,7 @@
         highlighted?: boolean; // Indicates if the activity is highlighted
     };
 
-    //use $state() to declare state variables
+    
     let activities = $state<Activity[]>([]); //Array to store activities 
 
     
