@@ -29,8 +29,6 @@
       try {
         isSubmitting = true;
         submitError = '';
-
-        console.log("Sending form data to Web3Forms with key:", WEB3FORMS_ACCESS_KEY);
         
         // Send data to Web3Forms
         const formData = new FormData();
@@ -41,22 +39,12 @@
         formData.append('message', message);
         formData.append('subject', 'New Contact Form Submission');
         
-        console.log("Form data prepared:", {
-    access_key_length: WEB3FORMS_ACCESS_KEY.length,
-    first_name: firstName,
-    last_name: lastName,
-    email: email,
-    message_length: message.length
-  });
-
         const response = await fetch('https://api.web3forms.com/submit', {
           method: 'POST',
           body: formData
         });
         
         const data = await response.json();
-        console.log("Web3Forms API response:", data);
-
         
         if (data.success) {
           // Clear form on success
@@ -100,25 +88,30 @@
       {/if}
       
       <form class="space-y-6" on:submit={handleSubmit}>
+        <!-- Web3Forms requires a hidden field with the access key -->
+        <input type="hidden" name="access_key" value={WEB3FORMS_ACCESS_KEY}>
+        <!-- Optional: Honeypot field to prevent spam -->
+        <input type="checkbox" name="botcheck" class="hidden" style="display: none;">
+        
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label for="first-name" class="block text-gray-700 mb-2">First Name</label>
-            <input id="first-name" type="text" class="w-full p-3 border rounded-lg" bind:value={firstName} required />
+            <input id="first-name" name="first_name" type="text" class="w-full p-3 border rounded-lg" bind:value={firstName} required />
           </div>
           <div>
             <label for="last-name" class="block text-gray-700 mb-2">Last Name</label>
-            <input id="last-name" type="text" class="w-full p-3 border rounded-lg" bind:value={lastName} required />
+            <input id="last-name" name="last_name" type="text" class="w-full p-3 border rounded-lg" bind:value={lastName} required />
           </div>
         </div>
         
         <div>
           <label for="email" class="block text-gray-700 mb-2">Email</label>
-          <input id="email" type="email" class="w-full p-3 border rounded-lg" bind:value={email} required />
+          <input id="email" name="email" type="email" class="w-full p-3 border rounded-lg" bind:value={email} required />
         </div>
         
         <div>
           <label for="message" class="block text-gray-700 mb-2">Message</label>
-          <textarea id="message" rows="4" class="w-full p-3 border rounded-lg resize-none" bind:value={message} required></textarea>
+          <textarea id="message" name="message" rows="4" class="w-full p-3 border rounded-lg resize-none" bind:value={message} required></textarea>
         </div>
         
         <button 

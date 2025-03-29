@@ -41,22 +41,12 @@
         formData.append('message', message);
         formData.append('subject', 'New Contact Form Submission');
         
-        console.log("Form data prepared:", {
-    access_key_length: WEB3FORMS_ACCESS_KEY.length,
-    first_name: firstName,
-    last_name: lastName,
-    email: email,
-    message_length: message.length
-  });
-
         const response = await fetch('https://api.web3forms.com/submit', {
           method: 'POST',
           body: formData
         });
         
         const data = await response.json();
-        console.log("Web3Forms API response:", data);
-
         
         if (data.success) {
           // Clear form on success
