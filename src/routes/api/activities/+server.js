@@ -4,22 +4,23 @@ import { json } from '@sveltejs/kit';
 //GET: Fetch all activities 
 export async function GET({ url }) {
     try {
-        const votes = url.searchParams.get('votes');
-        let activities;
-        if (votes !== null) {
-            activities = await sql`
-                SELECT * FROM activities
-                WHERE votes >= ${votes}
-                ORDER BY votes DESC
+        const activities = await sql`
+            SELECT
+                id, 
+                name,
+                description,
+                votes,
+                activity_date::text,
+                highlighted,
+                created_at::text
+            FROM activities
+            ORDER BY votes DESC
             `;
-        } else {
-            activities = await sql `SELECT * FROM activities ORDER BY id`;
-        }
-        return json(activities);
+            return json(activities);
     } catch (err) {
         console.error('Error fetching activities:', err);
         return json({
-            error: 'Failed to fetch activities',
+            error: 'Database error',
             status: 500,
         });
     }
@@ -57,22 +58,25 @@ export async function POST({ request }) {
 //DELETE: Delete an activity 
 export async function DELETE({ request }) {
     try {
-        const { id } = await request.json(); //parse JSON body 
-        if (!id) {
-            return json({error: 'ID is required', status: 400});
+        const { id, action } = await request.json(); 
+
+        if (id) {
+            //delete specific activity 
+            await sql`
+                DELETE FROM activities
+                WHERE id = ${id}
+            `;
+            return json({ success: true });
         }
 
-        const result = await sql`
-            DELETE FROM activities 
-            WHERE id = ${id}
-            RETURNING id
-            `;
-            
-        if (result.length === 0) {
-            return json({ error: 'Activity not found' }, {status: 404 });
+        if ( action === 'clear-votes') {
+            await sql`
+                UPDATE activities 
+                SET votes = 0`;
+            return json({ success: true });
         }
-        
-        return json({ success: true, deletedId: id });
+
+        return json({ error: 'Invalid action' }, { status: 400 });
     } catch (err) {
         console.error('Error deleting activity:', err);
         return json({
@@ -87,27 +91,29 @@ export async function PUT({ request }) {
     try {
         const { id, vote } = await request.json(); //parse JSON body 
 
-        //Validate input
-        if(!id || typeof vote !== 'number'){
-            return json({ error: 'Invalid request body' }, { status: 400});
-        }
-
         const [activity] = await sql`
                 UPDATE activities
-                SET votes = votes + ${vote}
+                SET 
+                    votes = votes + ${vote || 1},
+                    updated_at = NOW()
                 WHERE id = ${id}
                 RETURNING *
                 `;
         ;
+
+        if( !activity) {
+            return json({ error: 'Activity not found' }, { status: 404});
+        }
            
-            if(!activity){
-                return json({ error: 'Activity not found', status: 404});
-            }
-            return json(activity);
+        return json({
+            ...activity,
+            activity_date: activity.activity_date.toISOString(),
+            updated_at: activity.updated_at.toISOString()
+        });
     } catch (error) {
         console.error('Error voting for activity:' , error);
         return json({
-            error: 'Failed to vote for activity',
+            error: 'Vote update failed ',
             status: 500,
         });
     }

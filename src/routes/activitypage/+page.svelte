@@ -25,7 +25,7 @@
     let userInputActivityName = $state(''); //User input for activity name
     let userInputActivityDescript = $state(''); //User input for activity description 
 
-    let userSelectedActivityDate = $state<Date | null>(null); //User input for activity date 
+    let userSelectedActivityDate = $state<Date | null>(new Date()); //User input for activity date 
     
     let userHighlightedActivity = $state(''); //User assigned activity as highlight 
 
@@ -38,6 +38,7 @@
         votes: number;
         location?: string;
         highlighted?: boolean; // Indicates if the activity is highlighted
+        updated_at?: string | Date; // Timestamp of the last update
     };
 
     
@@ -61,9 +62,30 @@
     }
 
     //Date formatting function to display
-    function formatDisplayDate(dateString: string | Date): string {
-        const date = new Date(dateString);
-        return `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}-${date.getFullYear()}`;// Return the formatted date as a string
+   // function formatDisplayDate(dateString: string | Date): string {
+  //      const date = new Date(dateString);
+  //      return `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}-${date.getFullYear()}`;// Return the formatted date as a string
+//    }
+
+    //function to format date for display
+    function formatDisplayDate (dateString : string | Date | null) {
+        if (!dateString) {
+            return 'No date selected';
+        }
+
+        try {
+            const date = typeof dateString === 'string' ?
+            new Date(dateString.includes('T') ? dateString : `${dateString}T00:00:00`) : new Date(dateString); // Add time for Neon dates
+            return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+
+        } catch {
+            return 'Invalid date';
+        }
+
     }
 
     //Function to create a new activity 
@@ -118,7 +140,8 @@
 
             if (response.ok) {
                 //update local state by filtering out deleted activity
-                activities =activities.filter((activity) => activity.id !== activityId);
+                activities =activities.filter(a => a.id !== activityId);
+                voteResults = voteResults.filter(a => a.id !== activityId); //remove deleted activity from voteResults
 
                 //clear voteResults if no activities are listed
                 if(activities.length === 0){
@@ -168,20 +191,15 @@
             const response = await fetch(`/api/activities`,{
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({id: activityId, vote: 1})
+                body: JSON.stringify({ id: activityId, vote: 1})
             });
 
-            if( !response.ok){
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Vote failed');
-            }
+            if( response.ok) {
+                const updated = await response.json();
+                activities = activities.map(a => a.id === updated.id ? updated : a);
+                voteResults = [...voteResults]; 
+            } 
 
-            const updatedActivity = await response.json(); 
-
-            //update specific activity in the array 
-            activities = activities.map(activity =>
-                activity.id === updatedActivity.id ? updatedActivity : activity 
-                );
             console.log('Voted on Activity');
         } catch (error) {
             console.error('Error voting on activity: ', error);
@@ -214,13 +232,6 @@
             console.error('Error clearing polling results');
         }
         
-    }
-    
-
-    function handleActivityDescript(event: Event){
-        if(event.target) {
-            userInputActivityDescript = (event.target as HTMLInputElement).value; 
-        }
     }
 
     const handleCreateActivity = async (event: Event) => {
@@ -328,7 +339,7 @@
                         <div class="flex flex-col basis-small">
                             <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-pink">{activity.name}</h5>
                             <p class="text-gray-700 dark:text-gray-400 mb-2">{activity.description}</p>
-                            <p class="text-gray-700 dark:text-gray-400 mb-2">Votes: {activity.votes}</p>
+                            <p class="text-gray-700 dark:text-gray-400 mb-2">Votes: {activity.votes} (Last updated: {activity.updated_at ? new Date(activity.updated_at).toLocaleTimeString() : 'N/A'})</p>
                         </div>
                     </Card>
                 {/each}

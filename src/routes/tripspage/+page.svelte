@@ -270,20 +270,14 @@
     //Fetch results from API 
     async function loadVoteResults() {
         try{
-            isLoading = true;
-            error = null; 
-
-            const response = await fetch('/api/voting-results?t=' + Date.now());//add timestamp to prevent caching 
-
-            if(!response.ok){
-                throw new Error('HTTP error! status: ${response.status}');
-            }
-            const data = await response.json(); 
-
-            if(!Array.isArray(data)){
-                throw new Error('Invalid data format from server');
-            } 
-            voteResults = data;
+            const res = await fetch('/api/activities?order=votes');
+            const data = await res.json();
+            voteResults = data.map(a => ({
+                id: a.id,
+                name: a.name,
+                votes: a.votes,
+                updated_at: a.updated_at
+            }));
 
         } catch (err) {
             
@@ -329,6 +323,29 @@
         });
     }
 
+    //clear function
+    async function clearResults() {
+        try {
+            const res = await fetch('api/activities', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ action: 'clear-votes'})
+            });
+            if (res.ok) {
+                //refresh activity after clearing votes
+                const response = await fetch('/api/activities');
+                voteResults = [];
+            }
+        } catch (error) {
+            console.error('Error clearing vote results:', error);
+            alert('An error occurred while clearing results. Please try again.');
+        } finally {
+            if (pollInterval) clearInterval(pollInterval); 
+            pollInterval = null;
+        }
+    }
 
     //states for trip schedule
     let tripSchedule = $state<Array<{
@@ -608,7 +625,7 @@
                                             <div class="flex items-center justify-between p-4 bg-gray-50 rounded-md">
                                                 <span class="text-gray-700">{result.name}</span>
                                                 <button 
-                                                    onclick={() => voteForActivity(result.votes)}
+                                                    onclick={() => voteForActivity(result.id)}
                                                     class="text-sky-500 hover:text-sky-700"
                                                 >
                                                     <span class="text-gray-500">{result.votes}</span>
