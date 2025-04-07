@@ -306,8 +306,7 @@
                         </div>
                        
                         <p class="text-gray-700 dark:text-gray-400 mb-2">Activity's Details: {activity.description}</p>
-                        <div class="flex flex-wrap justify-between items-center gap-2">
-                            <Button on:click={editActivity} class="bg-sky-400 text-white hover:border-sky-700 hover:bg-sky-700">Edit</Button>
+                        <div class="flex flex-wrap justify-between items-center">
                             <Button on:click={() => deleteActivity(activity.id)} class="bg-sky-400 text-white hover:border-sky-700 hover:bg-sky-700">Delete</Button>
                             <Button on:click={() => voteActivity(activity.id)} class="bg-sky-400 text-white hover:border-sky-700 hover:bg-sky-700 ">Vote</Button>
                         </div>
