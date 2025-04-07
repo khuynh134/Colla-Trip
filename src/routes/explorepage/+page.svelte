@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Search, Button, Dropdown, DropdownItem, type InputType } from 'flowbite-svelte';
-    import { Map, TileLayer, Marker, Popup } from 'sveaflet';
     import { goto } from '$app/navigation'; // Import for navigation
+    import { onMount } from 'svelte';
  
     import { 
         Search as SearchIcon,
@@ -164,6 +164,22 @@
             return null;
         }
     };
+
+    let Map: typeof import('sveaflet').Map;
+    let TileLayer: typeof import('sveaflet').TileLayer;
+    let Marker: typeof import('sveaflet').Marker;
+    let Popup: typeof import('sveaflet').Popup; 
+
+    let mapReady = false; 
+
+   onMount(async () => {
+        const sveaflet = await import('sveaflet');
+        Map = sveaflet.Map;
+        TileLayer = sveaflet.TileLayer;
+        Marker = sveaflet.Marker;
+        Popup = sveaflet.Popup; 
+        mapReady = true; //Set mapReady to true when sveaflet is loaded
+   });
         
 
     //handle the form submit 
@@ -172,6 +188,7 @@
 
         // If user is not authenticated, prompt to register
         if (!isAuthenticated && showRegistrationBanner) {
+            alert('Please register or click "Continue as Guest" to proceed."');
             // You could either show a modal here or just let the banner handle it
             return;
         }
@@ -396,6 +413,7 @@
 
         <!-- Map and Results Section -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+            {#if mapReady}
             <!-- Map Implementation with Glass Effect -->
             <div class="bg-white/30 p-4 rounded-xl backdrop-blur-sm border border-white/50 shadow-lg overflow-hidden">
                 <h3 class="text-xl font-bold mb-4 text-gray-800">Interactive Map</h3>
@@ -435,6 +453,7 @@
                     </div>
                 {/if}
             </div>
+            {/if}
 
             <!-- Results Display with Glass Effect -->
             <div class="bg-white/30 p-4 rounded-xl backdrop-blur-sm border border-white/50 shadow-lg">
