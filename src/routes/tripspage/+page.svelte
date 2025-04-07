@@ -272,7 +272,7 @@
         try{
             const res = await fetch('/api/activities?order=votes');
             const data = await res.json();
-            voteResults = data.map(a => ({
+            voteResults = data.map((a: { id: number; name: string; votes: number; updated_at: string }) => ({
                 id: a.id,
                 name: a.name,
                 votes: a.votes,
@@ -321,30 +321,6 @@
             month: 'long',
             day: 'numeric'
         });
-    }
-
-    //clear function
-    async function clearResults() {
-        try {
-            const res = await fetch('api/activities', {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ action: 'clear-votes'})
-            });
-            if (res.ok) {
-                //refresh activity after clearing votes
-                const response = await fetch('/api/activities');
-                voteResults = [];
-            }
-        } catch (error) {
-            console.error('Error clearing vote results:', error);
-            alert('An error occurred while clearing results. Please try again.');
-        } finally {
-            if (pollInterval) clearInterval(pollInterval); 
-            pollInterval = null;
-        }
     }
 
     //states for trip schedule
@@ -485,7 +461,7 @@
                                 
                                 <div class="space-y-6">
                                     {#each tripSchedule as event, index}
-                                        <div class="border-l-4 border-cyan-500 pl-4 py-2 relative">
+                                        <div class="border-l-4 border-cyan-500 pl-4 py-2 relative bg-sky-300/30">
                                             <!-- Timeline dot -->
                                             <div class="absolute w-3 h-3 bg-cyan-500 rounded-full -left-1.5 top-5"></div>
 
@@ -508,6 +484,16 @@
                                             <div class="text-xs text-cyan-600 mt-1">
                                                 {event.votes} {event.votes === 1 ? 'vote' : 'votes'}
                                             </div>
+
+                                            <!-- Add to highlight button -->
+                                             <button class="text-cyan-600 hover:text-cyan-900 text-xs mt-2 rounded shadow-md px-2 py-1 bg-white border border-cyan-500 flex items-center gap-1">
+                                                <!-- Star SVG -->
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" 
+                                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
+                                                class="lucide lucide-star-icon lucide-star">
+                                                <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
+                                                <span>Add to Trip Highlights</span>
+                                            </button>
                                         
                                         </div>
                                     {:else}
@@ -637,17 +623,6 @@
                                 {:else}
                                     <p class="text-gray-700">Polling details will appear here.</p>
                                 {/if}
-
-                                <!-- Refresh Button -->
-                            <button
-                                onclick={loadVoteResults}
-                                class="my-4 px-4 py-2 bg-sky-500 text-cyan-600 rounded  hover:bg-sky-600 
-                                transition-colors disabled:opacity-50"
-                                disabled={isLoading}
-                                aria-label="Refresh vote results"
-                            >
-                                    {isLoading ? 'Loading...' : 'Refresh Results'}
-                            </button>
                                     
                             </div>
                         </TabItem>
