@@ -239,13 +239,47 @@
     // For the progress bar animation
     import { onMount } from 'svelte';
 	import { stringify } from 'postcss';
+
+    //import for highlights 
+    import { highlights, refreshHighlights } from '$lib/stores/highlights'; 
 	
 
     let animateProgress = $state(false);
     type TripHighlight = { name: string };
     let tripHighlights = $state<TripHighlight[]>([]); // Trip highlights from activity page to be displayed here in trip page
+    let loading = false;
+    let errorMessage = null; 
 
-    async function loadHighlights() {
+    //Load trip highlights from API
+    async function addHighlight(activityId: number){
+        try {
+            loading = true;
+            const response = await fetch('/api/highlights', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: activityId,
+                    highlighted: true
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update highlight');
+            }
+
+            //refresh both state and store 
+            await refreshHighlights();
+        } catch (error) {
+            console.error('Error adding highlight:', error);
+            errorMessage = 'Failed to add highlight. Please try again.';
+        } finally {
+            loading = false;
+        }
+    }
+
+    async function loadHighlights(eventId?: number) {
         //API call to get trip highlights 
         try{
             const res = await fetch('/api/highlights');
@@ -486,13 +520,25 @@
                                             </div>
 
                                             <!-- Add to highlight button -->
-                                             <button class="text-cyan-600 hover:text-cyan-900 text-xs mt-2 rounded shadow-md px-2 py-1 bg-white border border-cyan-500 flex items-center gap-1">
+                                             <button 
+                                                onclick={() => addHighlight(event.id)}
+                                                disabled={loading}
+                                                class="text-cyan-600 hover:text-cyan-900 text-xs mt-2 rounded shadow-md px-2 py-1 bg-white border border-cyan-500 flex items-center gap-1"
+                                             >
+
+                                             {#if loading}
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
+                                                class="lucide lucide-loader-icon lucide-loader"><path d="M12 2v4"/><path d="m16.2 7.8 2.9-2.9"/><path d="M18 12h4"/><path d="m16.2 16.2 2.9 2.9"/><path d="M12 18v4"/><path d="m4.9 19.1 2.9-2.9"/><path d="M2 12h4"/><path d="m4.9 4.9 2.9 2.9"/></svg>
+                                                <span>Loading.... </span>
+                                            {:else}
+                                            <!-- Add to highlight button -->
                                                 <!-- Star SVG -->
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" 
                                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
                                                 class="lucide lucide-star-icon lucide-star">
                                                 <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
                                                 <span>Add to Trip Highlights</span>
+                                            {/if}
                                             </button>
                                         
                                         </div>
