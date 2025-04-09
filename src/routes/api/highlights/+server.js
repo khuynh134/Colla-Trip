@@ -51,3 +51,30 @@ export async function PUT({ request }) {
         });
     }
 }
+
+//DELETE: Unhighlight an activity
+export async function DELETE({request}) {
+    try{
+        const { id } = await request.json();
+
+        if (!id) {
+            return json({ error: 'Highlight ID is required' }, { status:400});
+        }
+
+        //"Unhighlight" the activity (instead of deleting it entirely)
+        const [activity] = await sql`
+            UPDATE activities
+            SET highlighted = FALSE
+            WHERE id = ${id}
+            RETURNING id
+        `;
+
+        if (!activity) {
+            return json({ error: 'Activity not found' }, { status: 404 });
+        }
+        return json({ message: 'Activity unhighlighted successfully', id });
+    } catch (error) {
+        console.error('Error deleting highlight:', error);
+        return json({ error: 'Failed to delete highlight'}, { status: 500});
+    }
+}

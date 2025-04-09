@@ -1,6 +1,14 @@
 import { writable } from 'svelte/store'; 
 
-export const highlights = writable([]); //Create a writable store to hold the highlights
+export type Highlight = {
+    id: number;
+    name: string;
+    description?: string;
+    votes?: number;
+    highlighted?: boolean;
+};
+
+export const highlights = writable<Highlight[]>([]); //Create a writable store to hold the highlights
 
 export async function refreshHighlights() {
     try {

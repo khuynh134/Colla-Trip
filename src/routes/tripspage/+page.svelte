@@ -241,13 +241,11 @@
 	import { stringify } from 'postcss';
 
     //import for highlights 
-    import { highlights, refreshHighlights, type Highlight } from '$lib/stores/highlights'; 
+    import { highlights, refreshHighlights, type Highlight} from '$lib/stores/highlights'; 
+   
 	
 
     let animateProgress = $state(false);
-    type TripHighlight = { name: string };
-    //let tripHighlights = $state<TripHighlight[]>([]); // Trip highlights from activity page to be displayed here in trip page
-
 
     let loading = $state(false);
     let errorMessage: string | null; 
@@ -281,23 +279,31 @@
         }
     }
 
-    /*
-    async function loadHighlights(eventId?: number) {
-        //API call to get trip highlights 
-        try{
-            const res = await fetch('/api/highlights');
-            if(res.ok){
-                tripHighlights = await res.json();
+    //Delete highlight from the list
+    async function deleteHighlight(highlightId: number) {
+        try {
+            loading = true;
+            errorMessage = null; 
+            //API call to delete highlight
+            const response = await fetch('/api/highlights', {
+                method: 'DELETE',
+                headers: {'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: highlightId })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete highlight');
             }
-            else{
-                throw new Error('Failed to fetch trip highlights');
-            }
+
+            //refresh both state and store 
+            await refreshHighlights();
         } catch (error) {
-            console.error('Error fetching trip highlights:', error);
-            alert('An error occurred. Please try again.');
+            console.error('Error deleting highlight:', error);
+            errorMessage = 'Failed to delete highlight. Please try again.';
+        } finally {
+            loading = false;
         }
     }
-        */
 
     //Vote results
     let voteResults = $state<Array<{ id: number, name: string, votes: number }>>([]);
@@ -762,6 +768,14 @@
                                         <p class="text-gray-500 text-sm mt-1">{highlight.description}</p>
                                     {/if}
                                 </div>
+
+                                <button 
+                                    onclick={() => deleteHighlight(highlight.id)}
+                                    class="text-cyan-600 hover:text-cyan-700 text-sm flex items-center gap-1">
+                                    <Trash class="w-4 h-4" />
+                                    <span>Unhighlight</span>
+                                </button>
+
                             </div>
                         {:else}
                             <div class="text-gray-500">No highlights added yet.</div>
