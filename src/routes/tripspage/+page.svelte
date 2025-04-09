@@ -21,7 +21,8 @@
         UserPlus,
         Mail,
         Search,
-        Trash
+        Trash,
+        Settings
     } from 'lucide-svelte';
 
     // State management for sidebar
@@ -280,15 +281,15 @@
     }
 
     //Delete highlight from the list
-    async function deleteHighlight(highlightId: number) {
+    async function unhighlightActivity(highlightId: number) {
         try {
             loading = true;
             errorMessage = null; 
-            //API call to delete highlight
+            //API call to unhighlight activity 
             const response = await fetch('/api/highlights', {
-                method: 'DELETE',
+                method: 'PUT',
                 headers: {'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: highlightId })
+                body: JSON.stringify({ id: highlightId, highlighted: false })
             });
 
             if (!response.ok) {
@@ -483,6 +484,11 @@
                                 <Share2 class="w-4 h-4" />
                                 Share Trip 
                             </button>
+
+                            <!-- Settings Button -->
+                            <button class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors flex items-center gap-2 shadow-sm">
+                                <Settings class="w-4 h-4" />
+                                Settings
                         </div>
                     </div>
 
@@ -770,7 +776,7 @@
                                 </div>
 
                                 <button 
-                                    onclick={() => deleteHighlight(highlight.id)}
+                                    onclick={() => unhighlightActivity(highlight.id)}
                                     class="text-cyan-600 hover:text-cyan-700 text-sm flex items-center gap-1">
                                     <Trash class="w-4 h-4" />
                                     <span>Unhighlight</span>
