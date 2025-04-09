@@ -12,7 +12,7 @@ export async function GET() {
             `;
         return json(activities, {
             headers: {
-                'Cache-Control': 'no-store, max-age=0'
+                'Cache-Control': 'no-store, max-age=0',
             }
         });
     } catch (error) {
@@ -34,14 +34,14 @@ export async function PUT({ request }) {
             UPDATE activities
             SET highlighted = ${highlighted}
             WHERE id = ${id}
-            RETURNING *
+            RETURNING id, name, description, highlighted
             `;
 
         if( !activity ){
             return json({ error: 'Activity not found' }, { status: 404 });
         }
 
-        return json({ success: true, activity});
+        return json(activity);
       
     } catch (error) {
         console.error('Error highlighting activity:', error);
