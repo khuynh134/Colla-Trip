@@ -1,3 +1,13 @@
 {
-    "liveServer.settings.port": 5501
+    "liveServer.settings.port": 5501,
+
+    "postgresql.connections": [{
+        "name": "Neon DB",
+        "host": "ep-weathered-poetry-a6y2me30-pooler.us-west-2.aws.neon.tech",
+        "user": "teammate_user",
+        "password": "Collatrip25",
+        "port": 5432,
+        "database": "neondb",
+        "ssl": true
+    }]
 }

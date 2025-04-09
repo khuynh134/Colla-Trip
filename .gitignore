@@ -25,3 +25,6 @@ vite.config.ts.timestamp-*
 
 #Environment variables 
 .env
+
+# VS Code settings
+.vscode/settings.json
