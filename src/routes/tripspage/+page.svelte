@@ -21,7 +21,6 @@
         UserPlus,
         Mail,
         Search,
-        Trash,
         Settings
     } from 'lucide-svelte';
 
@@ -215,9 +214,6 @@
         packingItems.push({ id: newId, name: '', checked: false }); 
     }
     
-    // State for polling notifications
-    let pollNotifications = 3;
-    
     // Trip data
     const tripData = {
         title: "Summer in Japan",
@@ -306,6 +302,14 @@
         }
     }
 
+    // State for polling notifications
+    let pollNotifications = $state(0);
+
+    // Function to increment poll notifications
+    function incrementPollNotifications() {
+        pollNotifications += 1;
+    }
+
     //Vote results
     let voteResults = $state<Array<{ id: number, name: string, votes: number }>>([]);
     let isLoading = $state(false);
@@ -323,6 +327,8 @@
                 votes: a.votes,
                 updated_at: a.updated_at
             }));
+            // Update poll notifications
+            pollNotifications = voteResults.reduce((acc, result) => acc + result.votes, 0);
 
         } catch (err) {
             
@@ -773,14 +779,17 @@
                                     {#if highlight.description}
                                         <p class="text-gray-500 text-sm mt-1">{highlight.description}</p>
                                     {/if}
-                                </div>
 
-                                <button 
+                                    <button 
                                     onclick={() => unhighlightActivity(highlight.id)}
-                                    class="text-cyan-600 hover:text-cyan-700 text-sm flex items-center gap-1">
-                                    <Trash class="w-4 h-4" />
+                                    class="text-cyan-600 hover:text-cyan-900 text-xs mt-2 rounded shadow-md px-2 py-1 bg-white border border-cyan-500 flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
+                                    class="lucide lucide-star-off-icon lucide-star-off">
+                                    <path d="M8.34 8.34 2 9.27l5 4.87L5.82 21 12 17.77 18.18 21l-.59-3.43"/>
+                                    <path d="M18.42 12.76 22 9.27l-6.91-1L12 2l-1.44 2.91"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
                                     <span>Unhighlight</span>
                                 </button>
+                                </div>
 
                             </div>
                         {:else}
