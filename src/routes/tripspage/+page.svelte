@@ -113,6 +113,9 @@
         searchResults = [];
     }
 
+    // Share Trip Modal state
+    let shareTripModalOpen = $state(false);
+
     //states for packing list 
     let packingList = $state<Array<{ 
         id: number, 
@@ -486,7 +489,11 @@
                             </button>
                             
                             <!-- Share Trip Button -->
-                            <button class="px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition-colors flex items-center gap-2 shadow-sm">
+                            <button 
+                                class="px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition-colors flex items-center gap-2 shadow-sm"
+                                onclick={ () => shareTripModalOpen = true }
+                                >
+                            
                                 <Share2 class="w-4 h-4" />
                                 Share Trip 
                             </button>
@@ -915,5 +922,23 @@
                 </div>
             </div>
         </Modal>
+
+        <!-- Share Trip Modal -->
+        <Modal bind:open={shareTripModalOpen} size="md" autoclose={false} class="w-full">
+            <div class="text-center">
+                <Share2 class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" />
+                <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
+                    Share "{tripData.title}" with your friends!
+                </h3>
+                
+                <div class="flex justify-center gap-4">
+                    <Button color="alternative" on:click={() => shareTripModalOpen = false}>
+                        Close
+                    </Button>
+                </div>
+            </div>
+        </Modal>
+
+
     </div>
 </div>
