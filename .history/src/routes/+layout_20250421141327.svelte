@@ -157,8 +157,6 @@
         </div>
     {/if}
 </nav>
-<Notifications />  
-
 
 <div class="pt-14">
     <slot />

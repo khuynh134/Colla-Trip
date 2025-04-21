@@ -5,7 +5,6 @@
     import { Tabs, TabItem, Modal, Button, Input, Label, Radio, RadioButton } from 'flowbite-svelte';
     import {writable} from 'svelte/store'; 
     import PackingListForm from './PackingList/PackingListForm.svelte';
-    import { notifications } from '$lib/stores/notifications';
     
 
 
@@ -48,64 +47,51 @@
 
      // Function to handle member invitation
      async function inviteMember() {
-    try {
-        // Validate inputs
-        if (inviteMethod === 'email' && !emailInput) {
-            alert('Please enter an email address');
-            return;
-        }
-        
-        if (inviteMethod === 'username' && !usernameInput) {
-            alert('Please enter a username');
-            return;
-        }
-        
-        // Mock API call - replace with your actual API endpoint
-        const res = await fetch('/api/trip-invites', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                method: inviteMethod,
-                recipient: inviteMethod === 'email' ? emailInput : usernameInput,
-                tripId: 'summer-in-japan', // This should be dynamic based on the current trip
-                message: inviteMessage
-            })
-        });
-        
-        if (res.ok) {
-            // Add a notification for the successful invitation
-            notifications.addNotification({
-                type: 'invite',
-                title: 'Trip Invitation Sent',
-                message: `Invitation sent to ${inviteMethod === 'email' ? emailInput : usernameInput} for ${tripData.title}`,
-                timestamp: new Date(),
-                read: false,
-                action: {
-                    label: 'View Trip',
-                    href: `/tripspage/${tripData.title.toLowerCase().replace(/\s+/g, '-')}`
-                }
-            });
-
-            // Reset form and close modal
-            emailInput = '';
-            usernameInput = '';
-            inviteMessage = '';
-            addMemberModalOpen = false;
+        try {
+            // Validate inputs
+            if (inviteMethod === 'email' && !emailInput) {
+                alert('Please enter an email address');
+                return;
+            }
             
-            // Show success message
-            alert('Invitation sent successfully!');
-        } else {
-            const errorData = await res.json();
-            console.error('Error sending invitation:', errorData);
-            alert('Failed to send invitation. Please try again.');
+            if (inviteMethod === 'username' && !usernameInput) {
+                alert('Please enter a username');
+                return;
+            }
+            
+            // Mock API call - replace with your actual API endpoint
+            const res = await fetch('/api/trip-invites', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    method: inviteMethod,
+                    recipient: inviteMethod === 'email' ? emailInput : usernameInput,
+                    tripId: 'summer-in-japan', // This should be dynamic based on the current trip
+                    message: inviteMessage
+                })
+            });
+            
+            if (res.ok) {
+                // Reset form and close modal
+                emailInput = '';
+                usernameInput = '';
+                inviteMessage = '';
+                addMemberModalOpen = false;
+                
+                // Show success message
+                alert('Invitation sent successfully!');
+            } else {
+                const errorData = await res.json();
+                console.error('Error sending invitation:', errorData);
+                alert('Failed to send invitation. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error sending invitation:', error);
+            alert('An error occurred. Please try again.');
         }
-    } catch (error) {
-        console.error('Error sending invitation:', error);
-        alert('An error occurred. Please try again.');
     }
-}
 
     // Mock function to search for users
     function searchUsers() {

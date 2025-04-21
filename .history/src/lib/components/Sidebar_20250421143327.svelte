@@ -14,12 +14,9 @@
 
   let sidebarTransition = '';
   let invitedMembers: string[] = [''];
-  let isHovered = false;
 
   // Reactive statement to get unread notification count
   $: unreadNotificationsCount = $notifications.filter(n => !n.read).length;
-  $: sidebarExtended = isHovered || notificationsOpen;
-  $: sidebarWidth = sidebarExtended ? '300px' : '80px';  // Keep this as a reactive statement
 
   // Notification count for trip polling (Example: Unread notifications)
   let tripPollNotifications = 3; // Dynamic value, adjust based on logic
@@ -28,14 +25,6 @@
   onMount(() => {
     sidebarTransition = 'transition-all duration-500 ease-in-out';
   });
-
-function handleMouseEnter() {
-  isHovered = true;
-}
-
-function handleMouseLeave() {
-  isHovered = false;
-} 
   
   // Sidebar functions
   function toggleSidebar(): void {
@@ -99,11 +88,11 @@ function handleMouseLeave() {
 </script>
 
 <nav
-class="fixed left-0 top-0 h-full bg-[#3598db] text-white p-4 flex flex-col {sidebarTransition}"
-style="width: {sidebarWidth};"
-on:mouseenter={handleMouseEnter}
-on:mouseleave={handleMouseLeave}
-aria-label="Sidebar"
+  class="fixed left-0 top-0 h-full bg-[#3598db] text-white p-4 flex flex-col {sidebarTransition}"
+  style="width: {sidebarWidth};"
+  on:mouseenter={toggleSidebar}
+  on:mouseleave={toggleSidebar}
+  aria-label="Sidebar"
 >
   <div class="space-y-8 mt-40"> 
     <!-- Sidebar Links -->
