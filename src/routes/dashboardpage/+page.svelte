@@ -5,11 +5,109 @@
   import { user as userStore, isAuthenticated } from '$lib/stores/authStore';
   import { goto } from '$app/navigation';
   import { createFormOpen } from '$lib/stores/createFormStore';
-
+  import { enhance } from '$app/forms';
+  import type { SubmitFunction } from '@sveltejs/kit';
+  import { auth } from '$lib/firebase';
   
   // State management for sidebar only
   let sidebarExtended = false;
   let sidebarWidth = '80px';
+
+  let formError: string | null = null;
+
+
+  let recentTrips = $state([]);
+  let loading = true;
+  let error = $state<string | null>(null);
+
+    // Fetch recent trips from the server
+ async function fetchRecentTrips() {
+ try {
+   loading = true;
+   error = null;
+  
+   // Get auth token if available
+   let headers: Record<string, string> = {
+     'Content-Type': 'application/json'
+   };
+  
+   if (auth.currentUser) {
+     const token = await auth.currentUser.getIdToken(true);
+     headers['Authorization'] = `Bearer ${token}`;
+   }
+  
+   const response = await fetch('/api/recent-trips', {
+     method: 'GET',
+     headers
+   });
+  
+   if (!response.ok) {
+     throw new Error('Failed to fetch recent trips');
+   }
+  
+   recentTrips = await response.json();
+ } catch (err) {
+   error = err instanceof Error ? err.message : 'An unknown error occurred';
+   console.error('Error fetching recent trips:', err);
+ } finally {
+   loading = false;
+ }
+}
+
+
+async function ensureSession() {
+ if (!browser || !$isAuthenticated || !auth.currentUser) return;
+  try {
+   // Get a fresh token and create a session cookie
+   const token = await auth.currentUser.getIdToken(true);
+  
+   await fetch('/api/auth/session', {
+     method: 'POST',
+     headers: {
+       'Content-Type': 'application/json',
+       'Authorization': `Bearer ${token}`
+     }
+   });
+  
+   console.log('Session established');
+ } catch (error) {
+   console.error('Error establishing session:', error);
+ }
+}
+
+
+ // Format date function
+ function formatDate(dateString) {
+   const options = { year: 'numeric', month: 'long', day: 'numeric' };
+   return new Date(dateString).toLocaleDateString(undefined, options);
+}
+
+  
+
+  
+  const handleSubmit: SubmitFunction = async ({ formData }) => {
+    try {
+      formError = null;
+      const currentUser = $userStore;
+        if (!currentUser) throw new Error('Not logged in');
+        const token = await (currentUser as import('firebase/auth').User).getIdToken();
+        formData.append('idToken', token);
+      // Perform your custom submission logic here
+      console.log('Form submitted with:', formData);
+    } catch (err) {
+      formError = err instanceof Error ? err.message : 'Submission failed';
+    }
+  };
+
+   // Navigate to trips
+ async function navigateToTrips() {
+   if (!auth.currentUser) {
+   goto('/loginpage');
+   return;
+   }
+   goto('/totaltripspage');
+ }
+
 
 
     // Redirect if not logged in (backup to layout protection)
@@ -20,8 +118,9 @@
     });
 
     function handleCreateClick() {
-  createFormOpen.set(true);
-}
+      createFormOpen.set(true);
+    }
+    /*
   // Sample trip data for recent trips
   const recentTrips = [
     { 
@@ -46,7 +145,7 @@
       image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=2070&auto=format&fit=crop'
     }
   ];
-
+*/
   // Data for trip activity chart
   const tripActivityData = [
     { month: 'Jan', trips: 1 },
@@ -115,7 +214,7 @@
   ];
 
   // Navigate to trip detail page
-  function goToTripDetail(id) {
+  function goToTripDetail(id: number) {
     // Navigation logic would go here
     alert(`Navigating to trip ${id}`);
   }
@@ -164,20 +263,36 @@
       <!-- Quick Action Cards -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         {#each quickActions as action}
+          {#if action.title === 'New Trip'}
+            <Card class="p-4 shadow-md hover:shadow-lg transition-shadow">
+             <button
+                type="button"
+                class="w-full h-full cursor-pointer"
+                on:click={() => {createFormOpen.set(true)}}
+              >
+                <div class="flex flex-col items-center text-center">
+                  <div class="bg-blue-500 text-white p-3 rounded-lg mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                  </div>
+                  <span class="font-medium">New Trip</span>
+                </div>
+              </button>
+            </Card>
+          {:else}
         <Card
-  class="p-4 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-  on:click={() => {
-    if (action.title === 'New Trip') {
-      createFormOpen.set(true);
-    } else if (action.title === 'My Trips') {
-      goto('/tripspage');
-    } else if (action.title === 'Calendar') {
-      goto('/calendarpage');
-    } else if (action.title === 'Settings') {
-      goto('/settings');
+          class="p-4 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+          on:click={() => {
+            if (action.title === 'My Trips') {
+              goto ('/tripspage');
+            } else if (action.title === 'Calendar') {
+              goto('/calendarpage');
+            } else if (action.title === 'Settings') {
+              goto('/settings');
     }
   }}
->
+ >
             <div class="flex flex-col items-center text-center">
               <div class="{action.color} text-white p-3 rounded-lg mb-3">
                 {#if action.icon === 'plus'}
@@ -202,6 +317,7 @@
               <span class="font-medium">{action.title}</span>
             </div>
           </Card>
+          {/if}
         {/each}
       </div>
 
@@ -274,33 +390,42 @@
         <Card class="p-6 shadow-lg">
           <h3 class="text-xl font-semibold mb-6">Recent Trips</h3>
           <div class="space-y-4">
-            {#each recentTrips as trip}
-              <div class="flex items-center border-b border-gray-100 pb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"  on:click={() => goToTripDetail(trip.id)}
-                on:keydown={(e) => e.key === 'Enter' && goToTripDetail(trip.id)}
-                tabindex="0"
-                role="button">
-                <div class="h-16 w-16 rounded-lg bg-gray-200 mr-4 overflow-hidden flex-shrink-0">
-                  <img src={trip.image} alt={trip.destination} class="h-full w-full object-cover" />
-                </div>
-                <div class="flex-grow">
-                  <h4 class="font-medium text-lg">{trip.title}</h4>
-                  <div class="text-gray-600 text-sm flex flex-col sm:flex-row sm:gap-2">
-                    <span>{trip.destination}</span>
-                    <span class="hidden sm:inline">•</span>
-                    <span>{trip.dates}</span>
-                  </div>
-                </div>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
+            {#if loading}
+              <div class="animate-pulse">
+                <div class="h-16 bg-gray-200 rounded-lg mb-4"></div>
+                <div class="h-16 bg-gray-200 rounded-lg mb-4"></div>
               </div>
-            {/each}
-            <button class="text-blue-500 font-medium hover:text-blue-600 transition-colors flex items-center mt-2">
-              <span>View all trips</span>
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </button>
+            {:else if error}
+              <div class="text-red-500">{error}</div>
+            {:else if recentTrips.length > 0}
+              {#each recentTrips as trip}
+                <div
+                  class="flex items-center border-b border-gray-100 pb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
+                  on:click={() => goto(`/tripspage/${trip.id}`)}
+                >
+                  <!-- ... trip item content ... -->
+                </div>
+              {/each}
+              <button
+                class="text-blue-500 font-medium hover:text-blue-600 transition-colors flex items-center mt-2"
+                on:click={() => goto('/totaltripspage')}
+              >
+                <span>View all trips</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </button>
+            {:else}
+              <div class="text-gray-500 p-4 text-center">
+                <p>No trips found. Create your first trip to get started!</p>
+                <button
+                  class="mt-4 text-blue-500 hover:text-blue-600"
+                  on:click={() => goto('/create-trip')}
+                >
+                  Create a trip
+                </button>
+              </div>
+            {/if}
           </div>
         </Card>
       </div>

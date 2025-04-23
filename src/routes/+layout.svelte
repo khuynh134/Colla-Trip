@@ -5,6 +5,7 @@
 	import { isAuthenticated, isLoading, logout } from '$lib/stores/authStore';
 	import { goto } from '$app/navigation';
     import Notifications from '$lib/components/Notifications.svelte';
+    import '../app.css';
   
 
 	let isMenuOpen: boolean = false;

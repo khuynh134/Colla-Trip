@@ -2,6 +2,7 @@ import { writable } from 'svelte/store';
 import { 
     onAuthStateChanged, 
     signOut as firebaseSignOut,
+    getIdToken,
     type User as FirebaseUser
 } from 'firebase/auth';
 
@@ -30,7 +31,7 @@ if (typeof window !== 'undefined') {
     // This sets up a listener that Firebase provides
     // It will run whenever the login status changes
     // Use the any type to avoid TypeScript errors with auth
-    onAuthStateChanged(auth as any, (firebaseUser: FirebaseUser | null) => {
+    onAuthStateChanged(auth as any, async (firebaseUser: FirebaseUser | null) => {
         console.log("Auth state changed:", firebaseUser ? `User: ${firebaseUser.email}` : "No user");
         isLoading.set(false);
         
@@ -42,6 +43,7 @@ if (typeof window !== 'undefined') {
                 displayName: firebaseUser.displayName,
                 photoURL: firebaseUser.photoURL
             });
+
             isAuthenticated.set(true);
         } else {
             // Nobody is logged in
@@ -62,3 +64,4 @@ export async function logout() {
         return { success: false, error };
     }
 }
+

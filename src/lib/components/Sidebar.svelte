@@ -7,6 +7,21 @@
   import { createFormOpen } from '$lib/stores/createFormStore';
   import { notifications } from '$lib/stores/notifications';
 
+
+  import { user } from '$lib/stores/authStore';
+  import { getAuth} from 'firebase/auth';
+  import type { User as FirebaseUser } from 'firebase/auth';
+  import type { SubmitFunction } from '@sveltejs/kit'
+
+  // Form data variables 
+  let tripName = '';
+  let tripStartDate = '';
+  let tripEndDate = '';
+  let tripLocation = '';
+  let tripTotalDays = 0;
+  let formError: string | null = null; // Declare formError
+
+
   // Props
   export let sidebarExtended = false;
   export let sidebarWidth = '80px';
@@ -23,10 +38,23 @@
 
   // Notification count for trip polling (Example: Unread notifications)
   let tripPollNotifications = 3; // Dynamic value, adjust based on logic
+
+  
+  $: if ( tripStartDate && tripEndDate) {
+     const start = new Date(tripStartDate);
+     const end = new Date(tripEndDate);
+     if ( !isNaN(start.getTime()) && !isNaN(end.getTime())) {
+       tripTotalDays = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+       if ( tripTotalDays < 1) tripTotalDays = 1; //Ensure at least 1 day
+     } else {
+       tripTotalDays = 0;
+     }
+   }
   
   // Initialize sidebar transition on mount
   onMount(() => {
     sidebarTransition = 'transition-all duration-500 ease-in-out';
+    console.log('Auth status on mount:', $isAuthenticated, $user);
   });
 
 function handleMouseEnter() {
@@ -51,6 +79,11 @@ function handleMouseLeave() {
   function closeCreateForm(): void {
     createFormOpen.set(false);
     invitedMembers = [''];
+    // Reset form data
+    tripName = '';
+    tripStartDate = '';
+    tripEndDate = '';
+    formError = null;
   }
 
   function addNewMemberField(): void {
@@ -63,11 +96,12 @@ function handleMouseLeave() {
     invitedMembers[index] = value;
     invitedMembers = [...invitedMembers];
   }
-
+/*
   function handleSubmitTrip(event: SubmitEvent): void {
     event.preventDefault();
     closeCreateForm();
   }
+    */
   
   async function handleAuthButton(): Promise<void> {
     if ($isAuthenticated) {
@@ -96,6 +130,105 @@ function handleMouseLeave() {
     notifications.markAsRead(notification.id);
     notificationsOpen = false;
   }
+
+  async function handleManualSubmit() {
+    try {
+       formError = null;
+       console.log('Starting manual submit..');
+       console.log('Auth status:', $isAuthenticated, !!$user);
+
+       if(!$isAuthenticated || !$user) {
+         formError = 'You must be logged in to create a trip.';
+         console.error('Auth failed:', { isAuthenticated: $isAuthenticated, user: $user });
+         return;
+       }
+
+       //Validate required fields
+       if( !tripName || !tripStartDate || !tripEndDate) {
+         formError = 'Please fill in all required fields.';
+         return;
+       }
+
+       const currentUser = getAuth().currentUser;
+       console.log('Current Firebase user:', !!currentUser);
+
+       if( !currentUser){
+         formError = 'Firebase user not found. Please log in again.';
+         return;
+       }
+
+       console.log('Getting token..');
+       const token = await currentUser.getIdToken(true);
+       console.log('Token obtained:', token ? 'Yes (length: ' + token.length + ')' : 'No');
+
+       //Filter out empty member emails
+       const validMembers = invitedMembers.filter(m => m.trim() !== '');
+
+
+       //Calculate total days between start and end dates
+       let calculatedTotalDays = 0;
+
+
+       if ( tripStartDate && tripEndDate) {
+         const start = new Date(tripStartDate);
+         const end = new Date(tripEndDate);
+         if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+           calculatedTotalDays = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+           if( calculatedTotalDays < 1) calculatedTotalDays = 1; //Ensure at least 1 day
+         }
+       }
+
+        //Create json request data
+        const requestedData = {
+         tripName,
+         tripStartDate,
+         tripEndDate,
+         tripLocation,
+         firebaseToken: token,
+         tripTotalDays: calculatedTotalDays,
+         members: validMembers
+       };
+
+       console.log('Sending fetch request with JSON...');
+
+       const response = await fetch('api/create-trip', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+           'Authorization': `Bearer ${token}`
+         },
+         body: JSON.stringify(requestedData)
+       });
+
+
+       console.log('Response status:', response.status);
+
+
+       const data = await response.json();
+
+
+       if(response.ok) {
+         console.log('Response data:', data);
+         if(data && data.id) {
+           closeCreateForm();
+           console.log(`Navigating to trip page with ID: ${data.id}`);
+           goto(`/tripspage/${data.id}`);
+         } else {
+           closeCreateForm();
+           goto('/tripspage');
+         }
+       } else {
+         formError = data.error || `Server error: ${response.status}`;
+         console.error('Server error:', response.status, data);
+       }
+     } catch (error) {
+       formError = 'An unexpected error occured.';
+       console.error('Unexpected error:', error);
+     }
+
+  }
+
+
 </script>
 
 <nav
@@ -112,7 +245,7 @@ aria-label="Sidebar"
       <a 
         href="/create-trip" 
         class="flex items-center p-1 hover:bg-blue-600 rounded-lg transition-colors" 
-        on:click={handleCreateTripClick}
+        on:click|preventDefault={handleCreateTripClick}
       >
         <div class="bg-[#85e9eb] text-cyan rounded-full p-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="Create Trip">
@@ -215,6 +348,7 @@ aria-label="Sidebar"
       </div>
     </a>
   </div>
+  
 </nav>
 
 <!-- Notifications Panel -->
@@ -267,3 +401,171 @@ aria-label="Sidebar"
   </div>
 </div>
 {/if}
+
+<!-- Create Trip Form Panel -->
+<div
+class="fixed inset-0 flex items-center justify-center z-50"
+style="visibility: {$createFormOpen ? 'visible' : 'hidden'};"
+>
+<div
+  class="bg-white rounded-lg shadow-lg w-[500px] transform transition-transform duration-300 ease-in-out {$createFormOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}"
+>
+  <div class="p-6">
+    <!-- Form Header -->
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">Create New Trip</h2>
+      <button
+        type="button"
+        on:click={closeCreateForm}
+        class="text-gray-500 hover:text-gray-700"
+        aria-label="Close form"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <!-- Form Content -->
+    <div class="space-y-6">
+     <!-- Trip Name -->
+      <div>
+         <label for="tripName" class="block text-sm font-medium text-gray-700 mb-2">
+           Trip Name
+         </label>
+         <input
+           type = "text"
+           id = "tripName"
+           bind:value={tripName}
+           required
+           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"
+           placeholder="Enter trip name"
+           />
+      </div>
+
+
+       <!-- Start Date -->
+        <div>
+           <label for="tripStartDate" class ="block text-sm font-medium text-gray-700 mb-2">
+             Trip Start Date
+           </label>
+           <input
+             type="date"
+             id="tripStartDate"
+             bind:value={tripStartDate}
+             required
+             class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"
+             />
+        </div>
+
+        <!-- End Date -->
+        <div>
+          <label for="tripEndDate" class="block text-sm font-medium text-gray-700 mb-2">
+            Trip End Date
+          </label>
+          <input
+            type="date"
+            id="tripEndDate"
+            bind:value={tripEndDate}
+            required
+            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"
+            />
+        </div>
+
+
+        <!-- Total Days Display (read-only)-->
+         {#if tripTotalDays > 0}
+          <div>
+            <span class="block text-sm font-medium text-gray-700 mb-2">
+              Trip Duration
+            </span>
+            <p class="p-3 border border-gry-300 rounded-lg bg-gray-50">
+              {tripTotalDays} {tripTotalDays === 1 ? 'day' : 'days'}
+            </p>
+          </div>
+         {/if}
+
+
+        <!-- Location -->
+         <div>
+          <label for="tripLocation" class="block text-sm font-medium text-gray-700 mb-2">
+            Trip Location
+          </label>
+          <input
+            type="text"
+            id="tripLocation"
+            bind:value={tripLocation}
+            required
+            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"
+            placeholder="Enter trip location"
+            />
+         </div>
+
+
+        <div>
+          <p class="block text-sm font-medium text-gray-700 mb-2">Invite Members</p>
+          {#each invitedMembers as member, index}
+            <div class="flex gap-2 mb-2">
+              <label for="member-{index}" class="flex-1">
+                <span class="sr-only">Member {index + 1} email</span>
+                <input
+                  type="email"
+                  id="member-{index}"
+                  placeholder="Enter email address"
+                  value={member}
+                  on:input={(e: Event) => updateMember(index, (e.target as HTMLInputElement).value)}
+                  class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"
+                />
+
+
+              </label>
+
+
+              {#if index === invitedMembers.length - 1}
+                <button
+                  type="button"
+                  on:click={addNewMemberField}
+                  class="bg-[#3598db] text-white p-3 rounded-lg hover:bg-blue-600 transition-colors"
+                  aria-label="Add member"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </button>
+              {/if}
+            </div>
+          {/each}
+        </div>
+
+
+        <!-- Error Display -->
+         {#if formError}
+            <div class="text-red-500 text-sm mt-2">
+              {formError}
+            </div>
+          {/if}
+
+
+       <!-- Submit button -->
+        <button
+          type="button"
+          on:click={handleManualSubmit}
+          class="w-full bg-[#3598db] text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors"
+          >
+          Create Trip
+        </button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Overlay -->
+{#if $createFormOpen}
+ <button
+   type="button"
+   class="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-40 cursor-default"
+   on:click={closeCreateForm}
+   on:keydown={(e) => e.key === 'Escape' && closeCreateForm()}
+   aria-label="Close modal overlay"
+ ></button>
+{/if}
+
