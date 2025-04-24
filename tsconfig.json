@@ -11,11 +11,7 @@
 		"strict": true,
 		"moduleResolution": "bundler",
 		"types": ["@sveltejs/kit"],
-		"baseUrl": ".",
-		"paths": {
-			"$lib/*": ["src/lib/*"],
-			
-		}
+		
 		  }
 
 	}

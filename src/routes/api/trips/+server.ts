@@ -124,3 +124,35 @@ export async function POST({ request }) {
     });
   }
 }
+
+export async function GET({ request }) {
+  try {
+    // Extract the authentication token from the header
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw error(401, { message: 'Missing authentication token' });
+    }
+
+    const token = authHeader.substring(7);
+    const decodedToken = await adminAuth.verifyIdToken(token);
+    const firebaseUID = decodedToken.uid;
+
+    // Query the database for trips associated with the authenticated user
+    const trips = await sql`
+      SELECT 
+        id, 
+        name, 
+        start_date AS "startDate", 
+        end_date AS "endDate", 
+        location
+      FROM trips
+      WHERE owner_uid = ${firebaseUID}
+    `;
+
+        // Return trips in the response
+        return json(trips);
+      } catch (err) {
+        console.error('Error fetching trips:', err);
+        throw error(500, { message: 'Failed to fetch trips. Please try again.' });
+      }
+    }

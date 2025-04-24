@@ -6,18 +6,20 @@
   import { goto } from '$app/navigation';
   import { createFormOpen } from '$lib/stores/createFormStore';
   import { enhance } from '$app/forms';
+  import { browser } from '$app/environment';
   import type { SubmitFunction } from '@sveltejs/kit';
   import { auth } from '$lib/firebase';
+  import { writable } from 'svelte/store';
   
   // State management for sidebar only
-  let sidebarExtended = false;
-  let sidebarWidth = '80px';
+  let sidebarExtended = $state(false);
+  let sidebarWidth = $state('80px');
 
   let formError: string | null = null;
 
 
   let recentTrips = $state([]);
-  let loading = true;
+  let loading = $state(true);
   let error = $state<string | null>(null);
 
     // Fetch recent trips from the server
@@ -285,7 +287,7 @@ async function ensureSession() {
           class="p-4 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
           on:click={() => {
             if (action.title === 'My Trips') {
-              goto ('/tripspage');
+              navigateToTrips();
             } else if (action.title === 'Calendar') {
               goto('/calendarpage');
             } else if (action.title === 'Settings') {
@@ -399,12 +401,12 @@ async function ensureSession() {
               <div class="text-red-500">{error}</div>
             {:else if recentTrips.length > 0}
               {#each recentTrips as trip}
-                <div
+                <button
                   class="flex items-center border-b border-gray-100 pb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
                   on:click={() => goto(`/tripspage/${trip.id}`)}
                 >
                   <!-- ... trip item content ... -->
-                </div>
+            </button>
               {/each}
               <button
                 class="text-blue-500 font-medium hover:text-blue-600 transition-colors flex items-center mt-2"
