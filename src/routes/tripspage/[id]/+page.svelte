@@ -323,34 +323,29 @@
     import { onMount } from 'svelte';
 
     //import for highlights 
-    import { highlights, refreshHighlights, type Highlight} from '$lib/stores/highlights'; 
+    import { highlights, refreshHighlights, addHighlight, removeHighlight, type Highlight} from '$lib/stores/highlights'; 
+
    
     let animateProgress = $state(false);
 
     let loading = $state(false);
     let errorMessage: string | null; 
 
-    //Load trip highlights from API
-    async function addHighlight(activityId: number){
+    // Function to load highlights
+    async function loadHighlights() { 
+        try {
+            await refreshHighlights(tripId); // Pass the tripId to the refreshHighlights function
+        } catch (error) {
+            console.error('Error loading highlights:', error);
+            errorMessage = 'Failed to load highlights. Please try again.';
+        }  
+    }
+     // Add a highlight for the specific trip
+     async function handleAddHighlight(activityId: number) {
         try {
             loading = true;
-            errorMessage = null; 
-            //API call to add highlight
-            const response = await fetch('/api/highlights', {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id: activityId,
-                    highlighted: true
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to update highlight');
-            }
-
-            //refresh both state and store 
-            await refreshHighlights();
+            errorMessage = null;
+            await addHighlight(tripId, activityId); // Pass the tripId to add a highlight for the current trip
         } catch (error) {
             console.error('Error adding highlight:', error);
             errorMessage = 'Failed to add highlight. Please try again.';
@@ -359,27 +354,15 @@
         }
     }
 
-    //Delete highlight from the list
-    async function unhighlightActivity(highlightId: number) {
+    // Remove a highlight for the specific trip
+    async function handleRemoveHighlight(activityId: number) {
         try {
             loading = true;
-            errorMessage = null; 
-            //API call to unhighlight activity 
-            const response = await fetch('/api/highlights', {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: highlightId, highlighted: false })
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to delete highlight');
-            }
-
-            //refresh both state and store 
-            await refreshHighlights();
+            errorMessage = null;
+            await removeHighlight(tripId, activityId); // Pass the tripId to remove a highlight for the current trip
         } catch (error) {
-            console.error('Error deleting highlight:', error);
-            errorMessage = 'Failed to delete highlight. Please try again.';
+            console.error('Error removing highlight:', error);
+            errorMessage = 'Failed to remove highlight. Please try again.';
         } finally {
             loading = false;
         }
@@ -473,14 +456,16 @@
     async function loadSchedule() {
         try {
             scheduleLoading = true; 
-            const response = await fetch('/api/schedule');
+            scheduleError = null; 
+
+            const response = await fetch(`/api/schedule/${tripId}`);
             if (!response.ok) {
-                throw new Error('Failed to load schedule: ${response.status}');
+                throw new Error(`Failed to load schedule: ${response.status}`);
             }
             tripSchedule = await response.json(); 
             // Process and display the schedule data
         } catch (error) {
-            scheduleError = 'Failed to load schedule: ${error.message}';
+            scheduleError = `Failed to load schedule: ${(error as Error).message}`;
             console.error('Error fetching schedule:', error);
         } finally {
             scheduleLoading = false; 
@@ -494,7 +479,7 @@
             loadTripData();
 
             //Update the global highlights store
-            await refreshHighlights();
+            loadHighlights();
             
             // Load trip schedule
             loadSchedule(); 
@@ -628,43 +613,43 @@
                                 <span class="text-gray-700 group-hover:text-cyan-600 transition-colors font-medium">Schedule</span>
                             </span>
                             <div class="bg-white rounded-lg shadow-md p-6 mt-2">
-                                <div class="flex justify-between items-center mb-6">
-                                    <h3 class="text-lg font-semibold text-gray-800">Trip Schedule</h3>
-                                    <button class="text-cyan-600 hover:text-cyan-700 flex items-center gap-1">
-                                        <PlusCircle class="w-4 h-4" />
-                                        <span>Add Event</span>
-                                    </button>
-                                </div>
-                                
-                                <div class="space-y-6">
-                                    {#each tripSchedule as event, index}
-                                        <div class="border-l-4 border-cyan-500 pl-4 py-2 relative bg-sky-300/30">
-                                            <!-- Timeline dot -->
-                                            <div class="absolute w-3 h-3 bg-cyan-500 rounded-full -left-1.5 top-5"></div>
-
-                                            <!-- Day number and date -->
-                                             <div class="text-sm text-gray-500">
-                                                Event { index + 1 } - { formatDate(event.date)}
-                                             </div>
-
-                                            <!-- Activity title -->
-                                             <div class="text-gray-800 font-medium mt-1">
-                                                {event.title}
-                                             </div>
-
+                                {#if scheduleLoading}
+                                    <div class="animate-pulse space-y-4">
+                                        <div class="h-4 bg-gray-200 rounded w-1/2">
+                                        {#each Array(3) as _}
+                                            <div class="h-12 bg-gray-100 rounded-m"></div>
+                                        {/each}
+                                        </div>
+                                    </div>
+                                {:else if scheduleError}
+                                    <div class="text-red-500 p-4 bg-red-50 rounded-md">
+                                        {scheduleError}
+                                        <button onclick={loadSchedule} class="mt-2 px-4 py-2 bg-red-500 text-white rounded">
+                                            Retry loading
+                                        </button>
+                                    </div>
+                                {:else if tripSchedule.length > 0}
+                                    <div class="space-y-6">
+                                        {#each tripSchedule as event, index}
+                                            <div class="border-l-4 border-cyan-500 pl-4 py-2 relative bg-sky-300/30">
+                                                <!-- Timeline dot -->
+                                                <div class="absolute w-3 h-3 bg-cyan-500 rounded-full -left-1.5 top-5"></div>
+                                                <!-- Day number and date -->
+                                                <div class="text-sm text-gray-500">
+                                                    Event { index + 1 } - { formatDate(event.date)}
+                                                </div>
+                                                <!-- Activity title -->
+                                                <div class="text-gray-800 font-medium mt-1">{event.title}</div>
                                             <!-- Activity description -->
-                                            <div class="text-gray-600 text-sm mt-1">
-                                                {event.description}
-                                             </div>
-
-                                             <!-- Votes -->
+                                            <div class="text-gray-600 text-sm mt-1">{event.description}</div>
+                                            <!-- Votes -->
                                             <div class="text-xs text-cyan-600 mt-1">
                                                 {event.votes} {event.votes === 1 ? 'vote' : 'votes'}
                                             </div>
 
                                             <!-- Add to highlight button -->
                                              <button 
-                                                onclick={() => addHighlight(event.id)}
+                                                onclick={() => handleAddHighlight(event.id)}
                                                 disabled="{loading || $highlights.some((h: { id: number }) => h.id === event.id)}"
                                                 class="text-cyan-600 hover:text-cyan-900 text-xs mt-2 rounded shadow-md px-2 py-1 bg-white border border-cyan-500 flex items-center gap-1"
                                              >
@@ -673,32 +658,31 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
                                                 class="lucide lucide-loader-icon lucide-loader"><path d="M12 2v4"/><path d="m16.2 7.8 2.9-2.9"/><path d="M18 12h4"/><path d="m16.2 16.2 2.9 2.9"/><path d="M12 18v4"/><path d="m4.9 19.1 2.9-2.9"/><path d="M2 12h4"/><path d="m4.9 4.9 2.9 2.9"/></svg>
                                                 <span>Adding... </span>
-                                            {:else if $highlights.some((h: { id: number }) => h.id === event.id)}
+                                             {:else if $highlights.some((h: { id: number }) => h.id === event.id)}
                                                  <!-- Star SVG -->
                                                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" 
                                                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
                                                  class="lucide lucide-star-icon lucide-star">
                                                  <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
                                                 <span> Highlighted </span>
-                                            {:else}
-                                            <!-- Add to highlight button -->
+                                             {:else}
+                                                <!-- Add to highlight button -->
                                                 <!-- Star SVG -->
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" 
                                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
                                                 class="lucide lucide-star-icon lucide-star">
                                                 <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
                                                 <span>Add to Trip Highlights</span>
-                                            {/if}
+                                             {/if}
                                             </button>
-                                        
                                         </div>
-                                    {:else}
-                                        <div class="text-gray-500">No events scheduled yet. 
-                                            Add dates to activities in 'create poll' to see them here. 
-                                        </div>
-
                                     {/each}
                                 </div>
+                            {:else}
+                                <div class="text-gray-500">No events scheduled yet. 
+                                    Add dates to activities in 'create poll' to see them here. 
+                                </div>
+                            {/if}
                             </div>
                         </TabItem>
 
@@ -901,7 +885,7 @@
                                     {/if}
 
                                     <button 
-                                    onclick={() => unhighlightActivity(highlight.id)}
+                                    onclick={() => handleRemoveHighlight(highlight.id)}
                                     class="text-cyan-600 hover:text-cyan-900 text-xs mt-2 rounded shadow-md px-2 py-1 bg-white border border-cyan-500 flex items-center gap-1">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
                                     class="lucide lucide-star-off-icon lucide-star-off">

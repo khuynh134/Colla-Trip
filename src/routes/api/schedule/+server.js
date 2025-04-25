@@ -2,8 +2,9 @@ import { json } from '@sveltejs/kit';
 import sql from '$lib/server/database.js'; //Import the PostgreSQL client 
 
 //GET: Fetch all activities 
-export async function GET({ url }){
+export async function GET({ params }){
     try {
+        
         const activities = await sql` 
             SELECT 
                 id,
