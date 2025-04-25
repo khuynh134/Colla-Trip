@@ -402,7 +402,7 @@
     //Fetch results from API 
     async function loadVoteResults() {
         try{
-            const res = await fetch('/api/activities?order=votes');
+            const res = await fetch(`/api/trips/${tripId}/activities?order=votes`);
             const data = await res.json();
             voteResults = data.map((a: { id: number; name: string; votes: number; updated_at: string }) => ({
                 id: a.id,
@@ -425,7 +425,7 @@
 
     async function voteForActivity(activityId: number) {
         try {
-            const response = await fetch(`/api/activities`, {
+            const response = await fetch(`/api/trips/${tripId}/activities`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json' },
@@ -595,7 +595,7 @@
                             
                             <!-- Create Poll Button -->
                             <button class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors flex items-center gap-2 shadow-sm"
-                                onclick={() => goto('/activitypage')}
+                                onclick={() => goto(`/tripspage/${tripId}/activities`)}
                                 >
                                 <Vote class="w-4 h-4" />
                                 Create Poll
