@@ -6,7 +6,7 @@
     import {writable} from 'svelte/store'; 
     import PackingListForm from './PackingList/PackingListForm.svelte';
     import { notifications } from '$lib/stores/notifications';
-    const { data } = $props();
+    export let data;
 
 
     import { 
@@ -80,12 +80,12 @@
             notifications.addNotification({
                 type: 'invite',
                 title: 'Trip Invitation Sent',
-                message: `Invitation sent to ${inviteMethod === 'email' ? emailInput : usernameInput} for ${data.trip.title}`,
+                message: `Invitation sent to ${inviteMethod === 'email' ? emailInput : usernameInput} for ${tripData.title}`,
                 timestamp: new Date(),
                 read: false,
                 action: {
                     label: 'View Trip',
-                    href: `/tripspage/${data.trip.title.toLowerCase().replace(/\s+/g, '-')}`
+                    href: `/tripspage/${tripData.title.toLowerCase().replace(/\s+/g, '-')}`
                 }
             });
 
@@ -260,7 +260,7 @@ const tripData = {
     dates: data?.trip?.start_date && data?.trip?.end_date 
         ? formatDateRange(data.trip.start_date, data.trip.end_date)
         : "Jun 15 - Jun 22, 2025",
-    //travelers: data?.tripMembers?.length || 4,
+    travelers: data?.tripMembers?.length || 4,
     // Keep the budget as is for now since it's not in your database yet
     budget: {
         spent: 2450,
@@ -502,7 +502,6 @@ onMount(() => {
         if (pollInterval) clearInterval(pollInterval);
     };
 });
-
 </script>
 
 <div class="min-h-screen bg-gradient-to-b from-[#e0f7fa] to-[#b2ebf2]">
@@ -520,19 +519,19 @@ onMount(() => {
                 <div class="flex flex-col">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
-                            <h1 class="text-3xl font-bold text-cyan-700">{data.trip.title}</h1>
+                            <h1 class="text-3xl font-bold text-cyan-700">{tripData.title}</h1>
                             <div class="mt-3 flex flex-wrap items-center text-gray-600 gap-x-6 gap-y-2">
                                 <div class="flex items-center">
                                     <MapPin class="w-5 h-5 text-cyan-600 mr-2" />
-                                    <span>{data.trip.location}</span>
+                                    <span>{tripData.location}</span>
                                 </div>
                                 <div class="flex items-center">
                                     <Calendar class="w-5 h-5 text-cyan-600 mr-2" />
-                                    <span>{formatDateRange(data.trip.start_date, data.trip.end_date)}</span>
+                                    <span>{tripData.dates}</span>
                                 </div>
                                 <div class="flex items-center">
                                     <User class="w-5 h-5 text-cyan-600 mr-2" />
-                                    <span>{data.tripMembers.length} travelers</span>
+                                    <span>{tripData.travelers} travelers</span>
                                 </div>
                                 <div class="flex items-center">
                                     <Clock class="w-5 h-5 text-cyan-600 mr-2" />
@@ -891,7 +890,7 @@ onMount(() => {
             <div class="text-center">
                 <UserPlus class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" />
                 <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-                    Invite a member to join "{data.trip.title}"
+                    Invite a member to join "{tripData.title}"
                 </h3>
                 
                 <!-- Invite Method Selection -->
@@ -1000,7 +999,7 @@ onMount(() => {
             <div class="text-center">
                 <Share2 class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" />
                 <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-                    Share "{data.trip.title}" with your friends!
+                    Share "{tripData.title}" with your friends!
                 </h3>
                 
                 <div class="flex justify-center gap-4">

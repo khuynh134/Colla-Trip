@@ -6,7 +6,7 @@
     import {writable} from 'svelte/store'; 
     import PackingListForm from './PackingList/PackingListForm.svelte';
     import { notifications } from '$lib/stores/notifications';
-    const { data } = $props();
+    let { data } = $props();
 
 
     import { 
@@ -260,7 +260,7 @@ const tripData = {
     dates: data?.trip?.start_date && data?.trip?.end_date 
         ? formatDateRange(data.trip.start_date, data.trip.end_date)
         : "Jun 15 - Jun 22, 2025",
-    //travelers: data?.tripMembers?.length || 4,
+    travelers: data?.tripMembers?.length || 4,
     // Keep the budget as is for now since it's not in your database yet
     budget: {
         spent: 2450,
@@ -502,7 +502,7 @@ onMount(() => {
         if (pollInterval) clearInterval(pollInterval);
     };
 });
-
+export let data;
 </script>
 
 <div class="min-h-screen bg-gradient-to-b from-[#e0f7fa] to-[#b2ebf2]">

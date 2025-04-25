@@ -532,7 +532,7 @@ onMount(() => {
                                 </div>
                                 <div class="flex items-center">
                                     <User class="w-5 h-5 text-cyan-600 mr-2" />
-                                    <span>{data.tripMembers.length} travelers</span>
+                                    //<span>{data.tripMembers.length} travelers</span>
                                 </div>
                                 <div class="flex items-center">
                                     <Clock class="w-5 h-5 text-cyan-600 mr-2" />

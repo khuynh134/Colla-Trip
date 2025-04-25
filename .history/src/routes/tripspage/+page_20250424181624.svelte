@@ -260,7 +260,7 @@ const tripData = {
     dates: data?.trip?.start_date && data?.trip?.end_date 
         ? formatDateRange(data.trip.start_date, data.trip.end_date)
         : "Jun 15 - Jun 22, 2025",
-    //travelers: data?.tripMembers?.length || 4,
+    travelers: data?.tripMembers?.length || 4,
     // Keep the budget as is for now since it's not in your database yet
     budget: {
         spent: 2450,
