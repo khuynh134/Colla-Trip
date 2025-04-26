@@ -3,6 +3,7 @@ import { json, error } from '@sveltejs/kit';
 import sql from '$lib/server/database.js';
 import { adminAuth } from '$lib/server/firebase-admin';
 
+// POST: Create a new trip 
 export async function POST({ request }) {
   try {
     const contentType = request.headers.get('content-type') || '';
@@ -125,6 +126,7 @@ export async function POST({ request }) {
   }
 }
 
+// GET: Fetch trips for the authenticated user
 export async function GET({ request }) {
   try {
     // Extract the authentication token from the header

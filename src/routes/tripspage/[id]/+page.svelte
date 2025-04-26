@@ -218,6 +218,9 @@
     // Share Trip Modal state
     let shareTripModalOpen = $state(false);
 
+    // Setting Modal state
+    let settingsModalOpen = $state(false);
+
     //states for packing list 
     let packingList = $state<Array<{ 
         id: number, 
@@ -472,6 +475,29 @@
         }
 
     }
+    // Function to delete the trip 
+    async function deleteTrip() {
+        if(!confirm('Are you sure you want to delete this trip? This action cannot be undone.')) { return;}
+
+        try {
+            const response = await fetch(`/api/trips/${tripId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to delete trip');
+            }
+            alert('Trip deleted successfully!');
+            // Redirect to the trips page after deleting
+            window.location.href= '/totaltripspage';
+        } catch (error) {
+            console.error('Error deleting trip:', error);
+            alert('Failed to delete trip. Please try again.');
+        }
+    } 
 
     onMount(() => {
         (async () => {
@@ -597,9 +623,12 @@
                             </button>
 
                             <!-- Settings Button -->
-                            <button class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors flex items-center gap-2 shadow-sm">
+                            <button class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors flex items-center gap-2 shadow-sm"
+                                onclick={ () => settingsModalOpen = true}
+                            >
                                 <Settings class="w-4 h-4" />
                                 Settings
+                            </button>
                         </div>
                     </div>
 
@@ -1024,19 +1053,51 @@
 
         <!-- Share Trip Modal -->
         <Modal bind:open={shareTripModalOpen} size="md" autoclose={false} class="w-full">
-            <div class="text-center">
-                <Share2 class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" />
-                <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-                    Share "{tripData.title}" with your friends!
-                </h3>
-                
-                <div class="flex justify-center gap-4">
+            <div class="flex items-center justify-center h-full">
+                <div class="flex flex-col items-center gap-6 bg-cyan-50 p-6 rounded-lg shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
+                    class="lucide lucide-share-icon lucide-share">
+                   <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>
+                   <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
+                       Share "{tripData.title}" with your friends!
+                   </h3>
+                   <p class="text-sm text-gray-500">Trips's location: {tripData.location}</p>
+                   <p class="text-sm text-gray-500">Trip's dates: {formatDate(tripData.startDate)} - {formatDate(tripData.endDate)}</p>
+                   
+                   <div class="flex justify-center gap-4">
                     <Button color="alternative" on:click={() => shareTripModalOpen = false}>
+                        Close
+                    </Button>
+                    </div>
+                </div>
+            </div>
+        </Modal>
+
+        <!-- Setting Trip Modal -->
+         <Modal bind:open={settingsModalOpen} size="lg" autoclose={false} class="w-full">
+            <div class="text-center">
+                <Settings class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" />
+                <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
+                    Trip Settings
+                </h3>
+
+                <!-- Delete Trip -->
+                <div class="mb-4">
+                    <Label for="deleteTrip" class="mb-2">Delete Trip</Label>
+                    <p class="text-sm text-gray-500">This action cannot be undone.</p>
+                    <Button color="red" on:click={deleteTrip}>
+                        Delete Trip
+                    </Button>
+                </div>
+                
+                <!-- Settings Content -->
+                <div class="flex justify-center gap-4">
+                    <Button color="alternative" on:click={() => settingsModalOpen = false}>
                         Close
                     </Button>
                 </div>
             </div>
-        </Modal>
+         </Modal>
 
     {/if}
     </div>

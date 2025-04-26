@@ -57,3 +57,29 @@ export async function GET({ params, request }) {
         throw error(500, 'Failed to fetch trip data');
     }
 }
+
+export async function DELETE({ params }) {
+    const { tripId } = params;
+
+    try{
+        // Validate trip ID
+        if( !tripId || isNaN( Number(tripId))) {
+            throw error(400, {message: 'Invalide trip ID'});
+        }
+
+        // Delete trip from database
+        const result = await sql`
+            DELETE FROM trips
+            WHERE id = ${Number(tripId)}
+            RETURNING id
+            `;
+        if (result.count === 0) {
+            throw error(404, { message: 'Trip not found'}); 
+        }
+
+        return json({ success: true, message: 'Trip deleted successfully'});
+    } catch (err) {
+        console.error('Error deleting trip:', err);
+        throw error(500, { message: 'Failed to delete trip' });
+    }
+}
