@@ -62,52 +62,75 @@
         // Use the trip ID from the loaded data if available
         const tripId = data?.trip?.id || 1;
         
-        const res = await fetch('/api/trip-invites', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                method: inviteMethod,
-                recipient: inviteMethod === 'email' ? emailInput : usernameInput,
-                trip_id: tripId,
-                message: inviteMessage
-            })
-        });
-        
-        if (res.ok) {
-            // Add a notification for the successful invitation
-            notifications.addNotification({
-                type: 'invite',
-                title: 'Trip Invitation Sent',
-                message: `Invitation sent to ${inviteMethod === 'email' ? emailInput : usernameInput} for ${data.trip.title}`,
-                timestamp: new Date(),
-                read: false,
-                action: {
-                    label: 'View Trip',
-                    href: `/tripspage/${data.trip.title.toLowerCase().replace(/\s+/g, '-')}`
-                }
+                // If inviting by email
+                if (inviteMethod === 'email') {
+            const res = await fetch('/api/invite-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tripId,
+                    email: emailInput,
+                    message: inviteMessage
+                })
             });
 
-            // Reset form and close modal
-            emailInput = '';
-            usernameInput = '';
-            inviteMessage = '';
-            addMemberModalOpen = false;
-            
-            // Show success message
-            alert('Invitation sent successfully!');
-        } else {
-            const errorData = await res.json();
-            console.error('Error sending invitation:', errorData);
-            alert('Failed to send invitation. Please try again.');
+            if (res.ok) {
+                alert('Email invitation sent successfully!');
+            } else {
+                const errorData = await res.json();
+                console.error('Error sending email invitation:', errorData);
+                alert('Failed to send email invitation. Please try again.');
+            }
+        } 
+        // If inviting by username
+        else {
+            const res = await fetch('/api/trip-invites', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    method: inviteMethod,
+                    recipient: usernameInput,
+                    trip_id: tripId,
+                    message: inviteMessage
+                })
+            });
+
+            if (res.ok) {
+                notifications.addNotification({
+                    id: Date.now(),
+                    type: 'invite',
+                    title: 'Trip Invitation Sent',
+                    message: `Invitation sent to ${usernameInput} for ${data.trip.title}`,
+                    timestamp: new Date(),
+                    read: false,
+                    action: {
+                        label: 'View Trip',
+                        href: `/tripspage/${data.trip.title.toLowerCase().replace(/\s+/g, '-')}`
+                    }
+                });
+                alert('Username invitation sent successfully!');
+            } else {
+                const errorData = await res.json();
+                console.error('Error sending username invitation:', errorData);
+                alert('Failed to send username invitation. Please try again.');
+            }
         }
+
+        // After successful invite (either way):
+        emailInput = '';
+        usernameInput = '';
+        inviteMessage = '';
+        addMemberModalOpen = false;
+
     } catch (error) {
         console.error('Error sending invitation:', error);
         alert('An error occurred. Please try again.');
     }
 }
-
     // Mock function to search for users
     function searchUsers() {
         // In a real application, this would make an API call to search for users

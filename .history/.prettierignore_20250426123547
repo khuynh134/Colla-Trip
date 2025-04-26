@@ -6,5 +6,3 @@ yarn.lock
 **/* 2.ts
 **/* 2.js
 .history/
-# Ignore Mac system files
-.DS_Store
