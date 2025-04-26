@@ -55,54 +55,81 @@
             alert('Please enter an email address');
             return;
         }
-        
+
         if (inviteMethod === 'username' && !usernameInput) {
             alert('Please enter a username');
             return;
         }
-        
-        // Mock API call - replace with your actual API endpoint
-        const res = await fetch('/api/trip-invites', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                method: inviteMethod,
-                recipient: inviteMethod === 'email' ? emailInput : usernameInput,
-                tripId: 'summer-in-japan', // This should be dynamic based on the current trip
-                message: inviteMessage
-            })
-        });
-        
-        if (res.ok) {
-            // Add a notification for the successful invitation
-            notifications.addNotification({
-                id: Date.now(), // Add a unique ID
-                type: 'invite',
-                title: 'Trip Invitation Sent',
-                message: `Invitation sent to ${inviteMethod === 'email' ? emailInput : usernameInput} for ${tripData.title}`,
-                timestamp: new Date(),
-                read: false,
-                action: {
-                    label: 'View Trip',
-                    href: `/tripspage/${tripData.title.toLowerCase().replace(/\s+/g, '-')}`
-                }
+
+        // tripId is already extracted correctly in your file
+        if (!tripId) {
+            console.error('Missing trip ID');
+            alert('Trip ID not found.');
+            return;
+        }
+
+        if (inviteMethod === 'email') {
+            const res = await fetch('/api/invite-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tripId,
+                    email: emailInput,
+                    message: inviteMessage
+                })
             });
 
-            // Reset form and close modal
-            emailInput = '';
-            usernameInput = '';
-            inviteMessage = '';
-            addMemberModalOpen = false;
-            
-            // Show success message
-            alert('Invitation sent successfully!');
+            if (res.ok) {
+                alert('Email invitation sent successfully!');
+            } else {
+                const errorData = await res.json();
+                console.error('Error sending email invitation:', errorData);
+                alert('Failed to send email invitation. Please try again.');
+            }
         } else {
-            const errorData = await res.json();
-            console.error('Error sending invitation:', errorData);
-            alert('Failed to send invitation. Please try again.');
+            const res = await fetch('/api/trip-invites', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    method: 'username',
+                    recipient: usernameInput,
+                    trip_id: tripId,
+                    message: inviteMessage
+                })
+            });
+
+            if (res.ok) {
+                notifications.addNotification({
+                    id: Date.now(),
+                    type: 'invite',
+                    title: 'Trip Invitation Sent',
+                    message: `Invitation sent to ${usernameInput} for ${tripData.title}`,
+                    timestamp: new Date(),
+                    read: false,
+                    action: {
+                        label: 'View Trip',
+                        href: `/tripspage/${tripId}`
+                    }
+                });
+
+                alert('Username invitation sent successfully!');
+            } else {
+                const errorData = await res.json();
+                console.error('Error sending username invitation:', errorData);
+                alert('Failed to send username invitation. Please try again.');
+            }
         }
+
+        // Reset form fields
+        emailInput = '';
+        usernameInput = '';
+        inviteMessage = '';
+        addMemberModalOpen = false;
+
     } catch (error) {
         console.error('Error sending invitation:', error);
         alert('An error occurred. Please try again.');
