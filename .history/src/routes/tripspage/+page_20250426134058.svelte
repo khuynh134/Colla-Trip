@@ -298,7 +298,7 @@ function formatDateRange(start, end) {
     
     // For the progress bar animation
     import { onMount } from 'svelte';
-	
+	import { stringify } from 'postcss';
 
     //import for highlights 
     import { highlights, refreshHighlights, type Highlight} from '$lib/stores/highlights'; 

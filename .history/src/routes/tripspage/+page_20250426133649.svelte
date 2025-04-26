@@ -90,14 +90,14 @@
 
       if (res.ok) {
         notifications.addNotification({
-  id: Date.now(),
-  type: 'invite',
-  title: 'Trip Invitation Sent',
-  message: `Invitation sent to ${usernameInput} for ${data.trip.title}`, // <-- close backtick here
-  timestamp: new Date(),
-  read: false,
-  action: { label: 'View Trip', href: '/tripspage/' + tripId } // <-- also fix template string
-});
+          id: Date.now(),
+          type: 'invite',
+          title: 'Trip Invitation Sent',
+          message: `Invitation sent to ${usernameInput} for ${data.trip.title`,
+          timestamp: new Date(),
+          read: false,
+          action: { label: 'View Trip', href: `/tripspage/${tripId}` }
+        });
         triggerToast('Username invitation sent successfully!');
       } else {
         const errorData = await res.json();
@@ -298,7 +298,7 @@ function formatDateRange(start, end) {
     
     // For the progress bar animation
     import { onMount } from 'svelte';
-	
+	import { stringify } from 'postcss';
 
     //import for highlights 
     import { highlights, refreshHighlights, type Highlight} from '$lib/stores/highlights'; 
@@ -634,7 +634,7 @@ onMount(() => {
                                             <!-- Add to highlight button -->
                                              <button 
                                                 onclick={() => addHighlight(event.id)}
-                                                disabled={loading || $highlights.some((h: { id: number }) => h.id === event.id)}
+                                                disabled="{loading || $highlights.some((h: { id: number }) => h.id === event.id)}"
                                                 class="text-cyan-600 hover:text-cyan-900 text-xs mt-2 rounded shadow-md px-2 py-1 bg-white border border-cyan-500 flex items-center gap-1"
                                              >
 
