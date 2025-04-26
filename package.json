@@ -44,11 +44,13 @@
 	},
 	"dependencies": {
 		"@google-cloud/local-auth": "^2.1.0",
+		"dotenv": "^16.5.0",
 		"firebase": "^11.2.0",
 		"firebase-admin": "^13.3.0",
 		"googleapis": "^105.0.0",
 		"lucide-svelte": "^0.474.0",
 		"node-fetch": "^3.3.2",
+		"nodemailer": "^6.10.1",
 		"postgres": "^3.4.5",
 		"sveaflet": "^0.1.4"
 	}

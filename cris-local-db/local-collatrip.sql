@@ -73,3 +73,4 @@ CREATE TABLE trip_members(
     CONSTRAINT trip_members_trip_id_fkey FOREIGN KEY (trip_id) REFERENCES trips(id),
     CONSTRAINT trip_members_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
