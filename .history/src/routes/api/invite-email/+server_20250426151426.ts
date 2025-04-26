@@ -2,7 +2,6 @@ import 'dotenv/config';
 import sql from '$lib/server/database.js';
 import nodemailer from 'nodemailer';
 import { json } from '@sveltejs/kit';
-import crypto from 'crypto'; // you forgot to import this
 
 export async function POST({ request }) {
     try {
@@ -12,15 +11,19 @@ export async function POST({ request }) {
             return json({ error: 'Missing tripId or email' }, { status: 400 });
         }
 
+       
+        // Generate random 6-digit code this is temp edit
         const code = Math.floor(100000 + Math.random() * 900000).toString();
-        const token = crypto.randomUUID();  // <-- now it's clear we are using crypto
+
+        const token = crypto.randomUUID();
 
         await sql`
             INSERT INTO trip_invitations (trip_id, email, message, token, code)
             VALUES (${tripId}, ${email}, ${message}, ${token}, ${code})
         `;
 
-        const inviteLink = `${process.env.PUBLIC_APP_URL}/invitepage?token=${token}`;
+        console.log("Creating transporter with user:", process.env.EMAIL_USER);
+        console.log("App URL is:", process.env.PUBLIC_APP_URL);
 
         const transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -30,19 +33,21 @@ export async function POST({ request }) {
             }
         });
 
+        const inviteLink = `${process.env.PUBLIC_APP_URL}/invitepage?token=${token}`;
+
         const mailOptions = {
-            from: `"Colla-Trip" <${process.env.EMAIL_USER}>`, // <- nice professional display
+            from: process.env.EMAIL_USER,
             to: email,
             subject: 'You are invited to join a trip on Colla-Trip!',
             text: `You've been invited to join a trip!
 
-Accept your invite:
+Click the link below to accept the invite:
 ${inviteLink}
 
-OR manually enter this invite code after signing up:
+Or manually enter this code after you register:
 ${code}
 
-Personal message:
+Message from inviter:
 ${message || 'No message provided.'}
 
 This invitation expires in 7 days.
@@ -52,12 +57,10 @@ This invitation expires in 7 days.
 
         await transporter.sendMail(mailOptions);
 
-        console.log('Invite email sent successfully to:', email);
-
         return json({ success: true });
 
     } catch (error) {
-        console.error('Error sending invite email:', error);
+        console.error('Error sending invite email:', error); // keep this
         return json({ error: error.message || 'Failed to send invite email' }, { status: 500 });
     }
 }

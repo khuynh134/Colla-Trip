@@ -9,7 +9,7 @@ export async function GET({ url }) {
     }
 
     try {
-        const [invite] = await sql`
+        const result = await db.query(`
             SELECT 
                 ti.id,
                 ti.trip_id,
@@ -21,13 +21,15 @@ export async function GET({ url }) {
                 t.title AS trip_title
             FROM trip_invitations ti
             JOIN trips t ON ti.trip_id = t.id
-            WHERE ti.token = ${token}
+            WHERE ti.token = $1
             LIMIT 1
-        `;
+        `, [token]);
 
-        if (!invite) {
+        if (result.rows.length === 0) {
             return json({ error: 'Invitation not found or expired' }, { status: 404 });
         }
+
+        const invite = result.rows[0];
 
         // Optional: Check if invitation expired
         const now = new Date();

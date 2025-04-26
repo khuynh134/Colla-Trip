@@ -1,7 +1,6 @@
 {
 	"extends": "./.svelte-kit/tsconfig.json",
 	"compilerOptions": {
-	  "baseUrl": "src",
 	  "module": "es2020",
 	  "moduleResolution": "bundler",
 	  "allowJs": true,
@@ -13,7 +12,7 @@
 	  "sourceMap": true,
 	  "strict": true,
 	  "paths": {
-		"$server/*": ["server/*"]
+		"$server/*": ["src/server/*"]
 	  }
 	}
   }
