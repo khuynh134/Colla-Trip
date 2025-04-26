@@ -1,7 +1,3 @@
-# Package Managers
-package-lock.json
-pnpm-lock.yaml
-yarn.lock
 # Ignore accidental backup files
 **/* 2.ts
 **/* 2.js
