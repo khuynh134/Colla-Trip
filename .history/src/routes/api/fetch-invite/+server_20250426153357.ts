@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+
 import { getInvitationByToken } from '$lib/server/invitations-db';
 
 export async function GET({ url }) {
@@ -9,10 +10,31 @@ export async function GET({ url }) {
     }
 
     try {
-        const invite = await getInvitationByToken(token); // 👈 Call the function
+        const [invite] = await sql`
+            SELECT 
+                ti.id,
+                ti.trip_id,
+                ti.email,
+                ti.username,
+                ti.message,
+                ti.status,
+                ti.expires_at,
+                t.title AS trip_title
+            FROM trip_invitations ti
+            JOIN trips t ON ti.trip_id = t.id
+            WHERE ti.token = ${token}
+            LIMIT 1
+        `;
 
         if (!invite) {
             return json({ error: 'Invitation not found or expired' }, { status: 404 });
+        }
+
+        // Optional: Check if invitation expired
+        const now = new Date();
+        const expiresAt = new Date(invite.expires_at);
+        if (now > expiresAt) {
+            return json({ error: 'Invitation expired' }, { status: 410 });
         }
 
         return json({
