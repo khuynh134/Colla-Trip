@@ -22,9 +22,6 @@ export async function POST({ request }) {
             VALUES (${tripId}, ${email}, ${message}, ${token}, ${code})
         `;
 
-        console.log("Creating transporter with user:", process.env.EMAIL_USER);
-        console.log("App URL is:", process.env.PUBLIC_APP_URL);
-
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
