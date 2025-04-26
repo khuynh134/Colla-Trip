@@ -22,9 +22,6 @@ export async function POST({ request }) {
             VALUES (${tripId}, ${email}, ${message}, ${token}, ${code})
         `;
 
-        console.log("Creating transporter with user:", process.env.EMAIL_USER);
-        console.log("App URL is:", process.env.PUBLIC_APP_URL);
-
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -60,7 +57,7 @@ This invitation expires in 7 days.
         return json({ success: true });
 
     } catch (error) {
-        console.error('Error sending invite email:', error); // keep this
-        return json({ error: error.message || 'Failed to send invite email' }, { status: 500 });
+        console.error('Error sending invite email:', error);
+        return json({ error: 'Failed to send invite email' }, { status: 500 });
     }
 }
