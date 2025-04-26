@@ -189,7 +189,7 @@
                 // Continue without auth
             }
             // Make API result
-            const response = await fetch(`/api/trips/${tripId}`, { headers });
+            const response = await fetch(`/api/trips/${tripId}`);
             if (!response.ok) {
                 if (response.status === 404) {
                     throw new Error(`Trip not found: ${tripId}`);

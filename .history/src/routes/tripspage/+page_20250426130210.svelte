@@ -6,10 +6,7 @@
     import {writable} from 'svelte/store'; 
     import PackingListForm from './PackingList/PackingListForm.svelte';
     import { notifications } from '$lib/stores/notifications';
-    import {page} from '$app/stores';
-    import { getAuth } from 'firebase/auth';
-    import { triggerToast } from '$lib/stores/notifications';
-
+    const { data } = $props();
 
 
     import { 
@@ -26,8 +23,7 @@
         UserPlus,
         Mail,
         Search,
-        Settings,
-        Trash
+        Settings
     } from 'lucide-svelte';
 
     // State management for sidebar
@@ -50,8 +46,7 @@
     let searchResults = $state<TripUser[]>([]);
     let inviteMessage = $state('');
 
-     // Function to handle member invitation
-     async function inviteMember() {
+    async function inviteMember() {
   try {
     if (inviteMethod === 'email' && !emailInput) {
       triggerToast('Please enter an email address');
@@ -101,7 +96,6 @@
           action: { label: 'View Trip', href: `/tripspage/${tripId}` }
         });
         triggerToast('Username invitation sent successfully!');
-        
       } else {
         const errorData = await res.json();
         console.error('Error sending username invitation:', errorData);
@@ -136,101 +130,13 @@
     }
 
     // Function to select a user from search results
-    function selectUser(user: TripUser) {
-    usernameInput = user.username;
-    searchResults = [];
-    }
-
-    //export trip data
-    const { data } = $props();
-    //Get the trip ID from the URL
-    const tripId = $page.params.id;
-    
-    let tripData = $state({
-        id: tripId,
-        title: '',
-        location: '',
-        startDate: '',
-        endDate: '',
-        travelers: 0,
-        owner: '',
-        loading: false,
-        error: null as string | null,
-        budget: {
-            spent: 0,
-            total: 0,
-            percentage: 0
-        }
-        
-    });
-
-    async function loadTripData() {
-        try {
-            console.log('Loading trip data for ID:', tripId);
-            tripData.loading = true;
-            tripData.error = null;
-
-              // Get authentication token if available
-              let headers = new Headers({
-                'Content-Type': 'application/json'
-            });
-            
-            try {
-                const auth = getAuth();
-                const currentUser = auth.currentUser;
-                
-                if (currentUser) {
-                    const token = await currentUser.getIdToken();
-                    headers.append('Authorization', `Bearer ${token}`);
-                    console.log('Added auth token to request');
-                }
-            } catch (authError) {
-                console.warn('Failed to get auth token:', authError);
-                // Continue without auth
-            }
-            // Make API result
-            const response = await fetch(`/api/trips/${tripId}`, { headers });
-            if (!response.ok) {
-                if (response.status === 404) {
-                    throw new Error(`Trip not found: ${tripId}`);
-                }
-                throw new Error(`Failed to load trip: ${response.statusText}`);
-            }
-            
-            const data = await response.json();
-            console.log('Trip data received:', data);
-            
-            tripData = {
-                ...tripData,
-                title: data.title,
-                location: data.location,
-                startDate: data.startDate,
-                endDate: data.endDate,
-                travelers: data.travelers || 0,
-                loading: false,
-                error: null
-                
-            };
-        } catch (error) {
-            console.error('Error loading trip:', error);
-            tripData.error = (error as Error).message;
-            tripData.loading = false;
-        }
-    }
-
-    function calculateDuration(start: string, end: string){
-        const startDate = new Date(start);
-        const endDate = new Date(end);
-        const diff = endDate.getTime() - startDate.getTime();
-        const days = Math.ceil(diff / (1000 * 3600 * 24));
-        return `${days} ${days === 1 ? 'day' : 'days'}`;
+    function selectUser(user) {
+        usernameInput = user.username;
+        searchResults = [];
     }
 
     // Share Trip Modal state
     let shareTripModalOpen = $state(false);
-
-    // Setting Modal state
-    let settingsModalOpen = $state(false);
 
     //states for packing list 
     let packingList = $state<Array<{ 
@@ -249,74 +155,91 @@
     let packingListError = $state<string | null>(null);
     let packingListEmpty = $state(false);
 
-    //fetch packing list from API 
     async function loadPackingList() {
-        try {
-            packingListLoading = true; 
-            packingListError = null;
-            const response = await fetch('/api/packing-list');
-            if (!response.ok) throw new Error('Failed to load packing list items');
-            packingList = await response.json(); 
-            
-        } catch (error) {
-            packingListError = `Failed to load packing list: ${(error as Error).message}`;
-            console.error('Error fetching packing list:', error);
-        } finally {
-            packingListLoading = false; 
-        }
+    try {
+        packingListLoading = true; 
+        packingListError = null;
+        
+        // Use the trip ID from the loaded data if available
+        const tripId = data?.trip?.id || 1;
+        const response = await fetch(`/api/packing-list?trip_id=${tripId}`);
+        
+        if (!response.ok) throw new Error('Failed to load packing list items');
+        
+        packingList = await response.json();
+        packingListEmpty = packingList.length === 0;
+    } catch (error) {
+        packingListError = `Failed to load packing list: ${error.message}`;
+        console.error('Error fetching packing list:', error);
+    } finally {
+        packingListLoading = false; 
     }
+}
     
 
-    async function addItem() {
-        try {
-            const response = await fetch('/api/packing-list', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    name: newItemName,
-                    quantity: newItemQuantity,
-                    created_by: creatorName,
-                    trip_id: tripId
-                })
-            });
+async function addItem() {
+    try {
+        packingListLoading = true;
+        
+        // Use the trip ID from the loaded data if available
+        const tripId = data?.trip?.id || 1;
+        
+        const response = await fetch('/api/packing-list', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: newItemName,
+                quantity: newItemQuantity,
+                created_by: creatorName,
+                trip_id: tripId
+            })
+        });
 
-            if (!response.ok) throw new Error('Error adding item to packing list');
+        if (!response.ok) throw new Error('Error adding item to packing list');
 
-            const newItem = await response.json();
-            packingList = [newItem, ...packingList];
+        const newItem = await response.json();
+        packingList = [newItem, ...packingList];
+        packingListEmpty = false;
 
-            newItemName = '';
-            newItemQuantity = 1;
-            creatorName
-        } catch (error) {
-            console.error('Error adding item:', error);
-            packingListError = 'Failed to add item. Please try again.';
-        } finally {
-            packingListLoading = false;
-        }
+        newItemName = '';
+        newItemQuantity = 1;
+        // Don't reset creatorName so they don't have to re-enter it
+    } catch (error) {
+        console.error('Error adding item:', error);
+        packingListError = 'Failed to add item. Please try again.';
+    } finally {
+        packingListLoading = false;
     }
+}
    
-    async function deleteItem(itemId: number) {
-        try {
+async function deleteItem(itemId: number) {
+    try {
+        packingListLoading = true;
+        
         const response = await fetch(`/api/packing-list`, {
             method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: itemId, trip_id: tripId }) // <-- ADD trip_id to be safe
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id: itemId })
         });
-            if (!response.ok) {
-                throw new Error('Failed to delete item');
-            }
-            // Remove the item from the packing list
-            packingList = packingList.filter(item => item.id !== itemId);
-        } catch (error) {
-            console.error('Error deleting item:', error);
-            packingListError = 'Failed to delete item. Please try again.';
-        } finally {
-            packingListLoading = false; 
+        
+        if (!response.ok) {
+            throw new Error('Failed to delete item');
         }
+        
+        // Remove the item from the packing list
+        packingList = packingList.filter(item => item.id !== itemId);
+        packingListEmpty = packingList.length === 0;
+    } catch (error) {
+        console.error('Error deleting item:', error);
+        packingListError = 'Failed to delete item. Please try again.';
+    } finally {
+        packingListLoading = false; 
     }
+}
 
 
     // Mock packing items
@@ -335,34 +258,75 @@
         const newId = packingItems.length > 0 ? Math.max(...packingItems.map(item => item.id || 0)) + 1 : 1;
         packingItems.push({ id: newId, name: '', checked: false }); 
     }
-  
+    
+   // Replace your hardcoded tripData with this version
+const tripData = {
+    title: data?.trip?.title || "Summer in Japan",
+    location: data?.trip?.location || "Tokyo, Japan",
+    dates: data?.trip?.start_date && data?.trip?.end_date 
+        ? formatDateRange(data.trip.start_date, data.trip.end_date)
+        : "Jun 15 - Jun 22, 2025",
+    //travelers: data?.tripMembers?.length || 4,
+    // Keep the budget as is for now since it's not in your database yet
+    budget: {
+        spent: 2450,
+        total: 3000,
+        percentage: 81
+    },
+    highlights: data?.highlights || [
+        "Tokyo Disneyland",
+        "Mount Fuji Day Trip",
+        "Shibuya Crossing",
+        "Tokyo Skytree"
+    ]
+};
+
+// Add this helper function to format date ranges
+function formatDateRange(start, end) {
+    if (!start || !end) return "Dates not set";
+    
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    
+    const options = { month: 'short', day: 'numeric', year: 'numeric' };
+    return `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, ${endDate.getFullYear()}`;
+}
+    
     // For the progress bar animation
     import { onMount } from 'svelte';
+	import { stringify } from 'postcss';
 
     //import for highlights 
-    import { highlights, refreshHighlights, addHighlight, removeHighlight, type Highlight} from '$lib/stores/highlights'; 
-
+    import { highlights, refreshHighlights, type Highlight} from '$lib/stores/highlights'; 
    
+	
+
     let animateProgress = $state(false);
 
     let loading = $state(false);
     let errorMessage: string | null; 
 
-    // Function to load highlights
-    async function loadHighlights() { 
-        try {
-            await refreshHighlights(tripId); // Pass the tripId to the refreshHighlights function
-        } catch (error) {
-            console.error('Error loading highlights:', error);
-            errorMessage = 'Failed to load highlights. Please try again.';
-        }  
-    }
-     // Add a highlight for the specific trip
-     async function handleAddHighlight(activityId: number) {
+    //Load trip highlights from API
+    async function addHighlight(activityId: number){
         try {
             loading = true;
-            errorMessage = null;
-            await addHighlight(tripId, activityId); // Pass the tripId to add a highlight for the current trip
+            errorMessage = null; 
+            //API call to add highlight
+            const response = await fetch('/api/highlights', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: activityId,
+                    highlighted: true
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update highlight');
+            }
+
+            //refresh both state and store 
+            await refreshHighlights();
         } catch (error) {
             console.error('Error adding highlight:', error);
             errorMessage = 'Failed to add highlight. Please try again.';
@@ -371,15 +335,27 @@
         }
     }
 
-    // Remove a highlight for the specific trip
-    async function handleRemoveHighlight(activityId: number) {
+    //Delete highlight from the list
+    async function unhighlightActivity(highlightId: number) {
         try {
             loading = true;
-            errorMessage = null;
-            await removeHighlight(tripId, activityId); // Pass the tripId to remove a highlight for the current trip
+            errorMessage = null; 
+            //API call to unhighlight activity 
+            const response = await fetch('/api/highlights', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: highlightId, highlighted: false })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete highlight');
+            }
+
+            //refresh both state and store 
+            await refreshHighlights();
         } catch (error) {
-            console.error('Error removing highlight:', error);
-            errorMessage = 'Failed to remove highlight. Please try again.';
+            console.error('Error deleting highlight:', error);
+            errorMessage = 'Failed to delete highlight. Please try again.';
         } finally {
             loading = false;
         }
@@ -402,7 +378,7 @@
     //Fetch results from API 
     async function loadVoteResults() {
         try{
-            const res = await fetch(`/api/trips/${tripId}/activities?order=votes`);
+            const res = await fetch('/api/activities?order=votes');
             const data = await res.json();
             voteResults = data.map((a: { id: number; name: string; votes: number; updated_at: string }) => ({
                 id: a.id,
@@ -425,7 +401,7 @@
 
     async function voteForActivity(activityId: number) {
         try {
-            const response = await fetch(`/api/trips/${tripId}/activities`, {
+            const response = await fetch(`/api/activities`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json' },
@@ -449,7 +425,6 @@
     }
     //formatting the date 
     function formatDate(dateString: string){
-        if(!dateString) return '';
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', {
             year: 'numeric',
@@ -469,77 +444,71 @@
     let scheduleLoading = $state(false);
     let scheduleError = $state<string | null>(null);
   
-    //Load trip schedule in Schedule Tab 
-    async function loadSchedule() {
-        try {
-            scheduleLoading = true; 
-            scheduleError = null; 
-
-            const response = await fetch(`/api/schedule/${tripId}`);
-            if (!response.ok) {
-                throw new Error(`Failed to load schedule: ${response.status}`);
-            }
-            tripSchedule = await response.json(); 
-            // Process and display the schedule data
-        } catch (error) {
-            scheduleError = `Failed to load schedule: ${(error as Error).message}`;
-            console.error('Error fetching schedule:', error);
-        } finally {
-            scheduleLoading = false; 
+        async function loadSchedule() {
+    try {
+        scheduleLoading = true; 
+        // Use the trip ID from the loaded data if available
+        const tripId = data?.trip?.id || 1;
+        const response = await fetch(`/api/schedule?trip_id=${tripId}`);
+        
+        if (!response.ok) {
+            throw new Error(`Failed to load schedule: ${response.status}`);
         }
-
+        
+        tripSchedule = await response.json(); 
+    } catch (error) {
+        scheduleError = `Failed to load schedule: ${error.message}`;
+        console.error('Error fetching schedule:', error);
+    } finally {
+        scheduleLoading = false; 
     }
-    // Function to delete the trip 
-    async function deleteTrip() {
-        if(!confirm('Are you sure you want to delete this trip? This action cannot be undone.')) { return;}
+}
 
-        try {
-            const response = await fetch(`/api/trips/${tripId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to delete trip');
-            }
-            alert('Trip deleted successfully!');
-            // Redirect to the trips page after deleting
-            window.location.href= '/totaltripspage';
-        } catch (error) {
-            console.error('Error deleting trip:', error);
-            alert('Failed to delete trip. Please try again.');
+onMount(() => {
+    (async () => {
+        // Initialize from server data if available
+        if (data?.tripSchedule) {
+            tripSchedule = data.tripSchedule;
         }
-    } 
+        
+        if (data?.voteResults) {
+            voteResults = data.voteResults;
+        }
+        
+        if (data?.packingList) {
+            packingList = data.packingList;
+            packingListEmpty = packingList.length === 0;
+        }
+        
+        //Update the global highlights store
+        await refreshHighlights();
+        
+        // Load trip schedule
+        loadSchedule(); 
+        
+        // Load packing list if not already loaded
+        if (!data?.packingList) {
+            loadPackingList();
+        }
+        
+        // Load voting results asynchronously
+        loadVoteResults(); // initial load
 
-    onMount(() => {
-        (async () => {
-            //load trip data 
-            loadTripData();
+        // Set up polling interval to poll every 5 seconds
+        pollInterval = setInterval(loadVoteResults, 5000);
 
-            //Update the global highlights store
-            loadHighlights();
-            
-            // Load trip schedule
-            loadSchedule(); 
-            // Load voting results asynchronously
-            loadVoteResults(); // initial load
+        // Trigger animation after component mounts
+        setTimeout(() => {
+            animateProgress = true;
+        }, 300);
+    })();
 
-            // Set up polling interval to poll every 5 seconds
-            pollInterval = setInterval(loadVoteResults, 5000);
+    // Cleanup function to clear polling interval
+    return () => {
+        if (pollInterval) clearInterval(pollInterval);
+    };
+});
 
-            // Trigger animation after component mounts
-            setTimeout(() => {
-                animateProgress = true;
-            }, 300);
-        })();
-
-        // Cleanup function to clear polling interval
-        return () => {
-            if (pollInterval) clearInterval(pollInterval);
-        };
-    });
 </script>
 
 <div class="min-h-screen bg-gradient-to-b from-[#e0f7fa] to-[#b2ebf2]">
@@ -550,59 +519,30 @@
     />
 
     <div class="transition-all duration-500 ease-in-out" style="margin-left: {sidebarWidth};">
-        {#if tripData.error}
-            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
-                <p class="font-bold">Error loading trip data</p>
-                <p>{tripData.error}</p>
-                <button
-                    onclick={loadTripData}
-                    class="mt-2 px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red:600">
-                    Retry
-                </button>
-            </div>
         
-        {:else if tripData.loading}
-            <div class="animate-pulse space-y-4">
-                <!-- Header Loading -->
-                <div class="h-8 bg-gray-200 rounded w-3/4"></div>
-                <div class="flex space-x-4">
-                    <div class="h-4 bg-gray-200 rounded w-1/4"></div>
-                </div>
-        
-                 <!-- Tabs Loading -->
-                <div class="flex space-x-4 border-b">
-                    {#each ['Schedule', 'Budget', 'Packing', 'Polling'] as tab}
-                    <div class="h-10 bg-gray-200 rounded w-24"></div>
-                    {/each}
-                </div>
-        
-                <!-- Content Loading -->
-                <div class="h-64 bg-gray-200 rounded"></div>
-            </div>
-        {:else}
         <!-- Trip Header -->
         <div class="bg-white border-b shadow-sm">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div class="flex flex-col">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
-                            <h1 class="text-3xl font-bold text-cyan-700">{tripData.title}</h1>
+                            <h1 class="text-3xl font-bold text-cyan-700">{data.trip.title}</h1>
                             <div class="mt-3 flex flex-wrap items-center text-gray-600 gap-x-6 gap-y-2">
                                 <div class="flex items-center">
                                     <MapPin class="w-5 h-5 text-cyan-600 mr-2" />
-                                    <span>{tripData.location}</span>
+                                    <span>{data.trip.location}</span>
                                 </div>
                                 <div class="flex items-center">
                                     <Calendar class="w-5 h-5 text-cyan-600 mr-2" />
-                                    <span>{formatDate(tripData.startDate)} - {formatDate(tripData.endDate)}</span>
+                                    <span>{formatDateRange(data.trip.start_date, data.trip.end_date)}</span>
                                 </div>
                                 <div class="flex items-center">
                                     <User class="w-5 h-5 text-cyan-600 mr-2" />
-                                    <span>{tripData.travelers} travelers</span>
+                                    <span>{data.tripMembers.length} travelers</span>
                                 </div>
                                 <div class="flex items-center">
                                     <Clock class="w-5 h-5 text-cyan-600 mr-2" />
-                                    <span>{calculateDuration(tripData.startDate, tripData.endDate)}</span>
+                                    <span>7 days</span>
                                 </div>
                             </div>
                         </div>
@@ -620,7 +560,7 @@
                             
                             <!-- Create Poll Button -->
                             <button class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors flex items-center gap-2 shadow-sm"
-                                onclick={() => goto(`/tripspage/${tripId}/activities`)}
+                                onclick={() => goto('/activitypage')}
                                 >
                                 <Vote class="w-4 h-4" />
                                 Create Poll
@@ -637,12 +577,9 @@
                             </button>
 
                             <!-- Settings Button -->
-                            <button class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors flex items-center gap-2 shadow-sm"
-                                onclick={ () => settingsModalOpen = true}
-                            >
+                            <button class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors flex items-center gap-2 shadow-sm">
                                 <Settings class="w-4 h-4" />
                                 Settings
-                            </button>
                         </div>
                     </div>
 
@@ -656,43 +593,43 @@
                                 <span class="text-gray-700 group-hover:text-cyan-600 transition-colors font-medium">Schedule</span>
                             </span>
                             <div class="bg-white rounded-lg shadow-md p-6 mt-2">
-                                {#if scheduleLoading}
-                                    <div class="animate-pulse space-y-4">
-                                        <div class="h-4 bg-gray-200 rounded w-1/2">
-                                        {#each Array(3) as _}
-                                            <div class="h-12 bg-gray-100 rounded-m"></div>
-                                        {/each}
-                                        </div>
-                                    </div>
-                                {:else if scheduleError}
-                                    <div class="text-red-500 p-4 bg-red-50 rounded-md">
-                                        {scheduleError}
-                                        <button onclick={loadSchedule} class="mt-2 px-4 py-2 bg-red-500 text-white rounded">
-                                            Retry loading
-                                        </button>
-                                    </div>
-                                {:else if tripSchedule.length > 0}
-                                    <div class="space-y-6">
-                                        {#each tripSchedule as event, index}
-                                            <div class="border-l-4 border-cyan-500 pl-4 py-2 relative bg-sky-300/30">
-                                                <!-- Timeline dot -->
-                                                <div class="absolute w-3 h-3 bg-cyan-500 rounded-full -left-1.5 top-5"></div>
-                                                <!-- Day number and date -->
-                                                <div class="text-sm text-gray-500">
-                                                    Event { index + 1 } - { formatDate(event.date)}
-                                                </div>
-                                                <!-- Activity title -->
-                                                <div class="text-gray-800 font-medium mt-1">{event.title}</div>
+                                <div class="flex justify-between items-center mb-6">
+                                    <h3 class="text-lg font-semibold text-gray-800">Trip Schedule</h3>
+                                    <button class="text-cyan-600 hover:text-cyan-700 flex items-center gap-1">
+                                        <PlusCircle class="w-4 h-4" />
+                                        <span>Add Event</span>
+                                    </button>
+                                </div>
+                                
+                                <div class="space-y-6">
+                                    {#each tripSchedule as event, index}
+                                        <div class="border-l-4 border-cyan-500 pl-4 py-2 relative bg-sky-300/30">
+                                            <!-- Timeline dot -->
+                                            <div class="absolute w-3 h-3 bg-cyan-500 rounded-full -left-1.5 top-5"></div>
+
+                                            <!-- Day number and date -->
+                                             <div class="text-sm text-gray-500">
+                                                Event { index + 1 } - { formatDate(event.date)}
+                                             </div>
+
+                                            <!-- Activity title -->
+                                             <div class="text-gray-800 font-medium mt-1">
+                                                {event.title}
+                                             </div>
+
                                             <!-- Activity description -->
-                                            <div class="text-gray-600 text-sm mt-1">{event.description}</div>
-                                            <!-- Votes -->
+                                            <div class="text-gray-600 text-sm mt-1">
+                                                {event.description}
+                                             </div>
+
+                                             <!-- Votes -->
                                             <div class="text-xs text-cyan-600 mt-1">
                                                 {event.votes} {event.votes === 1 ? 'vote' : 'votes'}
                                             </div>
 
                                             <!-- Add to highlight button -->
                                              <button 
-                                                onclick={() => handleAddHighlight(event.id)}
+                                                onclick={() => addHighlight(event.id)}
                                                 disabled="{loading || $highlights.some((h: { id: number }) => h.id === event.id)}"
                                                 class="text-cyan-600 hover:text-cyan-900 text-xs mt-2 rounded shadow-md px-2 py-1 bg-white border border-cyan-500 flex items-center gap-1"
                                              >
@@ -701,31 +638,32 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
                                                 class="lucide lucide-loader-icon lucide-loader"><path d="M12 2v4"/><path d="m16.2 7.8 2.9-2.9"/><path d="M18 12h4"/><path d="m16.2 16.2 2.9 2.9"/><path d="M12 18v4"/><path d="m4.9 19.1 2.9-2.9"/><path d="M2 12h4"/><path d="m4.9 4.9 2.9 2.9"/></svg>
                                                 <span>Adding... </span>
-                                             {:else if $highlights.some((h: { id: number }) => h.id === event.id)}
+                                            {:else if $highlights.some((h: { id: number }) => h.id === event.id)}
                                                  <!-- Star SVG -->
                                                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" 
                                                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
                                                  class="lucide lucide-star-icon lucide-star">
                                                  <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
                                                 <span> Highlighted </span>
-                                             {:else}
-                                                <!-- Add to highlight button -->
+                                            {:else}
+                                            <!-- Add to highlight button -->
                                                 <!-- Star SVG -->
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" 
                                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
                                                 class="lucide lucide-star-icon lucide-star">
                                                 <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>
                                                 <span>Add to Trip Highlights</span>
-                                             {/if}
+                                            {/if}
                                             </button>
+                                        
                                         </div>
+                                    {:else}
+                                        <div class="text-gray-500">No events scheduled yet. 
+                                            Add dates to activities in 'create poll' to see them here. 
+                                        </div>
+
                                     {/each}
                                 </div>
-                            {:else}
-                                <div class="text-gray-500">No events scheduled yet. 
-                                    Add dates to activities in 'create poll' to see them here. 
-                                </div>
-                            {/if}
                             </div>
                         </TabItem>
 
@@ -928,7 +866,7 @@
                                     {/if}
 
                                     <button 
-                                    onclick={() => handleRemoveHighlight(highlight.id)}
+                                    onclick={() => unhighlightActivity(highlight.id)}
                                     class="text-cyan-600 hover:text-cyan-900 text-xs mt-2 rounded shadow-md px-2 py-1 bg-white border border-cyan-500 flex items-center gap-1">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
                                     class="lucide lucide-star-off-icon lucide-star-off">
@@ -954,14 +892,12 @@
             </div>
         </div>
 
-        
-
         <!-- Add Member Modal -->
         <Modal bind:open={addMemberModalOpen} size="md" autoclose={false} class="w-full">
             <div class="text-center">
                 <UserPlus class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" />
                 <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-                    Invite a member to join "{tripData.title}"
+                    Invite a member to join "{data.trip.title}"
                 </h3>
                 
                 <!-- Invite Method Selection -->
@@ -1067,52 +1003,20 @@
 
         <!-- Share Trip Modal -->
         <Modal bind:open={shareTripModalOpen} size="md" autoclose={false} class="w-full">
-            <div class="flex items-center justify-center h-full">
-                <div class="flex flex-col items-center gap-6 bg-cyan-50 p-6 rounded-lg shadow-md">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
-                    class="lucide lucide-share-icon lucide-share">
-                   <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>
-                   <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-                       Share "{tripData.title}" with your friends!
-                   </h3>
-                   <p class="text-sm text-gray-500">Trips's location: {tripData.location}</p>
-                   <p class="text-sm text-gray-500">Trip's dates: {formatDate(tripData.startDate)} - {formatDate(tripData.endDate)}</p>
-                   
-                   <div class="flex justify-center gap-4">
+            <div class="text-center">
+                <Share2 class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" />
+                <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
+                    Share "{data.trip.title}" with your friends!
+                </h3>
+                
+                <div class="flex justify-center gap-4">
                     <Button color="alternative" on:click={() => shareTripModalOpen = false}>
                         Close
                     </Button>
-                    </div>
                 </div>
             </div>
         </Modal>
+        <Toast />
 
-        <!-- Setting Trip Modal -->
-         <Modal bind:open={settingsModalOpen} size="lg" autoclose={false} class="w-full">
-            <div class="text-center">
-                <Settings class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" />
-                <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-                    Trip Settings
-                </h3>
-
-                <!-- Delete Trip -->
-                <div class="mb-4">
-                    <Label for="deleteTrip" class="mb-2">Delete Trip</Label>
-                    <p class="text-sm text-gray-500">This action cannot be undone.</p>
-                    <Button color="red" on:click={deleteTrip}>
-                        Delete Trip
-                    </Button>
-                </div>
-                
-                <!-- Settings Content -->
-                <div class="flex justify-center gap-4">
-                    <Button color="alternative" on:click={() => settingsModalOpen = false}>
-                        Close
-                    </Button>
-                </div>
-            </div>
-         </Modal>
-
-    {/if}
     </div>
 </div>

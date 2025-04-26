@@ -4,7 +4,7 @@
     import Sidebar from '$lib/components/Sidebar.svelte';
     import { Tabs, TabItem, Modal, Button, Input, Label, Radio, RadioButton } from 'flowbite-svelte';
     import {writable} from 'svelte/store'; 
-    import PackingListForm from './PackingList/PackingListForm.svelte';
+    //import PackingListForm from './PackingList/PackingListForm.svelte';
     import { notifications } from '$lib/stores/notifications';
     import {page} from '$app/stores';
     import { getAuth } from 'firebase/auth';
@@ -26,8 +26,7 @@
         UserPlus,
         Mail,
         Search,
-        Settings,
-        Trash
+        Settings
     } from 'lucide-svelte';
 
     // State management for sidebar
@@ -52,72 +51,93 @@
 
      // Function to handle member invitation
      async function inviteMember() {
-  try {
-    if (inviteMethod === 'email' && !emailInput) {
-      triggerToast('Please enter an email address');
-      return;
+    try {
+        // Validate inputs
+        if (inviteMethod === 'email' && !emailInput) {
+            alert('Please enter an email address');
+            return;
+        }
+
+        if (inviteMethod === 'username' && !usernameInput) {
+            alert('Please enter a username');
+            return;
+        }
+
+        // tripId is already extracted correctly in your file
+        if (!tripId) {
+            console.error('Missing trip ID');
+            alert('Trip ID not found.');
+            return;
+        }
+
+        if (inviteMethod === 'email') {
+            const res = await fetch('/api/invite-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tripId,
+                    email: emailInput,
+                    message: inviteMessage
+                })
+            });
+
+            if (res.ok) {
+                alert('Email invitation sent successfully!');
+                // Inside your inviteMember() function, after success:
+                triggerToast('Invitation sent successfully!');
+            } else {
+                const errorData = await res.json();
+                console.error('Error sending email invitation:', errorData);
+                alert('Failed to send email invitation. Please try again.');
+            }
+        } else {
+            const res = await fetch('/api/trip-invites', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    method: 'username',
+                    recipient: usernameInput,
+                    trip_id: tripId,
+                    message: inviteMessage
+                })
+            });
+
+            if (res.ok) {
+                notifications.addNotification({
+                    id: Date.now(),
+                    type: 'invite',
+                    title: 'Trip Invitation Sent',
+                    message: `Invitation sent to ${usernameInput} for ${tripData.title}`,
+                    timestamp: new Date(),
+                    read: false,
+                    action: {
+                        label: 'View Trip',
+                        href: `/tripspage/${tripId}`
+                    }
+                });
+
+                alert('Username invitation sent successfully!');
+            } else {
+                const errorData = await res.json();
+                console.error('Error sending username invitation:', errorData);
+                alert('Failed to send username invitation. Please try again.');
+            }
+        }
+
+        // Reset form fields
+        emailInput = '';
+        usernameInput = '';
+        inviteMessage = '';
+        addMemberModalOpen = false;
+
+    } catch (error) {
+        console.error('Error sending invitation:', error);
+        alert('An error occurred. Please try again.');
     }
-
-    if (inviteMethod === 'username' && !usernameInput) {
-      triggerToast('Please enter a username');
-      return;
-    }
-
-    if (!tripId) {
-      console.error('Missing trip ID');
-      triggerToast('Trip ID not found.');
-      return;
-    }
-
-    if (inviteMethod === 'email') {
-      const res = await fetch('/api/invite-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tripId, email: emailInput, message: inviteMessage })
-      });
-
-      if (res.ok) {
-        triggerToast('Email invitation sent successfully!');
-      } else {
-        const errorData = await res.json();
-        console.error('Error sending email invitation:', errorData);
-        triggerToast('Failed to send email invitation. Please try again.');
-      }
-    } else {
-      const res = await fetch('/api/trip-invites', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method: 'username', recipient: usernameInput, trip_id: tripId, message: inviteMessage })
-      });
-
-      if (res.ok) {
-        notifications.addNotification({
-          id: Date.now(),
-          type: 'invite',
-          title: 'Trip Invitation Sent',
-          message: `Invitation sent to ${usernameInput} for ${tripData.title}`,
-          timestamp: new Date(),
-          read: false,
-          action: { label: 'View Trip', href: `/tripspage/${tripId}` }
-        });
-        triggerToast('Username invitation sent successfully!');
-        
-      } else {
-        const errorData = await res.json();
-        console.error('Error sending username invitation:', errorData);
-        triggerToast('Failed to send username invitation. Please try again.');
-      }
-    }
-
-    emailInput = '';
-    usernameInput = '';
-    inviteMessage = '';
-    addMemberModalOpen = false;
-
-  } catch (error) {
-    console.error('Error sending invitation:', error);
-    triggerToast('An error occurred. Please try again.');
-  }
 }
 
     // Mock function to search for users
@@ -136,9 +156,9 @@
     }
 
     // Function to select a user from search results
-    function selectUser(user: TripUser) {
-    usernameInput = user.username;
-    searchResults = [];
+    function selectUser(user) {
+        usernameInput = user.username;
+        searchResults = [];
     }
 
     //export trip data
@@ -189,7 +209,7 @@
                 // Continue without auth
             }
             // Make API result
-            const response = await fetch(`/api/trips/${tripId}`, { headers });
+            const response = await fetch(`/api/trips/${tripId}`);
             if (!response.ok) {
                 if (response.status === 404) {
                     throw new Error(`Trip not found: ${tripId}`);
@@ -259,7 +279,7 @@
             packingList = await response.json(); 
             
         } catch (error) {
-            packingListError = `Failed to load packing list: ${(error as Error).message}`;
+            packingListError = 'Failed to load packing list: ${error.message}';
             console.error('Error fetching packing list:', error);
         } finally {
             packingListLoading = false; 
@@ -277,8 +297,7 @@
                 body: JSON.stringify({
                     name: newItemName,
                     quantity: newItemQuantity,
-                    created_by: creatorName,
-                    trip_id: tripId
+                    created_by: creatorName
                 })
             });
 
@@ -300,11 +319,9 @@
    
     async function deleteItem(itemId: number) {
         try {
-        const response = await fetch(`/api/packing-list`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: itemId, trip_id: tripId }) // <-- ADD trip_id to be safe
-        });
+            const response = await fetch(`/api/packing-list`, {
+                method: 'DELETE'
+            });
             if (!response.ok) {
                 throw new Error('Failed to delete item');
             }

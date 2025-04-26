@@ -4,7 +4,7 @@
     import Sidebar from '$lib/components/Sidebar.svelte';
     import { Tabs, TabItem, Modal, Button, Input, Label, Radio, RadioButton } from 'flowbite-svelte';
     import {writable} from 'svelte/store'; 
-    import PackingListForm from './PackingList/PackingListForm.svelte';
+    //import PackingListForm from './PackingList/PackingListForm.svelte';
     import { notifications } from '$lib/stores/notifications';
     import {page} from '$app/stores';
     import { getAuth } from 'firebase/auth';
@@ -26,8 +26,7 @@
         UserPlus,
         Mail,
         Search,
-        Settings,
-        Trash
+        Settings
     } from 'lucide-svelte';
 
     // State management for sidebar
@@ -101,7 +100,6 @@
           action: { label: 'View Trip', href: `/tripspage/${tripId}` }
         });
         triggerToast('Username invitation sent successfully!');
-        
       } else {
         const errorData = await res.json();
         console.error('Error sending username invitation:', errorData);
@@ -136,9 +134,9 @@
     }
 
     // Function to select a user from search results
-    function selectUser(user: TripUser) {
-    usernameInput = user.username;
-    searchResults = [];
+    function selectUser(user) {
+        usernameInput = user.username;
+        searchResults = [];
     }
 
     //export trip data
@@ -189,7 +187,7 @@
                 // Continue without auth
             }
             // Make API result
-            const response = await fetch(`/api/trips/${tripId}`, { headers });
+            const response = await fetch(`/api/trips/${tripId}`);
             if (!response.ok) {
                 if (response.status === 404) {
                     throw new Error(`Trip not found: ${tripId}`);
@@ -259,7 +257,7 @@
             packingList = await response.json(); 
             
         } catch (error) {
-            packingListError = `Failed to load packing list: ${(error as Error).message}`;
+            packingListError = 'Failed to load packing list: ${error.message}';
             console.error('Error fetching packing list:', error);
         } finally {
             packingListLoading = false; 

@@ -26,8 +26,7 @@
         UserPlus,
         Mail,
         Search,
-        Settings,
-        Trash
+        Settings
     } from 'lucide-svelte';
 
     // State management for sidebar
@@ -139,7 +138,7 @@
     function selectUser(user: TripUser) {
     usernameInput = user.username;
     searchResults = [];
-    }
+}
 
     //export trip data
     const { data } = $props();
@@ -189,7 +188,7 @@
                 // Continue without auth
             }
             // Make API result
-            const response = await fetch(`/api/trips/${tripId}`, { headers });
+            const response = await fetch(`/api/trips/${tripId}`);
             if (!response.ok) {
                 if (response.status === 404) {
                     throw new Error(`Trip not found: ${tripId}`);
@@ -259,7 +258,7 @@
             packingList = await response.json(); 
             
         } catch (error) {
-            packingListError = `Failed to load packing list: ${(error as Error).message}`;
+            packingListError = 'Failed to load packing list: ${error.message}';
             console.error('Error fetching packing list:', error);
         } finally {
             packingListLoading = false; 
