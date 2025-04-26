@@ -341,6 +341,7 @@
 
     //import for highlights 
     import { highlights, refreshHighlights, addHighlight, removeHighlight, type Highlight} from '$lib/stores/highlights'; 
+	import { stringify } from 'postcss';
 
    
     let animateProgress = $state(false);
@@ -418,6 +419,28 @@
             console.error('Error fetching voting results:', err);
         } finally {
             isLoading = false; 
+        }
+    }
+
+    // Declare tripActivities state 
+    let tripActivities = $state<Array<{
+        id: number;
+        title: string;
+        description: string;
+        date: string;
+        votes: number } >>([]);
+
+    // Function to load Activity details for Share Trip Modal
+    async function loadActivities() {
+        try {
+            const response = await fetch(`/api/trips/${tripId}/activities`);
+            if (!response.ok) {
+                throw new Error('Failed to load activity details');
+            }
+            const data = await response.json();
+            tripActivities = data;
+        } catch (error) {
+            console.error('Error fetching activity details:', error);
         }
     }
 
@@ -1066,18 +1089,51 @@
         </Modal>
 
         <!-- Share Trip Modal -->
-        <Modal bind:open={shareTripModalOpen} size="md" autoclose={false} class="w-full">
+        <Modal bind:open={shareTripModalOpen} size="md" autoclose={false} class="w-full"
+        on:open={() => {
+            loadActivities();
+            loadHighlights();
+        }} >
             <div class="flex items-center justify-center h-full">
-                <div class="flex flex-col items-center gap-6 bg-cyan-50 p-6 rounded-lg shadow-md">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
-                    class="lucide lucide-share-icon lucide-share">
-                   <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>
-                   <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-                       Share "{tripData.title}" with your friends!
-                   </h3>
+                <div class="flex flex-col items-center gap-6 bg-cyan-50 p-6 rounded-lg shadow-md max-w-md w-full">
+                    <div class="flex flex-col items-center gap-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
+                        class="lucide lucide-share-icon lucide-share">
+                       <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>
+                       <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
+                           Share "{tripData.title}" with your friends!
+                       </h3>
+                    </div>
                    <p class="text-sm text-gray-500">Trips's location: {tripData.location}</p>
                    <p class="text-sm text-gray-500">Trip's dates: {formatDate(tripData.startDate)} - {formatDate(tripData.endDate)}</p>
                    
+                   <div class="w-full">
+                    <h4 class="text-md font-semibold text-gray-700 mb-2">Activities</h4>
+                    {#if tripActivities.length > 0}
+                        <ul class="list-disc list-inside text-sm text-gray-600">
+                            {#each tripActivities as activity}
+                                <li>{activity.title}: {activity.description}</li>
+                            {/each}
+                        </ul>
+                    {:else}
+                        <p class="text-sm text-gray-500">No activities available.</p>
+                    {/if}
+                   </div>
+
+                    <!-- Highlights -->
+            <div class="w-full mt-4">
+                <h4 class="text-md font-semibold text-gray-700 mb-2">Highlights</h4>
+                {#if $highlights.length > 0}
+                    <ul class="list-disc list-inside text-sm text-gray-600">
+                        {#each $highlights as highlight}
+                            <li>{highlight.name}</li>
+                        {/each}
+                    </ul>
+                {:else}
+                    <p class="text-sm text-gray-500">No highlights available.</p>
+                {/if}
+            </div>
+
                    <div class="flex justify-center gap-4">
                     <Button color="alternative" on:click={() => shareTripModalOpen = false}>
                         Close
@@ -1088,7 +1144,8 @@
         </Modal>
 
         <!-- Setting Trip Modal -->
-         <Modal bind:open={settingsModalOpen} size="lg" autoclose={false} class="w-full">
+         <Modal bind:open={settingsModalOpen} size="md" autoclose={false} class="w-full">
+            
             <div class="text-center">
                 <Settings class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" />
                 <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
