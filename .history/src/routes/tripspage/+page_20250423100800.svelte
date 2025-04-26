@@ -6,7 +6,7 @@
     import {writable} from 'svelte/store'; 
     import PackingListForm from './PackingList/PackingListForm.svelte';
     import { notifications } from '$lib/stores/notifications';
-    const { data } = $props();
+    export let data;
 
 
     import { 
@@ -46,7 +46,8 @@
     let searchResults = $state<TripUser[]>([]);
     let inviteMessage = $state('');
 
-    async function inviteMember() {
+     // Function to handle member invitation
+     async function inviteMember() {
     try {
         // Validate inputs
         if (inviteMethod === 'email' && !emailInput) {
@@ -59,9 +60,7 @@
             return;
         }
         
-        // Use the trip ID from the loaded data if available
-        const tripId = data?.trip?.id || 1;
-        
+        // Mock API call - replace with your actual API endpoint
         const res = await fetch('/api/trip-invites', {
             method: 'POST',
             headers: {
@@ -70,7 +69,7 @@
             body: JSON.stringify({
                 method: inviteMethod,
                 recipient: inviteMethod === 'email' ? emailInput : usernameInput,
-                trip_id: tripId,
+                tripId: 'summer-in-japan', // This should be dynamic based on the current trip
                 message: inviteMessage
             })
         });
@@ -80,12 +79,12 @@
             notifications.addNotification({
                 type: 'invite',
                 title: 'Trip Invitation Sent',
-                message: `Invitation sent to ${inviteMethod === 'email' ? emailInput : usernameInput} for ${data.trip.title}`,
+                message: `Invitation sent to ${inviteMethod === 'email' ? emailInput : usernameInput} for ${tripData.title}`,
                 timestamp: new Date(),
                 read: false,
                 action: {
                     label: 'View Trip',
-                    href: `/tripspage/${data.trip.title.toLowerCase().replace(/\s+/g, '-')}`
+                    href: `/tripspage/${tripData.title.toLowerCase().replace(/\s+/g, '-')}`
                 }
             });
 
@@ -149,91 +148,71 @@
     let packingListError = $state<string | null>(null);
     let packingListEmpty = $state(false);
 
+    //fetch packing list from API 
     async function loadPackingList() {
-    try {
-        packingListLoading = true; 
-        packingListError = null;
-        
-        // Use the trip ID from the loaded data if available
-        const tripId = data?.trip?.id || 1;
-        const response = await fetch(`/api/packing-list?trip_id=${tripId}`);
-        
-        if (!response.ok) throw new Error('Failed to load packing list items');
-        
-        packingList = await response.json();
-        packingListEmpty = packingList.length === 0;
-    } catch (error) {
-        packingListError = `Failed to load packing list: ${error.message}`;
-        console.error('Error fetching packing list:', error);
-    } finally {
-        packingListLoading = false; 
+        try {
+            packingListLoading = true; 
+            packingListError = null;
+            const response = await fetch('/api/packing-list');
+            if (!response.ok) throw new Error('Failed to load packing list items');
+            packingList = await response.json(); 
+            
+        } catch (error) {
+            packingListError = 'Failed to load packing list: ${error.message}';
+            console.error('Error fetching packing list:', error);
+        } finally {
+            packingListLoading = false; 
+        }
     }
-}
     
 
-async function addItem() {
-    try {
-        packingListLoading = true;
-        
-        // Use the trip ID from the loaded data if available
-        const tripId = data?.trip?.id || 1;
-        
-        const response = await fetch('/api/packing-list', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                name: newItemName,
-                quantity: newItemQuantity,
-                created_by: creatorName,
-                trip_id: tripId
-            })
-        });
+    async function addItem() {
+        try {
+            const response = await fetch('/api/packing-list', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: newItemName,
+                    quantity: newItemQuantity,
+                    created_by: creatorName
+                })
+            });
 
-        if (!response.ok) throw new Error('Error adding item to packing list');
+            if (!response.ok) throw new Error('Error adding item to packing list');
 
-        const newItem = await response.json();
-        packingList = [newItem, ...packingList];
-        packingListEmpty = false;
+            const newItem = await response.json();
+            packingList = [newItem, ...packingList];
 
-        newItemName = '';
-        newItemQuantity = 1;
-        // Don't reset creatorName so they don't have to re-enter it
-    } catch (error) {
-        console.error('Error adding item:', error);
-        packingListError = 'Failed to add item. Please try again.';
-    } finally {
-        packingListLoading = false;
-    }
-}
-   
-async function deleteItem(itemId: number) {
-    try {
-        packingListLoading = true;
-        
-        const response = await fetch(`/api/packing-list`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ id: itemId })
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to delete item');
+            newItemName = '';
+            newItemQuantity = 1;
+            creatorName
+        } catch (error) {
+            console.error('Error adding item:', error);
+            packingListError = 'Failed to add item. Please try again.';
+        } finally {
+            packingListLoading = false;
         }
-        
-        // Remove the item from the packing list
-        packingList = packingList.filter(item => item.id !== itemId);
-        packingListEmpty = packingList.length === 0;
-    } catch (error) {
-        console.error('Error deleting item:', error);
-        packingListError = 'Failed to delete item. Please try again.';
-    } finally {
-        packingListLoading = false; 
     }
-}
+   
+    async function deleteItem(itemId: number) {
+        try {
+            const response = await fetch(`/api/packing-list`, {
+                method: 'DELETE'
+            });
+            if (!response.ok) {
+                throw new Error('Failed to delete item');
+            }
+            // Remove the item from the packing list
+            packingList = packingList.filter(item => item.id !== itemId);
+        } catch (error) {
+            console.error('Error deleting item:', error);
+            packingListError = 'Failed to delete item. Please try again.';
+        } finally {
+            packingListLoading = false; 
+        }
+    }
 
 
     // Mock packing items
@@ -253,38 +232,24 @@ async function deleteItem(itemId: number) {
         packingItems.push({ id: newId, name: '', checked: false }); 
     }
     
-   // Replace your hardcoded tripData with this version
-const tripData = {
-    title: data?.trip?.title || "Summer in Japan",
-    location: data?.trip?.location || "Tokyo, Japan",
-    dates: data?.trip?.start_date && data?.trip?.end_date 
-        ? formatDateRange(data.trip.start_date, data.trip.end_date)
-        : "Jun 15 - Jun 22, 2025",
-    //travelers: data?.tripMembers?.length || 4,
-    // Keep the budget as is for now since it's not in your database yet
-    budget: {
-        spent: 2450,
-        total: 3000,
-        percentage: 81
-    },
-    highlights: data?.highlights || [
-        "Tokyo Disneyland",
-        "Mount Fuji Day Trip",
-        "Shibuya Crossing",
-        "Tokyo Skytree"
-    ]
-};
-
-// Add this helper function to format date ranges
-function formatDateRange(start, end) {
-    if (!start || !end) return "Dates not set";
-    
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-    
-    const options = { month: 'short', day: 'numeric', year: 'numeric' };
-    return `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, ${endDate.getFullYear()}`;
-}
+    // Trip data
+    const tripData = {
+        title: "Summer in Japan",
+        location: "Tokyo, Japan",
+        dates: "Jun 15 - Jun 22, 2025",
+        travelers: 4,
+        budget: {
+            spent: 2450,
+            total: 3000,
+            percentage: 81
+        },
+        highlights: [
+            "Tokyo Disneyland",
+            "Mount Fuji Day Trip",
+            "Shibuya Crossing",
+            "Tokyo Skytree"
+        ]
+    };
     
     // For the progress bar animation
     import { onMount } from 'svelte';
@@ -438,71 +403,49 @@ function formatDateRange(start, end) {
     let scheduleLoading = $state(false);
     let scheduleError = $state<string | null>(null);
   
-        async function loadSchedule() {
-    try {
-        scheduleLoading = true; 
-        // Use the trip ID from the loaded data if available
-        const tripId = data?.trip?.id || 1;
-        const response = await fetch(`/api/schedule?trip_id=${tripId}`);
-        
-        if (!response.ok) {
-            throw new Error(`Failed to load schedule: ${response.status}`);
+    //Load trip schedule in Schedule Tab 
+    async function loadSchedule() {
+        try {
+            scheduleLoading = true; 
+            const response = await fetch('/api/schedule');
+            if (!response.ok) {
+                throw new Error('Failed to load schedule: ${response.status}');
+            }
+            tripSchedule = await response.json(); 
+            // Process and display the schedule data
+        } catch (error) {
+            scheduleError = 'Failed to load schedule: ${error.message}';
+            console.error('Error fetching schedule:', error);
+        } finally {
+            scheduleLoading = false; 
         }
-        
-        tripSchedule = await response.json(); 
-    } catch (error) {
-        scheduleError = `Failed to load schedule: ${error.message}`;
-        console.error('Error fetching schedule:', error);
-    } finally {
-        scheduleLoading = false; 
+
     }
-}
 
-onMount(() => {
-    (async () => {
-        // Initialize from server data if available
-        if (data?.tripSchedule) {
-            tripSchedule = data.tripSchedule;
-        }
-        
-        if (data?.voteResults) {
-            voteResults = data.voteResults;
-        }
-        
-        if (data?.packingList) {
-            packingList = data.packingList;
-            packingListEmpty = packingList.length === 0;
-        }
-        
-        //Update the global highlights store
-        await refreshHighlights();
-        
-        // Load trip schedule
-        loadSchedule(); 
-        
-        // Load packing list if not already loaded
-        if (!data?.packingList) {
-            loadPackingList();
-        }
-        
-        // Load voting results asynchronously
-        loadVoteResults(); // initial load
+    onMount(() => {
+        (async () => {
+            //Update the global highlights store
+            await refreshHighlights();
+            
+            // Load trip schedule
+            loadSchedule(); 
+            // Load voting results asynchronously
+            loadVoteResults(); // initial load
 
-        // Set up polling interval to poll every 5 seconds
-        pollInterval = setInterval(loadVoteResults, 5000);
+            // Set up polling interval to poll every 5 seconds
+            pollInterval = setInterval(loadVoteResults, 5000);
 
-        // Trigger animation after component mounts
-        setTimeout(() => {
-            animateProgress = true;
-        }, 300);
-    })();
+            // Trigger animation after component mounts
+            setTimeout(() => {
+                animateProgress = true;
+            }, 300);
+        })();
 
-    // Cleanup function to clear polling interval
-    return () => {
-        if (pollInterval) clearInterval(pollInterval);
-    };
-});
-
+        // Cleanup function to clear polling interval
+        return () => {
+            if (pollInterval) clearInterval(pollInterval);
+        };
+    });
 </script>
 
 <div class="min-h-screen bg-gradient-to-b from-[#e0f7fa] to-[#b2ebf2]">
@@ -520,19 +463,19 @@ onMount(() => {
                 <div class="flex flex-col">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
-                            <h1 class="text-3xl font-bold text-cyan-700">{data.trip.title}</h1>
+                            <h1 class="text-3xl font-bold text-cyan-700">{tripData.title}</h1>
                             <div class="mt-3 flex flex-wrap items-center text-gray-600 gap-x-6 gap-y-2">
                                 <div class="flex items-center">
                                     <MapPin class="w-5 h-5 text-cyan-600 mr-2" />
-                                    <span>{data.trip.location}</span>
+                                    <span>{tripData.location}</span>
                                 </div>
                                 <div class="flex items-center">
                                     <Calendar class="w-5 h-5 text-cyan-600 mr-2" />
-                                    <span>{formatDateRange(data.trip.start_date, data.trip.end_date)}</span>
+                                    <span>{tripData.dates}</span>
                                 </div>
                                 <div class="flex items-center">
                                     <User class="w-5 h-5 text-cyan-600 mr-2" />
-                                    <span>{data.tripMembers.length} travelers</span>
+                                    <span>{tripData.travelers} travelers</span>
                                 </div>
                                 <div class="flex items-center">
                                     <Clock class="w-5 h-5 text-cyan-600 mr-2" />
@@ -891,7 +834,7 @@ onMount(() => {
             <div class="text-center">
                 <UserPlus class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" />
                 <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-                    Invite a member to join "{data.trip.title}"
+                    Invite a member to join "{tripData.title}"
                 </h3>
                 
                 <!-- Invite Method Selection -->
@@ -1000,7 +943,7 @@ onMount(() => {
             <div class="text-center">
                 <Share2 class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" />
                 <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-                    Share "{data.trip.title}" with your friends!
+                    Share "{tripData.title}" with your friends!
                 </h3>
                 
                 <div class="flex justify-center gap-4">

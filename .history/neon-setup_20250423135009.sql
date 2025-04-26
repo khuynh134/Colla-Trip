@@ -66,7 +66,3 @@ CREATE TABLE trips(
     updated_at timestamp without time zone DEFAULT now(),
     PRIMARY KEY(id)
 );
-
-ALTER TABLE trips RENAME COLUMN name TO title;
-ALTER TABLE trips ADD COLUMN description TEXT;
-ALTER TABLE trips ADD COLUMN created_by VARCHAR(255);
