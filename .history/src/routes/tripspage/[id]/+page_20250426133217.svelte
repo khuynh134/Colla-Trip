@@ -4,7 +4,7 @@
     import Sidebar from '$lib/components/Sidebar.svelte';
     import { Tabs, TabItem, Modal, Button, Input, Label, Radio, RadioButton } from 'flowbite-svelte';
     import {writable} from 'svelte/store'; 
-    import PackingListForm from '../PackingList/PackingListForm.svelte';
+    import PackingListForm from './PackingList/PackingListForm.svelte';
     import { notifications } from '$lib/stores/notifications';
     import {page} from '$app/stores';
     import { getAuth } from 'firebase/auth';
