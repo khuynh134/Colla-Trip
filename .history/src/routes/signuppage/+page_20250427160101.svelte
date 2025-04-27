@@ -5,7 +5,7 @@
     import { page } from '$app/stores';
 
     let token = '';
-    $: token = $page.url.searchParams.get('token') || '';  
+    $: token = $page.url.searchParams.get('token') || '';
     let inviteCode = '';
 
     // Form state
@@ -15,7 +15,7 @@
     let email = '';
     let password = '';
     let confirmPassword = '';
-    let errorMessage = ''; 
+    let errorMessage = '';
     let success: boolean | undefined = undefined;
     let isLoading = false;
 
@@ -39,8 +39,7 @@
     }
 
     async function isUsernameUnique(username: string): Promise<boolean> {
-        // TODO: Implement username uniqueness check later
-        return true; 
+        return true; // (placeholder - no username validation yet)
     }
 
     async function handleSignUp(event: Event) {
@@ -71,10 +70,12 @@
                 email: user.email,
                 username: username,
                 profile: `${firstName} ${lastName}`,
-                roles: ['user'],
-                token: token
+                roles: ['user']
             };
 
+            if (token.trim() !== '') {
+                requestBody.token = token;
+            }
             if (inviteCode.trim() !== '') {
                 requestBody.invite_code = inviteCode;
             }
@@ -90,7 +91,7 @@
             }
 
             success = true;
-            const redirectUrl = token ? `/invite-success` : '/tripspage'; // 🎯 Redirect to dashboard
+            const redirectUrl = token ? `/invite-success` : `/dashboard`;  // ⭐ Redirect directly to dashboard if no invite
             goto(redirectUrl);
 
         } catch (error) {
@@ -103,109 +104,55 @@
     }
 </script>
 
+<!-- HTML page content stays almost the same -->
+
 <div class="min-h-screen bg-gradient-to-r from-[#84eaeb] to-[#3598db] flex flex-col items-center justify-center p-4">
     <div class="bg-white/90 backdrop-blur-sm p-8 rounded-lg shadow-lg w-full max-w-md">
         <h1 class="text-3xl font-bold text-[#3598db] mb-6 text-center">Sign Up</h1>
-        
+
         {#if success === true}
             <p class="text-green-600 text-center mb-4">Signup successful! Redirecting...</p>
         {:else if success === false}
             <p class="text-red-600 text-center mb-4">{errorMessage}</p>
         {/if}
-        
+
         <form on:submit={handleSignUp} class="space-y-6">
             <div>
                 <label for="firstName" class="block text-gray-700 mb-2">First Name</label>
-                <input 
-                    id="firstName" 
-                    type="text" 
-                    bind:value={firstName} 
-                    placeholder="Enter your first name"
-                    required
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
-                />
+                <input id="firstName" type="text" bind:value={firstName} placeholder="Enter your first name" required class="input" />
             </div>
 
             <div>
                 <label for="lastName" class="block text-gray-700 mb-2">Last Name</label>
-                <input 
-                    id="lastName" 
-                    type="text" 
-                    bind:value={lastName} 
-                    placeholder="Enter your last name"
-                    required
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
-                />
+                <input id="lastName" type="text" bind:value={lastName} placeholder="Enter your last name" required class="input" />
             </div>
 
             <div>
                 <label for="username" class="block text-gray-700 mb-2">Username</label>
-                <input 
-                    id="username" 
-                    type="text" 
-                    bind:value={username} 
-                    placeholder="Choose a username"
-                    required
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
-                />
-                <p class="text-sm text-gray-500 mt-1">Username must be unique</p>
+                <input id="username" type="text" bind:value={username} placeholder="Choose a username" required class="input" />
             </div>
 
             <div>
                 <label for="email" class="block text-gray-700 mb-2">Email</label>
-                <input 
-                    id="email" 
-                    type="email" 
-                    bind:value={email} 
-                    placeholder="Enter your email"
-                    required
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
-                />
+                <input id="email" type="email" bind:value={email} placeholder="Enter your email" required class="input" />
             </div>
 
             <div>
                 <label for="password" class="block text-gray-700 mb-2">Password</label>
-                <input 
-                    id="password" 
-                    type="password" 
-                    bind:value={password} 
-                    placeholder="Enter your password"
-                    required
-                    minlength="8"
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
-                />
-                <p class="text-sm text-gray-500 mt-1">Password must be at least 8 characters, with uppercase, lowercase, and a number.</p>
+                <input id="password" type="password" bind:value={password} placeholder="Enter your password" required minlength="8" class="input" />
             </div>
 
             <div>
                 <label for="confirmPassword" class="block text-gray-700 mb-2">Confirm Password</label>
-                <input 
-                    id="confirmPassword" 
-                    type="password" 
-                    bind:value={confirmPassword} 
-                    placeholder="Re-enter your password"
-                    required
-                    minlength="8"
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
-                />
+                <input id="confirmPassword" type="password" bind:value={confirmPassword} placeholder="Confirm your password" required minlength="8" class="input" />
             </div>
 
             <div>
                 <label for="inviteCode" class="block text-red-700 mb-2">Invitation Code (optional)</label>
-                <input 
-                    id="inviteCode"
-                    type="text"
-                    bind:value={inviteCode}
-                    placeholder="Enter your 6-digit invite code (optional)"
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
-                />
+                <input id="inviteCode" type="text" bind:value={inviteCode} placeholder="6-digit code (optional)" class="input" />
             </div>
 
-            <button 
-                type="submit" 
-                disabled={isLoading}
-                class="w-full bg-cyan-600 text-white py-3 rounded-lg hover:bg-cyan-700 transition-colors disabled:opacity-50"
-            >
+            <button type="submit" disabled={isLoading} class="btn-primary">
                 {isLoading ? 'Signing up...' : 'Sign Up'}
             </button>
         </form>
@@ -218,3 +165,12 @@
         </div>
     </div>
 </div>
+
+<style>
+    .input {
+        @apply w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent;
+    }
+    .btn-primary {
+        @apply w-full bg-cyan-600 text-white py-3 rounded-lg hover:bg-cyan-700 transition-colors disabled:opacity-50;
+    }
+</style>
