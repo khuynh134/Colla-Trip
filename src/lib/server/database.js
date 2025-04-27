@@ -1,6 +1,7 @@
 import postgres from 'postgres';
 import { env } from '$env/dynamic/private';
 
+
 function getConnectionString() {
     const isDev = process.env.NODE_ENV !== 'production';
 

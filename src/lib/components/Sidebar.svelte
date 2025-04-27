@@ -12,6 +12,7 @@
   import { getAuth} from 'firebase/auth';
   import type { User as FirebaseUser } from 'firebase/auth';
   import type { SubmitFunction } from '@sveltejs/kit'
+  import { fetchUnsplashImage } from '$lib/utils/unsplash'; 
 
   // Form data variables 
   let tripName = '';
@@ -178,6 +179,10 @@ function handleMouseLeave() {
          }
        }
 
+       // Fetch Unsplash Image
+       const tripImageUrl = await fetchUnsplashImage(tripLocation) || '';
+       console.log('Fetched Unsplash Image URL:', tripImageUrl); 
+
         //Create json request data
         const requestedData = {
          tripName,
@@ -186,12 +191,13 @@ function handleMouseLeave() {
          tripLocation,
          firebaseToken: token,
          tripTotalDays: calculatedTotalDays,
-         members: validMembers
+         members: validMembers,
+         tripImageUrl
        };
 
        console.log('Sending fetch request with JSON...');
 
-       const response = await fetch('api/create-trip', {
+       const response = await fetch('/api/create-trip', {
          method: 'POST',
          headers: {
            'Content-Type': 'application/json',

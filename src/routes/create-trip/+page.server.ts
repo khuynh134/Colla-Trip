@@ -14,6 +14,7 @@ export const actions = {
             let idToken: string | undefined;
             let tripLocation: string;
             let tripTotalDays: number;
+            let tripImageUrl: string; 
  
  
             // Check content type to determine how to parse the request
@@ -33,6 +34,7 @@ export const actions = {
                 endDate = body.tripEndDate;
                 tripLocation = body.tripLocation;
                 tripTotalDays = body.tripTotalDays;
+                tripImageUrl = body.tripImageUrl || ''; 
                 members = Array.isArray(body.members) ? body.members : [];
             } else {
                 //handle form data request
@@ -56,6 +58,7 @@ export const actions = {
                 members = formData.getAll('members').map((member) => member.toString());
                 tripLocation = formData.get('tripLocation')?.toString() ?? '';
                 tripTotalDays = Number((formData.get('tripTotalDays')?.toString() ?? '0'));
+                tripImageUrl = formData.get('tripImageUrl')?.toString() ?? ''; 
             }
  
  
@@ -115,14 +118,15 @@ export const actions = {
                 tripName,
                 dates: `${startDate} to ${endDate}`,
                 totalDays: tripTotalDays,
-                location: tripLocation
+                location: tripLocation,
+                tripImageUrl
             });
  
  
             //Database insert
             const [newTrip] = await sql`
-                INSERT INTO trips (name, start_date, end_date, owner_uid, location)
-                VALUES (${tripName}, ${startDateObj}, ${endDateObj}, ${firebaseUID}, ${tripLocation})
+                INSERT INTO trips (name, start_date, end_date, owner_uid, location, image_url, total_days)
+                VALUES (${tripName}, ${startDateObj}, ${endDateObj}, ${firebaseUID}, ${tripLocation}, ${tripImageUrl}, ${tripTotalDays})
                 RETURNING id
                 `;
                 console.log('Trip created with ID:', newTrip.id);
