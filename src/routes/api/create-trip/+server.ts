@@ -16,7 +16,7 @@ export async function POST({ request }) {
         }
 
         // Validate required fields
-        const { tripName, tripStartDate, tripEndDate, tripLocation, tripImageUrl, tripTotalDays } = body;
+        const { tripName, tripStartDate, tripEndDate, tripLocation } = body;
         if (!tripName || !tripStartDate || !tripEndDate || !tripLocation) {
             throw error(400, 'Missing required fields');
         }
@@ -40,8 +40,8 @@ export async function POST({ request }) {
 
         // Insert into database
         const [newTrip] = await sql`
-            INSERT INTO trips (name, start_date, end_date, owner_uid, location, image_url, total_days)
-            VALUES (${tripName}, ${startDate}, ${endDate}, ${firebaseUID}, ${tripLocation}, ${tripImageUrl}, ${tripTotalDays})
+            INSERT INTO trips (name, start_date, end_date, owner_uid, location)
+            VALUES (${tripName}, ${startDate}, ${endDate}, ${firebaseUID}, ${tripLocation})
             RETURNING id
         `;
 

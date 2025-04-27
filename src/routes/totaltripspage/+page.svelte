@@ -4,7 +4,7 @@
     import { getAuth, onAuthStateChanged } from 'firebase/auth';
     import { Card} from 'flowbite-svelte';
     import { Calendar, MapPin } from 'lucide-svelte';
-    let trips: { id: number; name: string; location: string; startDate: string; endDate: string; image_url?: string }[] = [];
+    let trips: { id: number; name: string; location: string; startDate: string; endDate: string }[] = [];
     let loading = true; 
     let error: string | null; 
 
@@ -91,13 +91,6 @@
             {#each trips as trip}
                 <button on:click={() => navigateToTrip(trip.id)} class="trip-card">
                     <Card>
-                    <!-- Trip image -->
-                     <img 
-                        src={trip.image_url || 'https://source.unsplash.com/400x300/?travel'}
-                        alt={trip.location}
-                        class="w-full h-40 object-cover rounded-t-lg"
-                    />
-                        
                     <h3>Trip's name: {trip.name}</h3>
                     <div class ="location">
                         <MapPin class="w-5 h-5 text-cyan-600 mr-2" />

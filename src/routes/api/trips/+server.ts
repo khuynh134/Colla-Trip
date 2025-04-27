@@ -146,8 +146,7 @@ export async function GET({ request }) {
         name, 
         start_date AS "startDate", 
         end_date AS "endDate", 
-        location,
-        image_url
+        location
       FROM trips
       WHERE owner_uid = ${firebaseUID}
     `;

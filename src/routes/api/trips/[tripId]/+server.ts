@@ -1,4 +1,3 @@
-//api/trips/[tripId]/+server.ts
 import { json, error } from '@sveltejs/kit';
 import sql from '$lib/server/database.js';
 import { adminAuth } from '$lib/server/firebase-admin';
@@ -34,8 +33,7 @@ export async function GET({ params, request }) {
                 start_date as "startDate",
                 end_date as "endDate",
                 owner_uid as "ownerUid",
-                created_at as "createdAt",
-                image_url as "imageUrl"
+                created_at as "createdAt"
             FROM trips
             WHERE id = ${tripId}
         `;

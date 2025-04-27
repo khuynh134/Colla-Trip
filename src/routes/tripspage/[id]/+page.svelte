@@ -1104,15 +1104,15 @@
                            Share "{tripData.title}" with your friends!
                        </h3>
                     </div>
-                   <p class="text-sm text-gray-500">Trips's Location: {tripData.location}</p>
-                   <p class="text-sm text-gray-500">Trip's Dates: {formatDate(tripData.startDate)} - {formatDate(tripData.endDate)}</p>
+                   <p class="text-sm text-gray-500">Trips's location: {tripData.location}</p>
+                   <p class="text-sm text-gray-500">Trip's dates: {formatDate(tripData.startDate)} - {formatDate(tripData.endDate)}</p>
                    
                    <div class="w-full">
                     <h4 class="text-md font-semibold text-gray-700 mb-2">Activities</h4>
                     {#if tripActivities.length > 0}
                         <ul class="list-disc list-inside text-sm text-gray-600">
                             {#each tripActivities as activity}
-                                <li>{activity.title} {activity.description}</li>
+                                <li>{activity.title}: {activity.description}</li>
                             {/each}
                         </ul>
                     {:else}
