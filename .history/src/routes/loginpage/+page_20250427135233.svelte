@@ -16,7 +16,6 @@
 	let loggedIn = false;
 	let inviteAcceptSuccess: boolean | null = null;
 	let inviteAcceptError = '';
-	let redirecting = false; 
 
 	async function handleLogin(event: Event) {
 		event.preventDefault();
@@ -35,41 +34,37 @@
 	}
 
 	async function handleAcceptInvite() {
-	if (!auth.currentUser) {
-		inviteAcceptError = 'You must be logged in.';
-		return;
-	}
+		if (!auth.currentUser) {
+			inviteAcceptError = 'You must be logged in.';
+			return;
+		}
 
-	const userEmail = auth.currentUser.email;
-	if (!userEmail) {
-		inviteAcceptError = 'Missing user email.';
-		return;
-	}
+		const userEmail = auth.currentUser.email;
+		if (!userEmail) {
+			inviteAcceptError = 'Missing user email.';
+			return;
+		}
 
-	try {
-		const res = await fetch('/api/accept-invite', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ token, invite_code: inviteCode, email: userEmail })
-		});
+		try {
+			const res = await fetch('/api/accept-invite', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ token, invite_code: inviteCode, email: userEmail })
+			});
 
-		if (res.ok) {
-			inviteAcceptSuccess = true;
-			redirecting = true; // ✨ Start spinner
-			setTimeout(() => {
-				goto('/tripspage');
-			}, 2000);
-		} else {
-			const errorData = await res.json();
-			inviteAcceptError = errorData.error || 'Failed to accept invite.';
+			if (res.ok) {
+				inviteAcceptSuccess = true;
+			} else {
+				const errorData = await res.json();
+				inviteAcceptError = errorData.error || 'Failed to accept invite.';
+				inviteAcceptSuccess = false;
+			}
+		} catch (err) {
+			console.error('Error accepting invite:', err);
+			inviteAcceptError = 'Something went wrong. Please try again.';
 			inviteAcceptSuccess = false;
 		}
-	} catch (err) {
-		console.error('Error accepting invite:', err);
-		inviteAcceptError = 'Something went wrong. Please try again.';
-		inviteAcceptSuccess = false;
 	}
-}
 </script>
 
 <div class="min-h-screen bg-gradient-to-r from-[#84eaeb] to-[#3598db] flex flex-col items-center justify-center p-4">
@@ -82,7 +77,7 @@
 
 		{#if !loggedIn}
 			<!-- Login Form -->
-			<form on:submit|preventDefault={handleLogin} class="space-y-6">
+			<form on:submit={handleLogin} class="space-y-6">
 				<div>
 					<label for="email" class="block text-gray-700 mb-2">Email</label>
 					<input 
@@ -128,33 +123,26 @@
 				<h2 class="text-2xl font-bold mb-4 text-cyan-700">Join Your Trip!</h2>
 
 				{#if inviteAcceptSuccess}
-    {#if redirecting}
-        <div class="flex flex-col items-center justify-center space-y-4">
-            <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-cyan-500"></div>
-            <p class="text-cyan-700 font-semibold">Redirecting you to your trip...</p>
-        </div>
-    {:else}
-        <p class="text-green-600 font-semibold mb-4">🎉 Invite accepted! You are now part of the trip!</p>
-        <a href="/tripspage" class="text-cyan-600 underline">Go to Trips</a>
-    {/if}
-{:else}
-    {#if inviteAcceptError}
-        <p class="text-red-600 font-semibold mb-4">{inviteAcceptError}</p>
-    {/if}
+					<p class="text-green-600 font-semibold mb-4">🎉 Invite accepted! You are now part of the trip!</p>
+					<a href="/tripspage" class="text-cyan-600 underline">Go to Trips</a>
+				{:else}
+					{#if inviteAcceptError}
+						<p class="text-red-600 font-semibold mb-4">{inviteAcceptError}</p>
+					{/if}
 
-    <input 
-        type="text"
-        placeholder="Enter your 6-digit invite code"
-        bind:value={inviteCode}
-        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent mb-4"
-    />
-    <button 
-        on:click={handleAcceptInvite}
-        class="w-full bg-cyan-600 text-white py-3 rounded-lg hover:bg-cyan-700 transition-all"
-    >
-        Accept Invite
-    </button>
-{/if}
+					<input 
+						type="text"
+						placeholder="Enter your 6-digit invite code"
+						bind:value={inviteCode}
+						class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent mb-4"
+					/>
+					<button 
+						on:click={handleAcceptInvite}
+						class="w-full bg-cyan-600 text-white py-3 rounded-lg hover:bg-cyan-700 transition-all"
+					>
+						Accept Invite
+					</button>
+				{/if}
 			</div>
 		{/if}
 	</div>

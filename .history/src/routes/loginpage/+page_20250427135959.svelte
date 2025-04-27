@@ -127,34 +127,37 @@
 			<div class="mt-10 p-6 bg-white rounded-lg shadow-md text-center">
 				<h2 class="text-2xl font-bold mb-4 text-cyan-700">Join Your Trip!</h2>
 
-				{#if inviteAcceptSuccess}
-    {#if redirecting}
-        <div class="flex flex-col items-center justify-center space-y-4">
-            <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-cyan-500"></div>
-            <p class="text-cyan-700 font-semibold">Redirecting you to your trip...</p>
-        </div>
-    {:else}
-        <p class="text-green-600 font-semibold mb-4">🎉 Invite accepted! You are now part of the trip!</p>
-        <a href="/tripspage" class="text-cyan-600 underline">Go to Trips</a>
-    {/if}
-{:else}
-    {#if inviteAcceptError}
-        <p class="text-red-600 font-semibold mb-4">{inviteAcceptError}</p>
-    {/if}
-
-    <input 
-        type="text"
-        placeholder="Enter your 6-digit invite code"
-        bind:value={inviteCode}
-        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent mb-4"
-    />
-    <button 
-        on:click={handleAcceptInvite}
-        class="w-full bg-cyan-600 text-white py-3 rounded-lg hover:bg-cyan-700 transition-all"
-    >
-        Accept Invite
-    </button>
+				{#if inviteAcceptSuccess && !redirecting}
+    <a href="/tripspage" class="text-cyan-600 underline">Go to Trips</a>
 {/if}
+				{#if inviteAcceptSuccess}
+				{#if redirecting}
+				<div class="flex flex-col items-center justify-center space-y-4">
+					<div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-cyan-500"></div>
+					<p class="text-cyan-700 font-semibold">Redirecting you to your trip...</p>
+				</div>
+			{:else}
+				<p class="text-green-600 font-semibold mb-4">🎉 Invite accepted! You are now part of the trip!</p>
+			{/if}
+					<a href="/tripspage" class="text-cyan-600 underline">Go to Trips</a>
+				{:else}
+					{#if inviteAcceptError}
+						<p class="text-red-600 font-semibold mb-4">{inviteAcceptError}</p>
+					{/if}
+
+					<input 
+						type="text"
+						placeholder="Enter your 6-digit invite code"
+						bind:value={inviteCode}
+						class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent mb-4"
+					/>
+					<button 
+						on:click={handleAcceptInvite}
+						class="w-full bg-cyan-600 text-white py-3 rounded-lg hover:bg-cyan-700 transition-all"
+					>
+						Accept Invite
+					</button>
+				{/if}
 			</div>
 		{/if}
 	</div>
