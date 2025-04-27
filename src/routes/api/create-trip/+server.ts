@@ -1,6 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import sql from '$lib/server/database.js';
 import { adminAuth } from '$lib/server/firebase-admin';
+import { fetchUnsplashImage } from '$lib/server/unsplash';
 
 export async function POST({ request }) {
     try {
@@ -16,7 +17,7 @@ export async function POST({ request }) {
         }
 
         // Validate required fields
-        const { tripName, tripStartDate, tripEndDate, tripLocation, tripImageUrl, tripTotalDays } = body;
+        const { tripName, tripStartDate, tripEndDate, tripLocation,  tripTotalDays } = body;
         if (!tripName || !tripStartDate || !tripEndDate || !tripLocation) {
             throw error(400, 'Missing required fields');
         }
@@ -37,6 +38,9 @@ export async function POST({ request }) {
         const endDate = new Date(tripEndDate);
         if (isNaN(startDate.getTime())) throw error(400, 'Invalid start date');
         if (isNaN(endDate.getTime())) throw error(400, 'Invalid end date');
+
+        // Fetch Unsplash image SERVER-SIDE
+        const tripImageUrl = await fetchUnsplashImage(tripLocation) || 'https://source.unsplash.com/400x300/?travel';
 
         // Insert into database
         const [newTrip] = await sql`
