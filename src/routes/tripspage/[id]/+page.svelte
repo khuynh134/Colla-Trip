@@ -9,7 +9,7 @@
     import {page} from '$app/stores';
     import { getAuth } from 'firebase/auth';
     import { triggerToast } from '$lib/stores/notifications';
-
+   
 
 
     import { 
@@ -160,8 +160,8 @@
             spent: 0,
             total: 0,
             percentage: 0
-        }
-        
+        },
+        imageUrl: '' // Added imageUrl property
     });
 
     async function loadTripData() {
@@ -206,6 +206,7 @@
                 location: data.location,
                 startDate: data.startDate,
                 endDate: data.endDate,
+                imageUrl: data.imageUrl,
                 travelers: data.travelers || 0,
                 loading: false,
                 error: null
@@ -338,6 +339,8 @@
   
     // For the progress bar animation
     import { onMount } from 'svelte';
+
+    let imageLoaded = false; // Declare imageLoaded variable
 
     //import for highlights 
     import { highlights, refreshHighlights, addHighlight, removeHighlight, type Highlight} from '$lib/stores/highlights'; 
@@ -1096,6 +1099,24 @@
         }} >
             <div class="flex items-center justify-center h-full">
                 <div class="flex flex-col items-center gap-6 bg-cyan-50 p-6 rounded-lg shadow-md max-w-md w-full">
+                    {#if tripData.imageUrl}
+                    <img
+                        src={tripData.imageUrl}
+                        alt="{tripData.title}"
+                        class:blue-sm={!imageLoaded}
+                        class:scale-105={!imageLoaded}
+                        onload={() => (imageLoaded = true)}
+                    />
+                    {:else}
+                    <img
+                        src="https://source.unsplash.com/400x300/?travel"
+                        alt="Travel"
+                        class:blue-sm={!imageLoaded}
+                        class:scale-105={!imageLoaded}
+                        onload={() => (imageLoaded = true)}
+                    />
+                    {/if}
+
                     <div class="flex flex-col items-center gap-4">
                         <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
                         class="lucide lucide-share-icon lucide-share">
