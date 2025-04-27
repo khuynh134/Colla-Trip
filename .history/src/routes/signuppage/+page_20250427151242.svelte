@@ -42,83 +42,61 @@
     }
 
     async function isUsernameUnique(username: string): Promise<boolean> {
-    try {
-        const res = await fetch('/api/check-username', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username })
-        });
-
-        if (!res.ok) {
-            throw new Error('Failed to check username uniqueness.');
-        }
-
-        const data = await res.json();
-        return !data.exists; // true if username is unique
-    } catch (err) {
-        console.error('Error checking username uniqueness:', err);
-        return false; // safer to block signup if error happens
+        return true; // Placeholder
     }
-}
 
     async function handleSignUp(event: Event) {
-    event.preventDefault();
-    isLoading = true;
-    errorMessage = '';
-    success = undefined;
+        event.preventDefault();
+        isLoading = true;
+        errorMessage = '';
+        success = undefined;
 
-    if (!await validatePasswords()) {
-        isLoading = false;
-        return;
-    }
-
-    const isUnique = await isUsernameUnique(username);
-    if (!isUnique) {
-        errorMessage = 'Username is already taken';
-        success = false;
-        isLoading = false;
-        return;
-    }
-
-    try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;  // ✅ NOW you have user.uid and user.email
-
-        const requestBody: any = {
-            firebase_uid: user.uid,
-            email: user.email,
-            username: username,
-            profile: `${firstName} ${lastName}`,
-            roles: ['user'],
-            token: token
-        };
-
-        if (inviteCode.trim() !== '') {
-            requestBody.invite_code = inviteCode;
+        if (!await validatePasswords()) {
+            isLoading = false;
+            return;
         }
 
-        const response = await fetch('/api/users', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody)
-        });
-
-        if (!response.ok) {
-            throw new Error('Error saving user to database');
+        const isUnique = await isUsernameUnique(username);
+        if (!isUnique) {
+            errorMessage = 'Username is already taken';
+            success = false;
+            isLoading = false;
+            return;
         }
 
-        success = true;
-        const redirectUrl = token ? `/invite-success` : '/loginpage';
-        goto(redirectUrl);
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
 
-    } catch (error) {
-        console.error('Error signing up:', error);
-        errorMessage = 'Error signing up. Please try again.';
-        success = false;
-    } finally {
-        isLoading = false;
+            const response = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    firebase_uid: user.uid,
+                    email: user.email,
+                    username: username,
+                    profile: `${firstName} ${lastName}`,
+                    roles: ['user'],
+                    token: token,
+                    invite_code: inviteCode  
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Error saving user to database');
+            }
+
+            success = true;
+            const redirectUrl = token ? `/invite-success` : '/loginpage';
+            goto(redirectUrl);
+        } catch (error) {
+            console.error('Error signing up:', error);
+            errorMessage = 'Error signing up. Please try again.';
+            success = false;
+        } finally {
+            isLoading = false;
+        }
     }
-}
 </script>
 
 <div class="min-h-screen bg-gradient-to-r from-[#84eaeb] to-[#3598db] flex flex-col items-center justify-center p-4">

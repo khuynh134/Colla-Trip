@@ -42,24 +42,8 @@
     }
 
     async function isUsernameUnique(username: string): Promise<boolean> {
-    try {
-        const res = await fetch('/api/check-username', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username })
-        });
-
-        if (!res.ok) {
-            throw new Error('Failed to check username uniqueness.');
-        }
-
-        const data = await res.json();
-        return !data.exists; // true if username is unique
-    } catch (err) {
-        console.error('Error checking username uniqueness:', err);
-        return false; // safer to block signup if error happens
+        return true; // Placeholder
     }
-}
 
     async function handleSignUp(event: Event) {
     event.preventDefault();
