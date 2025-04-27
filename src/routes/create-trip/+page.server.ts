@@ -3,6 +3,7 @@ import { redirect, error, type RequestEvent } from '@sveltejs/kit';
 import sql from '$lib/server/database.js';
 import { adminAuth } from '$lib/server/firebase-admin';
 
+// Backend route to create a trip
 export const actions = {
     default: async ({ request }: RequestEvent) => {
         try {
@@ -14,7 +15,7 @@ export const actions = {
             let idToken: string | undefined;
             let tripLocation: string;
             let tripTotalDays: number;
- 
+            let tripImageUrl: string;
  
             // Check content type to determine how to parse the request
             const contentType = request.headers.get('content-type') || '';
@@ -34,6 +35,7 @@ export const actions = {
                 tripLocation = body.tripLocation;
                 tripTotalDays = body.tripTotalDays;
                 members = Array.isArray(body.members) ? body.members : [];
+                tripImageUrl = body.tripImageUrl || '';
             } else {
                 //handle form data request
                 const formData = await request.formData();
@@ -56,6 +58,7 @@ export const actions = {
                 members = formData.getAll('members').map((member) => member.toString());
                 tripLocation = formData.get('tripLocation')?.toString() ?? '';
                 tripTotalDays = Number((formData.get('tripTotalDays')?.toString() ?? '0'));
+                tripImageUrl = formData.get('tripImageUrl')?.toString() ?? '';
             }
  
  
@@ -121,8 +124,8 @@ export const actions = {
  
             //Database insert
             const [newTrip] = await sql`
-                INSERT INTO trips (name, start_date, end_date, owner_uid, location)
-                VALUES (${tripName}, ${startDateObj}, ${endDateObj}, ${firebaseUID}, ${tripLocation})
+                INSERT INTO trips (name, start_date, end_date, owner_uid, location, image_url)
+                VALUES (${tripName}, ${startDateObj}, ${endDateObj}, ${firebaseUID}, ${tripLocation}, ${tripImageUrl})
                 RETURNING id
                 `;
                 console.log('Trip created with ID:', newTrip.id);
