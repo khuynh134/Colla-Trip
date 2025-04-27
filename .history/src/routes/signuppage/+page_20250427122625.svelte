@@ -76,7 +76,7 @@
                     username: username,
                     profile: `${firstName} ${lastName}`,
                     roles: ['user'],
-                    token: token  
+                    token: token  // ✅ Sending token to server
                 })
             });
 
@@ -85,8 +85,7 @@
             }
 
             success = true;
-            const redirectUrl = token ? `/invite-success` : '/loginpage';
-            goto(redirectUrl);
+            goto('/loginpage');
         } catch (error) {
             console.error('Error signing up:', error);
             errorMessage = 'Error signing up. Please try again.';

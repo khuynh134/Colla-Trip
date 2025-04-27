@@ -4,9 +4,12 @@
     import { getAuth, validatePassword, createUserWithEmailAndPassword } from 'firebase/auth';
 	import { Users } from 'lucide-svelte';
     import { page } from '$app/stores';
+    import { get } from 'svelte/store';
+    import { page } from '$app/stores';
 
+    let token: string | null = null;
     let token = '';
-    $: token = $page.url.searchParams.get('token') || '';  // ✅ reactive!
+    $: token = $page.url.searchParams.get('token') || '';
 
     // Form state
     let firstName = '';
@@ -19,42 +22,69 @@
     let success: boolean | undefined = undefined;
     let isLoading = false;
 
-    // (No need for onMount anymore!)
+    onMount(() => {
+    const url = new URL(window.location.href);
+    token = url.searchParams.get('token');
+    });
 
+    // Password validation
     async function validatePasswords(): Promise<boolean> {
         if (password !== confirmPassword) {
             errorMessage = 'Passwords do not match';
             success = false;
             return false;
         }
+        //Validate password using Firebase Auth
         const status = await validatePassword(getAuth(), password);
-        if (!status.isValid) {
+        if(!status.isValid){
+            //Password is not valid. Use the status to show what requirements are met and which are not met
+            const needsLowerCase = status.containsLowercaseLetter !== true;
+            const needsUpperCase = status.containsUppercaseLetter !== true;
+            const needsNumber = status.containsNumericCharacter !== true;
+            const needsMinLength = status.meetsMinPasswordLength !== true; //This is true if the password is at least 8 characters long
+
             errorMessage = 'Password does not meet requirements';
-            if (status.containsLowercaseLetter !== true) errorMessage += ' (needs lowercase)';
-            if (status.containsUppercaseLetter !== true) errorMessage += ' (needs uppercase)';
-            if (status.containsNumericCharacter !== true) errorMessage += ' (needs number)';
-            if (status.meetsMinPasswordLength !== true) errorMessage += ' (needs 8 characters)';
+            if(needsLowerCase){
+                errorMessage += ' (needs lowercase letter)';
+            }
+            if(needsUpperCase){
+                errorMessage += ' (needs uppercase letter)';
+            }
+            if(needsNumber){
+                errorMessage += ' (needs number)';
+            }
+            if(needsMinLength){
+                errorMessage += ' (needs to be at least 8 characters long)';
+            }
             success = false;
-            return false;
+            return false; 
+            
         }
+
         return true;
     }
 
+    // Username validation (you'll need to implement the check against your database)
     async function isUsernameUnique(username: string): Promise<boolean> {
+        // Implement your username uniqueness check here
         return true; // Placeholder
     }
 
     async function handleSignUp(event: Event) {
         event.preventDefault();
         isLoading = true;
+        
+        // Reset error state
         errorMessage = '';
         success = undefined;
 
+        // Validate passwords match
         if (!await validatePasswords()) {
             isLoading = false;
             return;
         }
 
+        // Check username uniqueness
         const isUnique = await isUsernameUnique(username);
         if (!isUnique) {
             errorMessage = 'Username is already taken';
@@ -65,28 +95,31 @@
 
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            // Add user details to your database
             const user = userCredential.user;
-
-            const response = await fetch('/api/users', {
+            
+            //Save user to database 
+            const response = await fetch('/api/users',{
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type' : 'application/json'
+                },
                 body: JSON.stringify({
                     firebase_uid: user.uid,
                     email: user.email,
                     username: username,
                     profile: `${firstName} ${lastName}`,
-                    roles: ['user'],
-                    token: token  
+                    roles: ['user']
                 })
             });
-
-            if (!response.ok) {
+            if( !response.ok){
                 throw new Error('Error saving user to database');
             }
-
-            success = true;
-            const redirectUrl = token ? `/invite-success` : '/loginpage';
-            goto(redirectUrl);
+            else {
+                console.log('Firebase UID:', user.uid);
+                success = true;
+            goto('/loginpage')
+            };
         } catch (error) {
             console.error('Error signing up:', error);
             errorMessage = 'Error signing up. Please try again.';
