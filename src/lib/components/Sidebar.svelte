@@ -197,7 +197,7 @@ function handleMouseLeave() {
 
        console.log('Sending fetch request with JSON...');
 
-       const response = await fetch('/api/create-trip', {
+       const response = await fetch('api/create-trip', {
          method: 'POST',
          headers: {
            'Content-Type': 'application/json',
