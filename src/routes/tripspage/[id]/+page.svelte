@@ -164,6 +164,26 @@
         imageUrl: '' // Added imageUrl property
     });
 
+    // Function to share trip
+    async function shareTrip() {
+        try {
+            const response = await fetch('/api/shared-trips', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json' },
+                body: JSON.stringify({ tripId: tripData.id })
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error('Failed to share trip');
+            }
+            alert ('Trip shared successfully!');
+            shareTripModalOpen = false;
+        } catch (error) {
+            console.error('Error sharing trip:', error);
+            alert('Failed to share trip. Please try again.');
+        }
+    }
+
     async function loadTripData() {
         try {
             console.log('Loading trip data for ID:', tripId);
@@ -1158,6 +1178,9 @@
                    <div class="flex justify-center gap-4">
                     <Button color="alternative" on:click={() => shareTripModalOpen = false}>
                         Close
+                    </Button>
+                    <Button color="green" on:click={shareTrip}>
+                        Share This Trip
                     </Button>
                     </div>
                 </div>
