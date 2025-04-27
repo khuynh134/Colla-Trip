@@ -19,6 +19,7 @@
     let confirmDeclineOpen = false; // controls the modal
 
     onMount(async () => {
+        // Get token from URL
         const url = new URL(window.location.href);
         token = url.searchParams.get('token');
 
@@ -46,35 +47,31 @@
     });
 
     function handleAccept() {
+        // Redirect to signup page, pass token along
         goto(`/signup?token=${token}`);
     }
-
-    function handleDecline() {
-        confirmDeclineOpen = true; // open the confirmation modal
-    }
-
     async function handleDeclineConfirmed() {
-        if (!token) return;
+    if (!token) return;
 
-        try {
-            const res = await fetch(`/api/fetch-invite/decline`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token })
-            });
+    try {
+        const res = await fetch(`/api/fetch-invite/decline`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token })
+        });
 
-            if (res.ok) {
-                alert('Invitation declined.');
-                goto('/');
-            } else {
-                const errorData = await res.json();
-                alert(errorData.error || 'Failed to decline invite.');
-            }
-        } catch (error) {
-            console.error('Error declining invite:', error);
-            alert('An error occurred. Please try again.');
+        if (res.ok) {
+            alert('Invitation declined.');
+            goto('/'); // Redirect after decline
+        } else {
+            const errorData = await res.json();
+            alert(errorData.error || 'Failed to decline invite.');
         }
+    } catch (error) {
+        console.error('Error declining invite:', error);
+        alert('An error occurred. Please try again.');
     }
+}
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gradient-to-b from-cyan-100 to-cyan-300">
@@ -110,28 +107,6 @@
                     Decline Invitation
                 </button>
             </div>
-            {#if confirmDeclineOpen}
-                <div class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                    <div class="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center">
-                        <h2 class="text-xl font-semibold mb-4 text-gray-800">Decline Invitation?</h2>
-                        <p class="text-gray-600 mb-6">Are you sure you want to decline this trip invitation? This cannot be undone.</p>
-                        <div class="flex justify-center gap-4">
-                            <button 
-                                on:click={handleDeclineConfirmed}
-                                class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md"
-                            >
-                                Yes, Decline
-                            </button>
-                            <button 
-                                on:click={() => confirmDeclineOpen = false}
-                                class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-md"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            {/if}
         {/if}
     </div>
 </div>
