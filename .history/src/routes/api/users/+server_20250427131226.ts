@@ -3,7 +3,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 
 export const POST: RequestHandler = async ({ request }) => {
     try {
-        const { firebase_uid, email, username, profile, roles, token, invite_code } = await request.json(); // ✅ include invite_code
+        const { firebase_uid, email, username, profile, roles, token } = await request.json();
 
         console.log('firebase_uid:', firebase_uid);
         console.log('email:', email);
@@ -11,7 +11,6 @@ export const POST: RequestHandler = async ({ request }) => {
         console.log('profile:', profile);
         console.log('roles:', roles);
         console.log('token:', token);
-        console.log('invite_code:', invite_code);
 
         if (!firebase_uid || !email || !username || !profile || !roles) {
             throw new Error('Missing required fields');
@@ -32,35 +31,63 @@ export const POST: RequestHandler = async ({ request }) => {
 
         console.log('User saved successfully:', user);
 
-        // 2. If token and invite_code are provided, verify the invitation
         if (token && invite_code) {
+            // Look up invitation by token
             const [invite] = await sql`
                 SELECT * FROM trip_invitations
                 WHERE token = ${token}
                   AND code = ${invite_code}
+                  AND status = 'pending'
+            `;
+        
+            if (!invite) {
+                throw new Error('Invalid invitation code or invitation already used');
+            }
+        
+            // Add to trip_members
+            await sql`
+                INSERT INTO trip_members (trip_id, user_id)
+                VALUES (${invite.trip_id}, ${user.id})
+            `;
+        
+            // Mark invitation as accepted
+            await sql`
+                UPDATE trip_invitations
+                SET status = 'accepted'
+                WHERE id = ${invite.id}
+            `;
+        }
+        // 2. If token is provided (meaning they came from an invitation)
+        if (token) {
+            // Find the invitation using the token
+            const [invite] = await sql`
+                SELECT * FROM trip_invitations
+                WHERE token = ${token}
                   AND expires_at > NOW()
                   AND status = 'pending'
                 LIMIT 1;
             `;
 
-            if (!invite) {
-                throw new Error('Invalid invitation code or invitation already used');
+            if (invite) {
+                console.log('Valid invite found:', invite);
+
+                // 3. Mark the invitation as accepted
+                await sql`
+                    UPDATE trip_invitations
+                    SET status = 'accepted'
+                    WHERE id = ${invite.id};
+                `;
+
+                // 4. Add user to trip_members
+                await sql`
+                    INSERT INTO trip_members (trip_id, user_id)
+                    VALUES (${invite.trip_id}, ${user.id});
+                `;
+
+                console.log(`User added to trip ${invite.trip_id}`);
+            } else {
+                console.warn('No valid invite found for token.');
             }
-
-            // 3. Add user to trip_members
-            await sql`
-                INSERT INTO trip_members (trip_id, user_id)
-                VALUES (${invite.trip_id}, ${user.id});
-            `;
-
-            // 4. Update invitation status
-            await sql`
-                UPDATE trip_invitations
-                SET status = 'accepted'
-                WHERE id = ${invite.id};
-            `;
-
-            console.log(`User added to trip ${invite.trip_id}`);
         }
 
         return new Response(JSON.stringify(user), {

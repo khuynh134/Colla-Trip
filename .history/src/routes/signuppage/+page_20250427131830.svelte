@@ -77,8 +77,7 @@
                     username: username,
                     profile: `${firstName} ${lastName}`,
                     roles: ['user'],
-                    token: token,
-                    invite_code: inviteCode  
+                    token: token  
                 })
             });
 
