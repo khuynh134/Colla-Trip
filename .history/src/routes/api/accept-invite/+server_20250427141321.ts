@@ -34,12 +34,12 @@ export async function POST({ request }) {
 			return json({ error: 'User not found in database.' }, { status: 404 });
 		}
 
-		// 3. Insert user into trip_members (SAFE!)
+		// 3. Insert user into trip_members
 		await sql`
-			INSERT INTO trip_members (trip_id, user_id)
-			VALUES (${invite.trip_id}, ${user.id})
-			ON CONFLICT DO NOTHING;
-		`;
+            INSERT INTO trip_members (trip_id, user_id)
+            VALUES (${invite.trip_id}, ${user.id})
+            ON CONFLICT DO NOTHING;
+        `;
 
 		// 4. Update the invitation status to accepted
 		await sql`
