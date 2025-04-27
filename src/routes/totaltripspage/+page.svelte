@@ -95,7 +95,7 @@
             {#each trips as trip}
                 <button on:click={() => navigateToTrip(trip.id)} class="trip-card">
                     <Card>
-                      <!-- 🖼️ Display trip image first -->
+                      <!-- 🖼️ Display trip image -->
                     <img
                         src={trip.image_url || 'https://source.unsplash.com/400x300/?travel'}
                         alt={trip.name}

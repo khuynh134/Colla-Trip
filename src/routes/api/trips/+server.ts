@@ -126,7 +126,7 @@ export async function POST({ request }) {
   }
 }
 
-// GET: Fetch trips for the authenticated user
+// GET: Fetch trips for the authenticated user And members of the trip
 export async function GET({ request }) {
   try {
     // Extract the authentication token from the header
@@ -141,15 +141,19 @@ export async function GET({ request }) {
 
     // Query the database for trips associated with the authenticated user
     const trips = await sql`
-      SELECT 
-        id, 
-        name, 
-        start_date AS "startDate", 
-        end_date AS "endDate", 
-        location,
-        image_url
-      FROM trips
-      WHERE owner_uid = ${firebaseUID}
+      SELECT DISTINCT
+        t.id, 
+        t.name, 
+        t.start_date AS "startDate", 
+        t.end_date AS "endDate", 
+        t.location,
+        t.image_url
+      FROM trips t
+      LEFT JOIN trip_members tm ON tm.trip_id = t.id
+      WHERE t.owner_uid = ${firebaseUID} OR tm.user_id = (
+        SELECT id from users WHERE firebase_uid = ${firebaseUID}
+        )
+      ORDER BY t.start_date DESC
     `;
 
         // Return trips in the response
