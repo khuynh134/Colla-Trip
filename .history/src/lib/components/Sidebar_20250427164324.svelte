@@ -14,7 +14,6 @@
   import type { SubmitFunction } from '@sveltejs/kit'
   import { fetchUnsplashImage } from '$lib/utils/unsplash'; 
 
-
   // Form data variables 
   let tripName = '';
   let tripStartDate = '';
@@ -246,43 +245,7 @@ function handleMouseLeave() {
      }
 
   }
-  async function handleAcceptInvite(notification) {
-  try {
-    const res = await fetch('/api/accept-invite', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ invite_id: notification.invite_id }) // pass the invitation id
-    });
 
-    if (res.ok) {
-      notifications.markAsRead(notification.id);
-      notificationsOpen = false;
-      goto('/totaltripspage');
-    } else {
-      console.error('Failed to accept invite.');
-    }
-  } catch (error) {
-    console.error('Error accepting invite:', error);
-  }
-}
-
-async function handleDeclineInvite(notification) {
-  try {
-    const res = await fetch('/api/decline-invite', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ invite_id: notification.invite_id }) 
-    });
-
-    if (res.ok) {
-      notifications.markAsRead(notification.id);
-    } else {
-      console.error('Failed to decline invite.');
-    }
-  } catch (error) {
-    console.error('Error declining invite:', error);
-  }
-}
 
 </script>
 
@@ -432,7 +395,7 @@ aria-label="Sidebar"
       </div>
     {:else}
       <ul class="space-y-4">
-        {#each $notifications as notification (notification.id)}
+        {{#each $notifications as notification (notification.id)}
         <li class="bg-gray-100 p-4 rounded-lg transition-colors space-y-2">
           <div class="flex justify-between items-center">
             <h3 class="font-bold">{notification.title}</h3>

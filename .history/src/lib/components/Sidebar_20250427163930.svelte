@@ -14,7 +14,6 @@
   import type { SubmitFunction } from '@sveltejs/kit'
   import { fetchUnsplashImage } from '$lib/utils/unsplash'; 
 
-
   // Form data variables 
   let tripName = '';
   let tripStartDate = '';
@@ -246,43 +245,7 @@ function handleMouseLeave() {
      }
 
   }
-  async function handleAcceptInvite(notification) {
-  try {
-    const res = await fetch('/api/accept-invite', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ invite_id: notification.invite_id }) // pass the invitation id
-    });
 
-    if (res.ok) {
-      notifications.markAsRead(notification.id);
-      notificationsOpen = false;
-      goto('/totaltripspage');
-    } else {
-      console.error('Failed to accept invite.');
-    }
-  } catch (error) {
-    console.error('Error accepting invite:', error);
-  }
-}
-
-async function handleDeclineInvite(notification) {
-  try {
-    const res = await fetch('/api/decline-invite', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ invite_id: notification.invite_id }) 
-    });
-
-    if (res.ok) {
-      notifications.markAsRead(notification.id);
-    } else {
-      console.error('Failed to decline invite.');
-    }
-  } catch (error) {
-    console.error('Error declining invite:', error);
-  }
-}
 
 </script>
 
@@ -433,41 +396,25 @@ aria-label="Sidebar"
     {:else}
       <ul class="space-y-4">
         {#each $notifications as notification (notification.id)}
-        <li class="bg-gray-100 p-4 rounded-lg transition-colors space-y-2">
-          <div class="flex justify-between items-center">
-            <h3 class="font-bold">{notification.title}</h3>
-            <span class="text-sm text-gray-500">
-              {new Date(notification.created_at).toLocaleTimeString()}
-            </span>
-          </div>
-      
-          <p class="text-gray-600">{notification.message}</p>
-      
-          {#if notification.type === 'trip_invite'}
-            <div class="flex gap-2 mt-2">
-              <button 
-                class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition"
-                on:click={() => handleAcceptInvite(notification)}
-              >
-                Accept
-              </button>
-              <button 
-                class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition"
-                on:click={() => handleDeclineInvite(notification)}
-              >
-                Decline
-              </button>
+        <li class="bg-gray-100 p-4 rounded-lg transition-colors">
+          <button 
+            class="w-full text-left p-4 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors"
+            on:click={() => handleNotificationAction(notification)}
+          >
+            <div class="flex justify-between">
+              <h3 class="font-bold">{notification.title}</h3>
+              <span class="text-sm text-gray-500">
+                {notification.timestamp.toLocaleTimeString()}
+              </span>
             </div>
-          {:else if notification.action}
-            <button 
-              class="text-blue-500 mt-2"
-              on:click={() => handleNotificationAction(notification)}
-            >
-              {notification.action.label}
-            </button>
-          {/if}
-        </li>
-      {/each}
+            <p class="text-gray-600 mt-2">{notification.message}</p>
+            {#if notification.action}
+              <button class="text-blue-500 mt-2">
+                {notification.action.label}
+              </button>
+            {/if}
+          </li>
+        {/each}
       </ul>
     {/if}
   </div>

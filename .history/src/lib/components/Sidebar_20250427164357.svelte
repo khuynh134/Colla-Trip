@@ -14,7 +14,6 @@
   import type { SubmitFunction } from '@sveltejs/kit'
   import { fetchUnsplashImage } from '$lib/utils/unsplash'; 
 
-
   // Form data variables 
   let tripName = '';
   let tripStartDate = '';
@@ -432,7 +431,7 @@ aria-label="Sidebar"
       </div>
     {:else}
       <ul class="space-y-4">
-        {#each $notifications as notification (notification.id)}
+        {{#each $notifications as notification (notification.id)}
         <li class="bg-gray-100 p-4 rounded-lg transition-colors space-y-2">
           <div class="flex justify-between items-center">
             <h3 class="font-bold">{notification.title}</h3>
