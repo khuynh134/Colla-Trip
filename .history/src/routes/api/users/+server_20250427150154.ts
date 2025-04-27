@@ -1,9 +1,9 @@
-import sql from '$lib/server/database.js'; 
+import sql from '$lib/server/database.js'; // database connection
 import type { RequestHandler } from '@sveltejs/kit';
 
 export const POST: RequestHandler = async ({ request }) => {
     try {
-        const { firebase_uid, email, username, profile, roles, token, invite_code } = await request.json();
+        const { firebase_uid, email, username, profile, roles, token, invite_code } = await request.json(); // ✅ include invite_code
 
         console.log('firebase_uid:', firebase_uid);
         console.log('email:', email);
@@ -18,20 +18,30 @@ export const POST: RequestHandler = async ({ request }) => {
         }
 
         const [user] = await sql`
-            INSERT INTO users (firebase_uid, email, username, profile, roles)
-            VALUES (${firebase_uid}, ${email}, ${username}, ${profile}, ${roles})
-            ON CONFLICT (firebase_uid) DO UPDATE 
-            SET email = EXCLUDED.email,
-                username = EXCLUDED.username,
-                profile = EXCLUDED.profile,
-                roles = EXCLUDED.roles,
-                updated_at = NOW()
-            RETURNING id, firebase_uid, email, username;
-        `;
+	INSERT INTO users (firebase_uid, email, username, profile, roles)
+	VALUES (${firebase_uid}, ${email}, ${username}, ${profile}, ${roles})
+	ON CONFLICT (firebase_uid) DO UPDATE 
+	SET email = EXCLUDED.email,
+		username = EXCLUDED.username,
+		profile = EXCLUDED.profile,
+		roles = EXCLUDED.roles,
+		updated_at = NOW()
+	RETURNING id, firebase_uid, email, username;
+`;
+
+return new Response(JSON.stringify({ 
+    id: user.id,   // ✅ return Postgres id
+    firebase_uid: user.firebase_uid,
+    email: user.email,
+    username: user.username 
+}), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' }
+});
 
         console.log('User saved successfully:', user);
 
-        // ✅ If user signed up through invite
+        // 2. If token and invite_code are provided, verify the invitation
         if (token && invite_code) {
             const [invite] = await sql`
                 SELECT * FROM trip_invitations
@@ -46,31 +56,26 @@ export const POST: RequestHandler = async ({ request }) => {
                 throw new Error('Invalid invitation code or invitation already used');
             }
 
+            // 3. Add user to trip_members
             await sql`
                 INSERT INTO trip_members (trip_id, user_id)
                 VALUES (${invite.trip_id}, ${user.id});
             `;
 
+            // 4. Update invitation status
             await sql`
                 UPDATE trip_invitations
                 SET status = 'accepted'
                 WHERE id = ${invite.id};
             `;
 
-            console.log(`✅ User added to trip ${invite.trip_id}`);
+            console.log(`User added to trip ${invite.trip_id}`);
         }
 
-        // ✅ Now only ONE return at the very end
-        return new Response(JSON.stringify({
-            id: user.id,
-            firebase_uid: user.firebase_uid,
-            email: user.email,
-            username: user.username
-        }), {
+        return new Response(JSON.stringify(user), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
         });
-
     } catch (error: any) {
         console.error('Database Error:', error);
         return new Response(JSON.stringify({ error: 'Failed to save user', details: error.message }), {
