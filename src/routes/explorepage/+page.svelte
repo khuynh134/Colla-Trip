@@ -26,13 +26,28 @@
 
     } from 'lucide-svelte';
 
+    interface SharedTrip {
+        id: number;
+        name: string;
+        location: string;
+        imageUrl: string;
+        activities: {id: number; name: string; description: string; activity_date: string}[];
+        highlights: {id:number; name: string; description: string}[];
+    }
+
+    let sharedTrips: SharedTrip[] = []; // Shared trips array to be used in the component
+    $: {
+        sharedTrips = sharedTrips.length < 3
+            ? [...sharedTrips, ...sampleTrips.slice(0, 3 - sharedTrips.length)]
+            : sharedTrips;
+    }
+
     // Mock authentication state - replace with your actual auth check
     let isAuthenticated = false; // Set to false to test the registration button
 
     // Function to handle registration
     function handleRegister() {
         // Redirect to registration page
-        // Replace '/register' with your actual registration route
         goto('/signuppage');
     }
 
@@ -62,10 +77,33 @@
     // State management for carousel
     let index = 0; 
            
-    const trips = [
-        { name: 'Summer in Tokyo', location: 'Tokyo, Japan', description: 'Experience the vibrant culture, stunning cherry blossoms, and amazing cuisine that Tokyo has to offer.', image: '/images/boatpic.jpeg'},
-        { name: 'Coastal Adventure', location: 'Amalfi Coast, Italy', description: 'Explore the breathtaking cliffside villages, crystal-clear waters, and renowned Italian hospitality.', image: '/images/flower.jpeg'},
-        { name: 'Mountain Retreat', location: 'Swiss Alps, Switzerland', description: 'Immerse yourself in the majestic alpine scenery with hiking, skiing, and authentic mountain experiences.', image: '/images/mountainandclouds.jpeg'}
+    const sampleTrips: SharedTrip[] = [
+        {
+            id: 1,
+            name: 'Summer in Tokyo',
+            location: 'Tokyo, Japan',
+            imageUrl: '/images/boatpic.jpeg',
+            activities: [
+                { id: 1, name: 'Visit Meiji Shrine', description: 'Explore the famous Meiji Shrine in Tokyo.', activity_date: '2025-05-01' },
+                { id: 2, name: 'Shibuya Crossing', description: 'Experience the busiest pedestrian crossing in the world.', activity_date: '2025-05-02' }
+            ],
+            highlights: [
+                { id: 1, name: 'Cherry Blossoms', description: 'Enjoy the stunning cherry blossoms in spring.' }
+            ]
+        },
+        {
+            id: 2,
+            name: 'Coastal Adventure',
+            location: 'Amalfi Coast, Italy',
+            imageUrl: '/images/flower.jpeg',
+            activities: [
+                { id: 1, name: 'Boat Tour', description: 'Take a boat tour along the Amalfi Coast.', activity_date: '2025-06-10' },
+                { id: 2, name: 'Lemon Groves', description: 'Visit the famous lemon groves.', activity_date: '2025-06-11' }
+            ],
+            highlights: [
+                { id: 1, name: 'Cliffside Villages', description: 'Explore the breathtaking cliffside villages.' }
+            ]
+        }
     ];
 	
     //Define the type for a place
@@ -179,6 +217,17 @@
         Marker = sveaflet.Marker;
         Popup = sveaflet.Popup; 
         mapReady = true; //Set mapReady to true when sveaflet is loaded
+        try{
+            const response = await fetch('/api/shared-trips');
+            console.log('API Response:', response); // Log the response
+            if(!response.ok){
+                throw new Error('Failed to fetch shared trips');
+            }
+            sharedTrips = await response.json();
+            console.log('Shared Trips:', sharedTrips); // Log the shared trips
+        } catch (error) {
+            console.error('Error fetching shared trips:', error);
+        }
    });
         
 
@@ -254,7 +303,7 @@
     {/if}
 
     <!-- Main content container with proper padding -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="relative overflow-visible max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <!-- Page Header -->
         <div class="flex flex-col sm:flex-row justify-between items-center mb-8">
             <h1 class="text-4xl font-bold text-gray-800 mb-4 sm:mb-0">
@@ -267,7 +316,7 @@
         </div>
 
         <!-- Search Bar with Glassmorphism -->
-        <div class="bg-white/30 p-6 rounded-xl backdrop-blur-sm border border-white/50 shadow-lg mb-10">
+        <div class="relative z-10 bg-white/30 p-6 rounded-xl backdrop-blur-sm border border-white/50 shadow-lg mb-10">
             <form class="flex flex-col sm:flex-row gap-3" on:submit|preventDefault={executeSearch}>
                 <div class="relative">
                     <Button class="w-full sm:w-auto rounded-xl whitespace-nowrap border-0 bg-gradient-to-r from-blue-500 to-cyan-500 px-5 py-2.5 text-center text-sm font-medium text-white shadow-md transition-all hover:from-blue-600 hover:to-cyan-600 focus:ring focus:ring-blue-300">
@@ -287,7 +336,7 @@
                     </Button>
                
                     <!-- Dropdown Menu for Category -->
-                    <Dropdown style="position: absolute; top: 60px; z-index: 1000; max-height: 300px; overflow-y: auto; width: auto; border-radius: 0.5rem; background-color: white; border: 1px solid rgba(209, 213, 219, 0.5); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
+                    <Dropdown style="position: absolute; top: 60px; z-index: 3000; max-height: 300px; overflow-y: auto; width: auto; border-radius: 0.5rem; background-color: white; border: 1px solid rgba(209, 213, 219, 0.5); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
                         {#each items as { label, icon, categoryId }}
                             <DropdownItem on:click={() => updateCategory(categoryId, label)}
                                 class="hover:bg-blue-50 {selectedCategoryId === categoryId ? 'bg-blue-100 font-medium' : ''}"
@@ -331,23 +380,26 @@
         </div>
 
         <!-- Suggested Trips Section -->
-        <div class="mb-12">
+        <div class="relative overflow-visible mb-12">
             <h3 class="text-2xl font-bold mb-6 text-gray-800 flex items-center">
                 <Binoculars class="w-6 h-6 mr-2 text-blue-600" />
                 Suggested Trips
             </h3>
                     
             <!-- Carousel with Glass Effect -->
-            <div class="relative w-full max-w-4xl mx-auto">
+            <div class="relative overflow-visible w-full max-w-4xl mx-auto">
                 <!-- Trip Details as Cards -->
-                <div class="overflow-hidden rounded-2xl">
-                    {#each trips as trip, i}
+                <div class="relative overflow-visible rounded-2xl">
+                    {#each sharedTrips as trip, i}
                         {#if i === index}
-                            <div class="bg-white/40 backdrop-blur-md rounded-xl shadow-xl overflow-hidden transition-all duration-500 transform hover:scale-[1.01]">
+                            <div class="bg-white/40 backdrop-blur-md rounded-xl shadow-xl overflow-visible transition-all duration-500 transform hover:scale-[1.01]">
                                 <div class="flex flex-col md:flex-row">
                                     <!-- Image -->
                                     <div class="md:w-2/5 overflow-hidden">
-                                        <img src={trip.image} alt={trip.name} class="w-full h-64 md:h-full object-cover transition-transform duration-700 hover:scale-110">
+                                        <img src={trip.imageUrl || 'https://source.unsplash.com/400x300/?travel'} 
+                                        alt={trip.name} 
+                                        class="w-full h-64 md:h-full object-cover transition-transform duration-700 hover:scale-110"
+                                        />
                                     </div>
                                     
                                     <!-- Content -->
@@ -358,7 +410,41 @@
                                                 <h4 class="text-sm font-medium text-blue-600">{trip.location}</h4>
                                             </div>
                                             <h3 class="text-2xl font-bold text-gray-800 mb-3">{trip.name}</h3>
-                                            <p class="text-gray-600 mb-6 leading-relaxed">{trip.description}</p>
+
+                                            <!-- Activities -->
+                                             {#if trip.activities && trip.activities.length > 0}
+                                             <div class = "mt-2">
+                                                <h4 class="text-md font-semibold text-gray-700">Trip's Activities</h4>
+                                                <ul class="list-disc list-inside text-sm text-gray-600">
+                                                    {#each trip.activities as activity}
+                                                        <li>
+                                                            <strong>{activity.name}:</strong> {activity.description}
+                                                            {#if activity.activity_date}
+                                                                <span class="text-gray-500">({activity.activity_date})</span>
+                                                            {/if}
+                                                        </li>
+                                                    {/each}
+                                                </ul>
+                                             </div>
+                                             {:else}
+                                                <p class="text-gray-500">No activities available for this trip.</p>
+                                            {/if}
+                                            <!-- Highlights -->
+                                            {#if trip.highlights && trip.highlights.length > 0}
+                                                <div class="mt-2">
+                                                    <h4 class="text-md font-semibold text-gray-700">Highlights Of The Trip</h4>
+                                                    <ul class="list-disc list-inside text-sm text-gray-600">
+                                                        {#each trip.highlights as highlight}
+                                                            <li>
+                                                                <strong>{highlight.name}:</strong> {highlight.description}
+                                                            </li>
+                                                        {/each}
+                                                    </ul>
+                                                </div>
+                                            {:else}
+                                                <p class="text-gray-500">No highlights available for this trip.</p>
+                                            {/if}
+                                            
                                         </div>
                                         
                                         <div class="flex justify-end">
@@ -387,13 +473,13 @@
                 <!-- Custom Navigation Controls -->
                 <div class="flex justify-between items-center absolute top-1/2 left-0 right-0 transform -translate-y-1/2 px-4">
                     <Button class="bg-white/70 backdrop-blur-sm p-3 rounded-full shadow-md hover:bg-white transition-all border-0"
-                        on:click={() => index = (index - 1 + trips.length) % trips.length}
+                        on:click={() => index = (index - 1 + sharedTrips.length) % sharedTrips.length}
                     >
                         <ChevronLeft class="w-5 h-5 text-gray-800" />
                     </Button>
 
                     <Button class="bg-white/70 backdrop-blur-sm p-3 rounded-full shadow-md hover:bg-white transition-all border-0"
-                        on:click={() => index = (index + 1) % trips.length}
+                        on:click={() => index = (index + 1) % sharedTrips.length}
                     >
                         <ChevronRight class="w-5 h-5 text-gray-800" />
                     </Button>
@@ -401,7 +487,7 @@
                 
                 <!-- Indicator Dots -->
                 <div class="flex justify-center mt-4 gap-2">
-                    {#each trips as _, i}
+                    {#each sharedTrips as _, i}
                         <button 
                             class="w-3 h-3 rounded-full transition-all {i === index ? 'bg-blue-600 w-6' : 'bg-gray-300 hover:bg-gray-400'}"
                             on:click={() => index = i}
