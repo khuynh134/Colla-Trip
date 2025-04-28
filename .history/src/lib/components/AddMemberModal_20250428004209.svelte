@@ -3,7 +3,7 @@
 	import { auth } from '$lib/firebase'; 
 
 	const dispatch = createEventDispatcher();
-	const origin = window.location.origin; 
+	const origin = window.location.origin; // ✅ Only once here
 
 	export let tripId: number;
 
