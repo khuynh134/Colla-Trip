@@ -5,7 +5,7 @@
   import { goto } from '$app/navigation';
   import { LogIn, LogOut } from 'lucide-svelte';
   import { createFormOpen } from '$lib/stores/createFormStore';
-  import { notifications } from '$lib/stores/notifications';
+  import { notifications, notificationsPanelOpen } from '$lib/stores/notifications';
   import { writable } from 'svelte/store';
 
   import { user } from '$lib/stores/authStore';
@@ -14,6 +14,7 @@
   import type { SubmitFunction } from '@sveltejs/kit'
   import { fetchUnsplashImage } from '$lib/utils/unsplash'; 
   import { authenticatedFetch } from '$lib/utils/authenticatedFetch';
+
 
   // Form data variables 
   let tripName = '';
@@ -26,7 +27,7 @@
   // Props
   export let sidebarExtended = false;
   export let sidebarWidth = '80px';
-  export let notificationsOpen = false; // New prop to control notifications panel
+
   export let invites = writable([]);
 
   let sidebarTransition = '';
@@ -35,7 +36,7 @@
 
   // Reactive statement to get unread notification count
   $: unreadNotificationsCount = $notifications.filter(n => !n.read).length;
-  $: sidebarExtended = isHovered || notificationsOpen;
+  $: sidebarExtended = isHovered || get(notificationsPanelOpen);
   $: sidebarWidth = sidebarExtended ? '300px' : '80px';  // Keep this as a reactive statement
 
   // Notification count for trip polling (Example: Unread notifications)
@@ -117,45 +118,24 @@ function handleMouseLeave() {
   }
     */
   
-  async function acceptInvite(inviteId: number) {
-    try {
-      const res = await fetch('/api/invite-response', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inviteId, action: 'accept' })
-      });
+    async function respondToInvite(inviteId: number, action: 'accept' | 'decline') {
+  try {
+    const res = await fetch('/api/invite-response', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ inviteId, action })
+    });
 
-      if (res.ok) {
-        // Refresh the invites list
-        const updated = await authenticatedFetch('/api/my-invites');
-        invites.set(await updated.json());
-      } else {
-        console.error('Failed to accept invite');
-      }
-    } catch (error) {
-      console.error('Error accepting invite:', error);
+    if (res.ok) {
+      const updated = await authenticatedFetch('/api/my-invites');
+      invites.set(await updated.json());
+    } else {
+      console.error(`Failed to ${action} invite`);
     }
+  } catch (error) {
+    console.error(`Error ${action}ing invite:`, error);
   }
-
-  async function declineInvite(inviteId: number) {
-    try {
-      const res = await fetch('/api/invite-response', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inviteId, action: 'decline' })
-      });
-
-      if (res.ok) {
-        // Refresh the invites list
-        const updated = await authenticatedFetch('/api/my-invites');
-        invites.set(await updated.json());
-      } else {
-        console.error('Failed to decline invite');
-      }
-    } catch (error) {
-      console.error('Error declining invite:', error);
-    }
-  }
+}
 
   async function handleAuthButton() {
   const authenticated = $isAuthenticated;
@@ -168,24 +148,8 @@ function handleMouseLeave() {
     goto('/loginpage');
   }
 }
-  async function toggleNotifications() {
-  notificationsOpen = !notificationsOpen;
-
-  if (notificationsOpen) {
-    try {
-      const res = await fetch('/api/notifications');
-      if (res.ok) {
-        const data = await res.json();
-        notifications.set(data); // Update your store
-      } else {
-        console.error('Failed to fetch notifications');
-      }
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    }
-
-    notifications.markAllAsRead(); // Optionally mark as read once opened
-  }
+  function toggleNotifications() {
+  notificationsPanelOpen.update(open => !open);
 }
   function handleNotificationAction(notification) {
     if (notification.action?.href) {
@@ -291,43 +255,7 @@ function handleMouseLeave() {
      }
 
   }
-  async function handleAcceptInvite(notification) {
-  try {
-    const res = await fetch('/api/accept-invite', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ invite_id: notification.invite_id }) // pass the invitation id
-    });
-
-    if (res.ok) {
-      notifications.markAsRead(notification.id);
-      notificationsOpen = false;
-      goto('/totaltripspage');
-    } else {
-      console.error('Failed to accept invite.');
-    }
-  } catch (error) {
-    console.error('Error accepting invite:', error);
-  }
-}
-
-async function handleDeclineInvite(notification) {
-  try {
-    const res = await fetch('/api/decline-invite', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ invite_id: notification.invite_id }) 
-    });
-
-    if (res.ok) {
-      notifications.markAsRead(notification.id);
-    } else {
-      console.error('Failed to decline invite.');
-    }
-  } catch (error) {
-    console.error('Error declining invite:', error);
-  }
-}
+  
 
 </script>
 
@@ -381,14 +309,14 @@ aria-label="Sidebar"
         <div class="flex space-x-2 mt-2">
           <button 
             class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
-            on:click={() => acceptInvite(invite.id)}
+            on:click={() => respondToInvite(invite.id, 'accept')}
           >
             Accept
           </button>
 
           <button 
             class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-            on:click={() => declineInvite(invite.id)}
+            on:click={() => respondToInvite(invite.id, 'decline')}
           >
             Decline
           </button>
@@ -479,17 +407,17 @@ aria-label="Sidebar"
 </nav>
 
 <!-- Notifications Panel -->
-{#if notificationsOpen}
+{#if $notificationsPanelOpen}
 <div 
   class="fixed inset-y-0 right-0 w-96 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out 
-         {notificationsOpen ? 'translate-x-0' : 'translate-x-full'}"
+         {$notificationsPanelOpen ? 'translate-x-0' : 'translate-x-full'}
   style="left: calc({sidebarWidth} + 0px);"
 >
   <div class="p-6">
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-2xl font-bold">Notifications</h2>
       <button 
-        on:click={() => notificationsOpen = false}
+        on:click={() => notificationsPanelOpen.set(false)}
         class="text-gray-500 hover:text-gray-700"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -497,54 +425,58 @@ aria-label="Sidebar"
         </svg>
       </button>
     </div>
-
-    {#if $notifications.length === 0}
-      <div class="text-center text-gray-500 py-4">
-        No notifications
-      </div>
-    {:else}
-      <ul class="space-y-4">
-        {#each $notifications as notification (notification.id)}
-        <li class="bg-gray-100 p-4 rounded-lg transition-colors space-y-2">
-          <div class="flex justify-between items-center">
-            <h3 class="font-bold">{notification.title}</h3>
-            <span class="text-sm text-gray-500">
-              {new Date(notification.created_at).toLocaleTimeString()}
-            </span>
-          </div>
-      
-          <p class="text-gray-600">{notification.message}</p>
-      
-          {#if notification.type === 'trip_invitation'}
-            <div class="flex gap-2 mt-2">
-              <button 
-                class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition"
-                on:click={() => handleAcceptInvite(notification)}
-              >
-                Accept
-              </button>
-              <button 
-                class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition"
-                on:click={() => handleDeclineInvite(notification)}
-              >
-                Decline
-              </button>
-            </div>
-          {:else if notification.action}
-            <button 
-              class="text-blue-500 mt-2"
-              on:click={() => handleNotificationAction(notification)}
-            >
-              {notification.action.label}
-            </button>
-          {/if}
-        </li>
-      {/each}
-      </ul>
-    {/if}
+    
+    {#if $notifications.length === 0 && $invites.length === 0}
+  <div class="text-center text-gray-500 py-4">
+    No notifications
   </div>
-</div>
+{:else}
+  {#if $invites.length > 0}
+    <div class="text-center text-gray-500 py-4">
+      You have new trip invitations!
+    </div>
+  {/if}
+
+  <ul class="space-y-4">
+    {#each $notifications as notification (notification.id)}
+      <li class="bg-gray-100 p-4 rounded-lg transition-colors space-y-2">
+        <div class="flex justify-between items-center">
+          <h3 class="font-bold">{notification.title}</h3>
+          <span class="text-sm text-gray-500">
+            {new Date(notification.created_at).toLocaleTimeString()}
+          </span>
+        </div>
+
+        <p class="text-gray-600">{notification.message}</p>
+
+        {#if notification.type === 'trip_invitation'}
+          <div class="flex gap-2 mt-2">
+            <button 
+              class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition"
+              on:click={() => handleAcceptInvite(notification)}
+            >
+              Accept
+            </button>
+            <button 
+              class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition"
+              on:click={() => handleDeclineInvite(notification)}
+            >
+              Decline
+            </button>
+          </div>
+        {:else if notification.action}
+          <button 
+            class="text-blue-500 mt-2"
+            on:click={() => handleNotificationAction(notification)}
+          >
+            {notification.action.label}
+          </button>
+        {/if}
+      </li>
+    {/each}
+  </ul>
 {/if}
+ 
 
 <!-- Create Trip Form Panel -->
 <div
@@ -620,7 +552,7 @@ style="visibility: {$createFormOpen ? 'visible' : 'hidden'};"
             <span class="block text-sm font-medium text-gray-700 mb-2">
               Trip Duration
             </span>
-            <p class="p-3 border border-gry-300 rounded-lg bg-gray-50">
+            <p class="p-3 border border-gray-300 rounded-lg bg-gray-50">
               {tripTotalDays} {tripTotalDays === 1 ? 'day' : 'days'}
             </p>
           </div>

@@ -50,3 +50,4 @@ function createNotificationsStore() {
 }
 
 export const notifications = createNotificationsStore();
+export const notificationsPanelOpen = writable(false);
