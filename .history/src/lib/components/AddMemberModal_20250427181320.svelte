@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { getAuth } from 'firebase/auth'; 
-	import { auth } from '$lib/firebase'; 
+	import { getAuth } from 'firebase/auth'; // ✅ NEW: We need the Firebase token
+	import { auth } from '$lib/firebase'; // ✅ Assuming you have this setup already
 
 	const dispatch = createEventDispatcher();
 
