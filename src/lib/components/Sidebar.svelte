@@ -155,21 +155,18 @@ function handleMouseLeave() {
       console.error('Error declining invite:', error);
     }
   }
-</script>
-  
-  async function handleAuthButton(): Promise<void> {
-    if ($isAuthenticated) {
-      // User is logged in, log them out
-      const result = await logout();
-      if (result.success) {
-        goto('/'); // Redirect to home page after logout
-      }
-    } else {
-      // User is not logged in, redirect to login page
-      goto('/loginpage');
-    }
-  }  
 
+  async function handleAuthButton() {
+  const authenticated = $isAuthenticated;
+  if (authenticated) {
+    const result = await logout();
+    if (result.success) {
+      goto('/');
+    }
+  } else {
+    goto('/loginpage');
+  }
+}
   async function toggleNotifications() {
   notificationsOpen = !notificationsOpen;
 
