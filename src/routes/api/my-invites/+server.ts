@@ -1,19 +1,18 @@
 import sql from '$lib/server/database.js';
 
 export async function GET({ locals }) {
-  const username = locals.user?.username; // or however you store it
+  const firebaseUid = locals.user?.firebaseUid;
 
-  if (!username) {
+  if (!firebaseUid) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
   const invites = await sql`
-    SELECT ti.id, ti.trip_id, t.title as trip_title
-    FROM trip_invitations ti
+    SELECT ti.id, ti.trip_id, t.title as trip_title, ti.message
+    FROM trip_invites ti
     JOIN trips t ON t.id = ti.trip_id
-    WHERE ti.username = ${username}
-      AND ti.status = 'pending'
-      AND ti.expires_at > NOW()
+    JOIN users u ON u.id = ti.recipient_user_id
+    WHERE u.firebase_uid = ${firebaseUid} AND ti.status = 'pending'
   `;
 
   return new Response(JSON.stringify(invites), { status: 200 });
