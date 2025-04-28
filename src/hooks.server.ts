@@ -1,6 +1,7 @@
 // src/hooks.server.ts
 import { adminAuth as auth } from '$lib/server/firebase-admin';
- // server-side Firebase Admin SDK
+import sql from '$lib/server/database.js'; // make sure you import your db connection
+
 import type { Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -11,18 +12,30 @@ export const handle: Handle = async ({ event, resolve }) => {
     try {
       const decodedToken = await auth.verifyIdToken(token);
 
-      // Attach the user info to event.locals
-      event.locals.user = {
-        firebaseUid: decodedToken.uid
-      };
+      // Fetch user from Postgres based on firebaseUid
+      const userResult = await sql`
+        SELECT id, username, email FROM users WHERE firebase_uid = ${decodedToken.uid} LIMIT 1
+      `;
+
+      const user = userResult[0];
+
+      if (user) {
+        event.locals.user = {
+          id: user.id,           // <--- Postgres users.id
+          username: user.username,
+          email: user.email,
+          firebaseUid: decodedToken.uid
+        };
+      } else {
+        event.locals.user = null;
+      }
     } catch (error) {
       console.error('Error verifying token:', error);
-      event.locals.user = null; // If token invalid, make sure user is null
+      event.locals.user = null;
     }
   } else {
     event.locals.user = null;
   }
 
-  // Proceed with the request
   return resolve(event);
 };

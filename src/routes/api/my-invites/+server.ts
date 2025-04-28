@@ -1,19 +1,19 @@
-// src/routes/api/my-invites/+server.ts
 import sql from '$lib/server/database.js';
-import { getAuth } from '$lib/server/auth'; // or wherever you manage auth
 
 export async function GET({ locals }) {
-  const userId = locals.user?.id; // get authenticated user's id
+  const username = locals.user?.username; // or however you store it
 
-  if (!userId) {
+  if (!username) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
   const invites = await sql`
-    SELECT ti.id, ti.trip_id, t.title as trip_title, ti.message
-    FROM trip_invites ti
+    SELECT ti.id, ti.trip_id, t.title as trip_title
+    FROM trip_invitations ti
     JOIN trips t ON t.id = ti.trip_id
-    WHERE ti.recipient_user_id = ${userId} AND ti.status = 'pending'
+    WHERE ti.username = ${username}
+      AND ti.status = 'pending'
+      AND ti.expires_at > NOW()
   `;
 
   return new Response(JSON.stringify(invites), { status: 200 });
