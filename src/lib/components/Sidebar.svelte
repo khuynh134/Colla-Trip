@@ -32,6 +32,7 @@
   interface Invite {
   id: number;
   trip_title: string;
+  token: string;
 }
 
 export let invites = writable<Invite[]>([]);
@@ -66,7 +67,7 @@ export let invites = writable<Invite[]>([]);
    async function handleAcceptInvite(notification: Notification) {
   console.log('Accepting invite notification:', notification);
   if (notification && notification.token) {
-    await respondToInvite(notification.token, 'accepted'); // <--- use token and 'accepted'
+    await respondToInvite(notification.token, 'accepted'); // <-- RIGHT HERE
     notifications.markAsRead(notification.id);
   }
 }
@@ -74,7 +75,7 @@ export let invites = writable<Invite[]>([]);
 async function handleDeclineInvite(notification: Notification) {
   console.log('Declining invite notification:', notification);
   if (notification && notification.token) {
-    await respondToInvite(notification.token, 'declined'); // <--- use token and 'declined'
+    await respondToInvite(notification.token, 'declined'); // <-- AND HERE
     notifications.markAsRead(notification.id);
   }
 }
@@ -142,22 +143,22 @@ function handleMouseLeave() {
   }
     */
   
-    async function respondToInvite(token: string, response: 'accepted' | 'declined') {
+    async function respondToInvite(token: string, status: 'accepted' | 'declined') {
   try {
     const res = await fetch('/api/invite-response', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, response })
+      body: JSON.stringify({ token, status }) // <--- send status not response
     });
 
     if (res.ok) {
       const updated = await authenticatedFetch('/api/my-invites');
       invites.set(await updated.json());
     } else {
-      console.error(`Failed to ${response} invite`);
+      console.error(`Failed to ${status} invite`);
     }
   } catch (error) {
-    console.error(`Error ${response}ing invite:`, error);
+    console.error(`Error ${status}ing invite:`, error);
   }
 }
 
@@ -333,14 +334,14 @@ aria-label="Sidebar"
         <div class="flex space-x-2 mt-2">
           <button 
             class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
-            onclick={() => respondToInvite(invite.id, 'accept')}
+            onclick={() => respondToInvite(invite.token, 'accepted')}  
           >
             Accept
           </button>
 
           <button 
             class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-            onclick={() => respondToInvite(invite.id, 'decline')}
+            onclick={() => respondToInvite(invite.token, 'declined')} 
           >
             Decline
           </button>
