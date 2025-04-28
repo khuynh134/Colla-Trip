@@ -10,4 +10,4 @@ declare namespace App {
   }
 }
 
-export {}; 
+export {}; // ✅ Good, keeps module scope isolated
