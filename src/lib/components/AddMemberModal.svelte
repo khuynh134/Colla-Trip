@@ -14,6 +14,14 @@
   errorMessage = '';
 
   try {
+    console.log('tripId:', tripId, 'username:', username);
+
+    if (!tripId || !username.trim()) {
+      errorMessage = 'Trip ID and username are required.';
+      loading = false;
+      return;
+    }
+
     const res = await fetch('/api/trip-invites', {
       method: 'POST',
       headers: {

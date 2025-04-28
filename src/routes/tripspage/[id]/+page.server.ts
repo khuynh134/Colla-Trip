@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import sql from '$lib/server/database.js';
 
+
 export async function load({ params }) {
   const tripId = Number(params.id);
   
