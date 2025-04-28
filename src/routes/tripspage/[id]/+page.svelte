@@ -37,7 +37,7 @@
     let createFormOpen = $state(false);
 
   let showAddMemberModal = false; // controls showing the modal
-  let tripId = 123; // TEMP fake value (we'll make it dynamic next)
+
 
     // Add Member Modal state
     let addMemberModalOpen = $state(false);
