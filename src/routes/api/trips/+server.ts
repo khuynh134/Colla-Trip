@@ -1,4 +1,3 @@
-// src/routes/api/trips/+server.ts
 import { json, error } from '@sveltejs/kit';
 import sql from '$lib/server/database.js';
 import { adminAuth } from '$lib/server/firebase-admin';
@@ -60,15 +59,9 @@ export async function POST({ request }) {
     const startDateObj = new Date(startDate);
     const endDateObj = new Date(endDate);
     
-    if (isNaN(startDateObj.getTime())) {
+    if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
       throw error(400, {
-        message: 'Invalid start date'
-      });
-    }
-    
-    if (isNaN(endDateObj.getTime())) {
-      throw error(400, {
-        message: 'Invalid end date'
+        message: 'Invalid start or end date'
       });
     }
     
@@ -80,27 +73,20 @@ export async function POST({ request }) {
     
     tripTotalDays = Math.floor((endDateObj.getTime() - startDateObj.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     
-    // Insert trip into database
     const [newTrip] = await sql`
       INSERT INTO trips (name, start_date, end_date, owner_uid, location, total_days)
       VALUES (${tripName}, ${startDateObj}, ${endDateObj}, ${firebaseUID}, ${tripLocation}, ${tripTotalDays})
       RETURNING id
     `;
     
-    // Process member invites
     if (members.length > 0) {
       const validMembers = members.filter(email => email && email.includes('@'));
-      
       if (validMembers.length > 0) {
-        // Insert invites into the database
         await Promise.all(validMembers.map(async (email) => {
           await sql`
             INSERT INTO trip_invites (trip_id, email, invited_by, status)
             VALUES (${newTrip.id}, ${email}, ${firebaseUID}, 'pending')
           `;
-          
-          // Here you would typically send an email invite
-          // This would require integration with an email service
         }));
       }
     }
@@ -113,23 +99,15 @@ export async function POST({ request }) {
     
   } catch (err) {
     console.error('Trip creation error:', err);
-    
-    if (typeof err === 'object' && err !== null && 'status' in err) {
-      if (err instanceof Error && 'body' in err) {
-        throw error(err.status as number, err.body as any);
-      }
-    }
-    
     throw error(500, {
       message: 'Failed to create trip. Please try again.'
     });
   }
 }
 
-// GET: Fetch trips for the authenticated user And members of the trip
+// SINGLE GET FUNCTION
 export async function GET({ request }) {
   try {
-    // Extract the authentication token from the header
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw error(401, { message: 'Missing authentication token' });
@@ -139,7 +117,6 @@ export async function GET({ request }) {
     const decodedToken = await adminAuth.verifyIdToken(token);
     const firebaseUID = decodedToken.uid;
 
-    // Query the database for trips associated with the authenticated user
     const trips = await sql`
       SELECT DISTINCT
         t.id, 
@@ -151,15 +128,15 @@ export async function GET({ request }) {
       FROM trips t
       LEFT JOIN trip_members tm ON tm.trip_id = t.id
       WHERE t.owner_uid = ${firebaseUID} OR tm.user_id = (
-        SELECT id from users WHERE firebase_uid = ${firebaseUID}
-        )
+        SELECT id FROM users WHERE firebase_uid = ${firebaseUID}
+      )
       ORDER BY t.start_date DESC
     `;
 
-        // Return trips in the response
-        return json(trips);
-      } catch (err) {
-        console.error('Error fetching trips:', err);
-        throw error(500, { message: 'Failed to fetch trips. Please try again.' });
-      }
-    }
+    return json(trips);
+
+  } catch (err) {
+    console.error('Error fetching trips:', err);
+    throw error(500, { message: 'Failed to fetch trips. Please try again.' });
+  }
+}
