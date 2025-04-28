@@ -4,7 +4,7 @@ import { adminAuth } from '$lib/server/firebase-admin';
 
 export async function POST({ request }) {
   try {
-    const authHeader = request.headers.get('authorization');
+    const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
 
     if (!authHeader) {
       return json({ error: 'Missing Authorization header' }, { status: 401 });

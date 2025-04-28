@@ -3,7 +3,6 @@
 	import { auth } from '$lib/firebase'; 
 
 	const dispatch = createEventDispatcher();
-	const origin = window.location.origin; 
 
 	export let tripId: number;
 
@@ -17,16 +16,12 @@
 
 		try {
 			const currentUser = auth.currentUser;
-			console.log('Current auth user:', currentUser);
 
 			if (!currentUser) {
 				throw new Error('Not authenticated.');
 			}
 
-			console.log('User email:', currentUser.email);
-
 			const token = await currentUser.getIdToken(true);
-			console.log('Token that will be sent:', token);
 
 			const res = await fetch('/api/trip-invites', {
 				method: 'POST',
@@ -36,9 +31,9 @@
 				},
 				credentials: 'include',
 				body: JSON.stringify({
-					tripId: tripId,
-					username: username,
-					message: ''
+					tripId,
+					username,
+					message: '' // optional placeholder
 				})
 			});
 
