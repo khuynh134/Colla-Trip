@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import sql from '$lib/server/database.js'; 
-import { auth } from '$lib/firebase-server'; // (if you're using server-side auth)
-
+import { auth } from '$lib/server/firebase-admin'; 
 export async function GET({ locals }) {
     try {
         const firebaseUser = locals.user; // adjust if your auth works differently
