@@ -65,16 +65,16 @@ export let invites = writable<Invite[]>([]);
   
    async function handleAcceptInvite(notification: Notification) {
   console.log('Accepting invite notification:', notification);
-  if (notification && notification.id) {
-    await respondToInvite(notification.id, 'accept');
+  if (notification && notification.token) {
+    await respondToInvite(notification.token, 'accepted'); // <--- use token and 'accepted'
     notifications.markAsRead(notification.id);
   }
 }
 
 async function handleDeclineInvite(notification: Notification) {
   console.log('Declining invite notification:', notification);
-  if (notification && notification.id) {
-    await respondToInvite(notification.id, 'decline');
+  if (notification && notification.token) {
+    await respondToInvite(notification.token, 'declined'); // <--- use token and 'declined'
     notifications.markAsRead(notification.id);
   }
 }
@@ -142,22 +142,22 @@ function handleMouseLeave() {
   }
     */
   
-    async function respondToInvite(inviteId: number, action: 'accept' | 'decline') {
+    async function respondToInvite(token: string, response: 'accepted' | 'declined') {
   try {
     const res = await fetch('/api/invite-response', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ inviteId, action })
+      body: JSON.stringify({ token, response })
     });
 
     if (res.ok) {
       const updated = await authenticatedFetch('/api/my-invites');
       invites.set(await updated.json());
     } else {
-      console.error(`Failed to ${action} invite`);
+      console.error(`Failed to ${response} invite`);
     }
   } catch (error) {
-    console.error(`Error ${action}ing invite:`, error);
+    console.error(`Error ${response}ing invite:`, error);
   }
 }
 
