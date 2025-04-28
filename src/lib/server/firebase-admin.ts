@@ -11,7 +11,7 @@ const firebaseAdmin = getApps().length > 0
         clientEmail: env.CLIENT_EMAIL,
         privateKey: env.PRIVATE_KEY.replace(/\\n/g, '\n'), 
       }),
-      // 
+      
     });
 
 export const adminAuth = getAuth(firebaseAdmin);
