@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { auth } from '$lib/firebase';
+	import { auth } from '$lib/firebase'; 
 
 	const dispatch = createEventDispatcher();
-
 	export let tripId: number;
 
 	let username = '';
@@ -15,33 +14,31 @@
 		errorMessage = '';
 
 		try {
-			let currentUser = auth.currentUser;
-
-			// If no user yet, wait for it
-			if (!currentUser) {
-				currentUser = await new Promise((resolve, reject) => {
-					const unsubscribe = auth.onAuthStateChanged((user) => {
-						unsubscribe();
-						if (user) resolve(user);
-						else reject(new Error('User not authenticated.'));
-					});
+			const currentUser = await new Promise((resolve, reject) => {
+				const unsubscribe = auth.onAuthStateChanged((user) => {
+					unsubscribe();
+					if (user) resolve(user);
+					else reject(new Error('User not authenticated.'));
 				});
-			}
+			});
 
-			const token = await currentUser.getIdToken(true);
+			const token = await (currentUser as any).getIdToken(true);
 
-			const res = await fetch('/api/trip-invites', {
+			// 👇 THE FIX: window.location.origin
+			const apiUrl = `${window.location.origin}/api/trip-invites`;
+
+			const res = await fetch(apiUrl, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
 					'Authorization': `Bearer ${token}`
 				},
+				credentials: 'include',
 				body: JSON.stringify({
 					tripId,
 					username,
 					message: '' 
-				}),
-				credentials: 'include'
+				})
 			});
 
 			if (!res.ok) {
@@ -59,27 +56,3 @@
 		}
 	}
 </script>
-
-<div class="p-6">
-	<h2 class="text-xl font-bold mb-4">Invite Member by Username</h2>
-
-	{#if errorMessage}
-		<p class="text-red-500 mb-4">{errorMessage}</p>
-	{/if}
-
-	<input
-		type="text"
-		bind:value={username}
-		placeholder="Enter username"
-		class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
-		required
-	/>
-
-	<button
-		class="w-full bg-cyan-600 text-white py-3 rounded-lg hover:bg-cyan-700 transition-colors disabled:opacity-50"
-		on:click={handleInvite}
-		disabled={loading}
-	>
-		{loading ? 'Sending invite...' : 'Send Invite'}
-	</button>
-</div>
