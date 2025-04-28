@@ -13,6 +13,7 @@
   import type { User as FirebaseUser } from 'firebase/auth';
   import type { SubmitFunction } from '@sveltejs/kit'
   import { fetchUnsplashImage } from '$lib/utils/unsplash'; 
+  import { authenticatedFetch } from '$lib/utils/authenticatedFetch';
 
   // Form data variables 
   let tripName = '';
@@ -60,7 +61,7 @@
   });
  onMount(async () => {
     try {
-      const res = await fetch('/api/my-invites');
+      const res = await authenticatedFetch('/api/my-invites');
       if (res.ok) {
         invites.set(await res.json());
       } else {
@@ -126,7 +127,7 @@ function handleMouseLeave() {
 
       if (res.ok) {
         // Refresh the invites list
-        const updated = await fetch('/api/my-invites');
+        const updated = await authenticatedFetch('/api/my-invites');
         invites.set(await updated.json());
       } else {
         console.error('Failed to accept invite');
@@ -146,7 +147,7 @@ function handleMouseLeave() {
 
       if (res.ok) {
         // Refresh the invites list
-        const updated = await fetch('/api/my-invites');
+        const updated = await authenticatedFetch('/api/my-invites');
         invites.set(await updated.json());
       } else {
         console.error('Failed to decline invite');
