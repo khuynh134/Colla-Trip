@@ -5,23 +5,23 @@ import sql from '$lib/server/database.js';
 export async function POST({ request }) {
     try {
         const body = await request.json();
-        const { token, response } = body;
+        const { token, status } = body;
 
-        if (!token || !response) {
-            return json({ error: 'Missing token or response' }, { status: 400 });
-        }
+if (!token || !status) {
+  return json({ error: 'Missing token or status' }, { status: 400 });
+}
 
-        if (!['accepted', 'declined'].includes(response)) {
-            return json({ error: 'Invalid response' }, { status: 400 });
-        }
+if (!['accepted', 'declined'].includes(status)) {
+  return json({ error: 'Invalid status' }, { status: 400 });
+}
 
-        // Update the status based on the token
-        const result = await sql`
-            UPDATE trip_invitations
-            SET status = ${response}
-            WHERE token = ${token}
-            RETURNING *;
-        `;
+// Update the status based on the token
+const result = await sql`
+  UPDATE trip_invitations
+  SET status = ${status}
+  WHERE token = ${token}
+  RETURNING *;
+`;
 
         if (result.rowCount === 0) {
             return json({ error: 'Invite not found or already handled' }, { status: 404 });
