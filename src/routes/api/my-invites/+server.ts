@@ -10,7 +10,13 @@ export async function GET({ locals }) {
 
   try {
     const invites = await sql`
-      SELECT ti.id, ti.trip_id, t.name as trip_title, ti.message, ti.created_at
+      SELECT 
+        ti.id, 
+        ti.trip_id, 
+        t.name AS trip_title, 
+        ti.message, 
+        ti.created_at, 
+        ti.token  -- ADD THIS!!
       FROM trip_invitations ti
       JOIN trips t ON t.id = ti.trip_id
       WHERE ti.status = 'pending'
