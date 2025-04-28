@@ -258,7 +258,8 @@
         id: number, 
         name: string,
         quantity: number,
-        created_by: string 
+        created_by: string,
+        checked: boolean // Added 'checked' property
     }>>([]);
 
     let newItemName = $state(''); // Declare newItemName
@@ -275,9 +276,18 @@
         try {
             packingListLoading = true; 
             packingListError = null;
-            const response = await fetch('/api/packing-list');
+            const response = await fetch(`/api/packing-list?trip_id=${tripId}`);
             if (!response.ok) throw new Error('Failed to load packing list items');
-            packingList = await response.json(); 
+
+            const data = await response.json();
+            if (!Array.isArray(data)) {
+            throw new Error('Invalid data format received from API');
+        }
+            packingList = data.map(item => ({
+                ...item,
+                checked: false
+            }))
+            packingListEmpty = packingList.length === 0; 
             
         } catch (error) {
             packingListError = `Failed to load packing list: ${(error as Error).message}`;
@@ -286,11 +296,36 @@
             packingListLoading = false; 
         }
     }
+
+    async function toggleItemChecked(itemId: number, isChecked: boolean) {
+    try {
+        const response = await fetch('/api/packing-list', {
+            method: 'PATCH', // Use PATCH to update the item
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                id: itemId,
+                checked: isChecked
+            })
+        });
+
+        if (!response.ok) throw new Error('Failed to update item state');
+
+        // Update the local state
+        packingList = packingList.map(item =>
+            item.id === itemId ? { ...item, checked: isChecked } : item
+        );
+    } catch (error) {
+        console.error('Error updating item state:', error);
+        packingListError = 'Failed to update item. Please try again.';
+    }
+}
     
 
     async function addItem() {
         try {
-            const response = await fetch('/api/packing-list', {
+            const response = await fetch(`/api/packing-list`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -310,7 +345,7 @@
 
             newItemName = '';
             newItemQuantity = 1;
-            creatorName
+            creatorName = '';
         } catch (error) {
             console.error('Error adding item:', error);
             packingListError = 'Failed to add item. Please try again.';
@@ -561,12 +596,12 @@
 
     onMount(() => {
         (async () => {
+            // Load packing list
+            loadPackingList();
             //load trip data 
             loadTripData();
-
             //Update the global highlights store
             loadHighlights();
-            
             // Load trip schedule
             loadSchedule(); 
             // Load voting results asynchronously
@@ -933,20 +968,19 @@
                         <Luggage class="w-6 h-6 text-cyan-600" />
                     </div>
                     <div class="space-y-3">
-                        {#each packingItems as item (item.id)}
+                        {#each packingList as item (item.id)}
                             <label class="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded-md transition-colors">
-                                <input type="checkbox" bind:checked={item.checked} class="rounded text-cyan-600 focus:ring-cyan-500" />
+                                <input 
+                                type="checkbox" 
+                                bind:checked={item.checked} 
+                                class="rounded text-cyan-600 focus:ring-cyan-500" 
+                                onchange={() => toggleItemChecked(item.id, item.checked)} 
+                            />
                                 <span class="ml-2 text-gray-700 {item.checked ? 'line-through text-gray-400' : ''}">
                                     {item.name}
                                 </span>
                             </label>
                         {/each}
-                    </div>
-                    <div class="mt-4 pt-3 border-t border-gray-100">
-                        <button class="text-cyan-600 hover:text-cyan-700 text-sm flex items-center gap-1">
-                            <PlusCircle class="w-4 h-4" />
-                            <span>Add Item</span>
-                        </button>
                     </div>
                 </div>
 

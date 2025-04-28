@@ -139,7 +139,7 @@ export async function GET({ request }) {
     const decodedToken = await adminAuth.verifyIdToken(token);
     const firebaseUID = decodedToken.uid;
 
-    // Query the database for trips associated with the authenticated user
+    // Query the database for trips associated with the authenticated user and the trip's members
     const trips = await sql`
       SELECT DISTINCT
         t.id, 
@@ -150,9 +150,8 @@ export async function GET({ request }) {
         t.image_url
       FROM trips t
       LEFT JOIN trip_members tm ON tm.trip_id = t.id
-      WHERE t.owner_uid = ${firebaseUID} OR tm.user_id = (
-        SELECT id from users WHERE firebase_uid = ${firebaseUID}
-        )
+      LEFT JOIN users u ON u.id = tm.user_id
+      WHERE t.owner_uid = ${firebaseUID} OR u.firebase_uid = ${firebaseUID}
       ORDER BY t.start_date DESC
     `;
 

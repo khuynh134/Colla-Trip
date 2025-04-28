@@ -60,7 +60,10 @@
     
     //Convert DATE to YYYY-MM-DD format for PostgreSQL
     function formatDateForDB(date: Date): string {
-        return date.toISOString().split('T')[0];
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`; // "YYYY-MM-DD"
     }
 
     //Date formatting function to display
@@ -68,28 +71,35 @@
   //      const date = new Date(dateString);
   //      return `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}-${date.getFullYear()}`;// Return the formatted date as a string
 //    }
-
-    //function to format date for display
-    function formatDisplayDate (dateString : string | Date | null) {
-        if (!dateString) {
-            return 'No date selected';
-        }
-
-        try {
-            const date = typeof dateString === 'string' ?
-            new Date(dateString.includes('T') ? dateString : `${dateString}T00:00:00`) : new Date(dateString); // Add time for Neon dates
-            return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        });
-
-        } catch {
-            return 'Invalid date';
-        }
-
+function formatDisplayDate(dateString: string | Date | null) {
+    if (!dateString) {
+        return 'No date selected';
     }
 
+    let year: number, month: number, day: number;
+
+    try {
+        let d: Date;
+
+        if (typeof dateString === 'string') {
+            d = new Date(dateString);
+        } else if (dateString instanceof Date) {
+            d = dateString;
+        } else {
+            throw new Error('Unknown date format');
+        }
+
+        year = d.getUTCFullYear();
+        month = d.getUTCMonth() + 1;
+        day = d.getUTCDate();
+
+        return `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}-${year}`;
+    } catch (error) {
+        console.error('Error formatting date: ', error);
+        return 'Invalid date';
+    }
+}
+  
     //Function to create a new activity 
     async function createActivity() {
         if(!userSelectedActivityDate){
