@@ -23,7 +23,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
       if (dbUser) {
         event.locals.user = {
-          id: dbUser.id,              // Postgres ID
+          id: dbUser.id,              // Postgres ID the
           firebaseUid: dbUser.firebase_uid // Firebase UID
         };
       } else {
