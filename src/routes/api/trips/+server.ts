@@ -84,7 +84,7 @@ export async function POST({ request }) {
       if (validMembers.length > 0) {
         await Promise.all(validMembers.map(async (email) => {
           await sql`
-            INSERT INTO trip_invites (trip_id, email, invited_by, status)
+            INSERT INTO trip_invitations (trip_id, email, invited_by, status)
             VALUES (${newTrip.id}, ${email}, ${firebaseUID}, 'pending')
           `;
         }));

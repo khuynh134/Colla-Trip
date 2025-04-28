@@ -10,7 +10,7 @@ export async function GET({ locals }) {
   try {
     const invites = await sql`
       SELECT ti.id, ti.trip_id, t.title as trip_title, ti.message
-      FROM trip_invites ti
+      FROM trip_invitations ti
       JOIN trips t ON t.id = ti.trip_id
       JOIN users u ON u.id = ti.recipient_user_id
       WHERE u.firebase_uid = ${firebaseUid} AND ti.status = 'pending'

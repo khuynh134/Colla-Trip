@@ -515,7 +515,7 @@ aria-label="Sidebar"
       
           <p class="text-gray-600">{notification.message}</p>
       
-          {#if notification.type === 'trip_invite'}
+          {#if notification.type === 'trip_invitation'}
             <div class="flex gap-2 mt-2">
               <button 
                 class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition"
