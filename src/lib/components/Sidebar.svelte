@@ -412,7 +412,7 @@ aria-label="Sidebar"
   <div class="mt-auto mb-8">
     <a 
       href={$isAuthenticated ? "/logout" : "/loginpage"} 
-      on:click|preventDefault={handleAuthButton} 
+      onclick={handleAuthButton}
       class="flex items-center p-3 hover:bg-blue-600 rounded-lg transition-colors"
     >
       <div>
