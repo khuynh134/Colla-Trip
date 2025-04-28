@@ -244,7 +244,7 @@
         const startDate = new Date(start);
         const endDate = new Date(end);
         const diff = endDate.getTime() - startDate.getTime();
-        const days = Math.ceil(diff / (1000 * 3600 * 24));
+        const days = Math.ceil(diff / (1000 * 3600 * 24)) + 1; // Add 1 to include the start date 
         return `${days} ${days === 1 ? 'day' : 'days'}`;
     }
 
@@ -341,8 +341,9 @@
 
             if (!response.ok) throw new Error('Error adding item to packing list');
 
-            const newItem = await response.json();
-            packingList = [newItem, ...packingList];
+            //const newItem = await response.json();
+            //packingList = [newItem, ...packingList];
+            await loadPackingList();
 
             newItemName = '';
             newItemQuantity = 1;
@@ -536,7 +537,8 @@
         return date.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
-            day: 'numeric'
+            day: 'numeric',
+            timeZone: 'UTC'
         });
     }
 
@@ -1188,7 +1190,7 @@
                     {#if tripActivities.length > 0}
                         <ul class="list-disc list-inside text-sm text-gray-600">
                             {#each tripActivities as activity}
-                                <li>{activity.title}: {activity.description}</li>
+                                <li>{activity.title} {activity.description}</li>
                             {/each}
                         </ul>
                     {:else}
