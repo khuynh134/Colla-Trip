@@ -264,7 +264,7 @@ function handleMouseLeave() {
          method: 'POST',
          headers: {
            'Content-Type': 'application/json',
-           'Authorization': Bearer ${token}
+           'Authorization': `Bearer ${token}`
          },
          body: JSON.stringify(requestedData)
        });
@@ -277,14 +277,14 @@ function handleMouseLeave() {
          console.log('Response data:', data);
          if(data && data.id) {
            closeCreateForm();
-           console.log(Navigating to trip page with ID: ${data.id});
-           goto(/tripspage/${data.id});
+           console.log(`Navigating to trip page with ID: ${data.id}`);
+           goto(`/tripspage/${data.id}`);
          } else {
            closeCreateForm();
            goto('/tripspage');
          }
        } else {
-         formError = data.error || Server error: ${response.status};
+        formError = data.error || `Server error: ${response.status}`;
          console.error('Server error:', response.status, data);
        }
      } catch (error) {
