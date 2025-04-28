@@ -38,7 +38,7 @@ export async function POST({ request }) {
         'pending',
         encode(gen_random_bytes(16), 'hex')
       )
-    `;  
+    `;  // ✅ Notice tripId camelCase here.
 
     return json({ success: true });
   } catch (error) {
