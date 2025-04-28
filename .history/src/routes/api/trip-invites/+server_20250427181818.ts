@@ -1,7 +1,7 @@
-// src/routes/api/invite-username/+server.ts
-import { json } from '@sveltejs/kit';
+// src/routes/api/trip-invites/+server.ts
 import sql from '$lib/server/database.js';
-import { adminAuth } from '$lib/server/firebase-admin'; // correct!
+import { json } from '@sveltejs/kit';
+import { adminAuth } from '$lib/server/firebase-admin'; // 🔥 correct import
 
 export async function POST({ request }) {
   try {
@@ -12,23 +12,25 @@ export async function POST({ request }) {
       return json({ error: 'Missing Authorization token' }, { status: 401 });
     }
 
-    const decoded = await adminAuth.verifyIdToken(token);
+    const decoded = await adminAuth.verifyIdToken(token); // 🔥 verify token
 
     if (!decoded.uid) {
       return json({ error: 'Invalid token.' }, { status: 401 });
     }
 
-    const { trip_id, username } = await request.json();
+    const { username, trip_id, message } = await request.json();
 
-    if (!trip_id || !username) {
-      return json({ error: 'Missing trip_id or username' }, { status: 400 });
+    if (!username || !trip_id) {
+      return json({ error: 'Missing username or trip ID' }, { status: 400 });
     }
 
+    // Insert the invitation into the trip_invitations table
     await sql`
-      INSERT INTO trip_invitations (trip_id, username, status, token)
+      INSERT INTO trip_invitations (trip_id, username, message, status, token)
       VALUES (
         ${trip_id},
         ${username},
+        ${message},
         'pending',
         encode(gen_random_bytes(16), 'hex')
       )
@@ -36,7 +38,7 @@ export async function POST({ request }) {
 
     return json({ success: true });
   } catch (error) {
-    console.error('Error in invite-username API:', error);
+    console.error('Error in trip-invites API:', error);
     return json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
