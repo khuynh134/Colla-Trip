@@ -28,7 +28,7 @@
 			const token = await currentUser.getIdToken(true);
 			console.log('Token that will be sent:', token);
 
-			const res = await fetch(`${origin}/api/trip-invites`, {
+			const res = await fetch('/api/trip-invites', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
