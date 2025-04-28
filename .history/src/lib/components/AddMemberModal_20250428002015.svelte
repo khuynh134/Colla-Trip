@@ -4,7 +4,6 @@
 	import { auth } from '$lib/firebase'; 
 
 	const dispatch = createEventDispatcher();
-	const origin = window.location.origin;
 
 	export let tripId: number;
 
@@ -13,18 +12,18 @@
 	let errorMessage = '';
 
 	async function handleInvite() {
-    loading = true;
-    errorMessage = '';
+		loading = true;
+		errorMessage = '';
 
-    try {
-        const currentUser = auth.currentUser;
-        if (!currentUser) {
-            throw new Error('Not authenticated.');
-        }
+		try {
+			const currentUser = auth.currentUser;
+if (!currentUser) {
+  throw new Error('Not authenticated.');
+}
 
-        const token = await currentUser.getIdToken(true);
+const token = await currentUser.getIdToken(true);
 
-        const res = await fetch(`${origin}/api/trip-invites`, {
+const res = await fetch('https://colla-trip-foi84kjdn-khuynh134s-projects.vercel.app/api/trip-invites', { 
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
@@ -36,21 +35,20 @@
         username: username
     })
 });
+			if (!res.ok) {
+				const errorData = await res.json();
+				errorMessage = errorData.error || 'Failed to send invite.';
+				return;
+			}
 
-        if (!res.ok) {
-            const errorData = await res.json();
-            errorMessage = errorData.error || 'Failed to send invite.';
-            return;
-        }
-
-        dispatch('close'); 
-    } catch (err) {
-        console.error('Error inviting member:', err);
-        errorMessage = 'Something went wrong. Please try again.';
-    } finally {
-        loading = false;
-    }
-}
+			dispatch('close'); 
+		} catch (err) {
+			console.error('Error inviting member:', err);
+			errorMessage = 'Something went wrong. Please try again.';
+		} finally {
+			loading = false;
+		}
+	}
 </script>
 
 <div class="p-6">

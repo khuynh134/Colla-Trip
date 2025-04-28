@@ -4,7 +4,6 @@
 	import { auth } from '$lib/firebase'; 
 
 	const dispatch = createEventDispatcher();
-	const origin = window.location.origin;
 
 	export let tripId: number;
 
@@ -24,18 +23,18 @@
 
         const token = await currentUser.getIdToken(true);
 
-        const res = await fetch(`${origin}/api/trip-invites`, {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-    },
-    credentials: 'include',
-    body: JSON.stringify({
-        tripId: tripId,
-        username: username
-    })
-});
+        const res = await fetch('https://colla-trip-foi84kjdn-khuynh134s-projects.vercel.app/api/trip-invites', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                tripId: tripId,
+                username: username
+            })
+        });
 
         if (!res.ok) {
             const errorData = await res.json();
