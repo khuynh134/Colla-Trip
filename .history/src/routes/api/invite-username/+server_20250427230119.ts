@@ -1,5 +1,5 @@
 import { json, type RequestEvent } from '@sveltejs/kit';
-import { inviteUserByUsername } from '$lib/server/invitations-db';
+import { addUserToTripByUsername } from '$lib/server/invitations-db'; // assuming you have a helper function
 
 export async function POST({ request, locals }: RequestEvent) {
     const user = locals.user;
@@ -15,7 +15,8 @@ export async function POST({ request, locals }: RequestEvent) {
     }
 
     try {
-        const result = await inviteUserByUsername(tripId, username, user.id); 
+        // You probably have some DB logic here:
+        const result = await addUserToTripByUsername(tripId, username, user.id); 
 
         return json({ success: true, result });
     } catch (error) {

@@ -15,6 +15,8 @@ export async function POST({ request, locals }: RequestEvent) {
     }
 
     try {
+        // You probably have some DB logic here:
+        
         const result = await inviteUserByUsername(tripId, username, user.id); 
 
         return json({ success: true, result });

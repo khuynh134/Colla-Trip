@@ -1,5 +1,4 @@
 // This is your existing code
-import { v4 as uuidv4 } from 'uuid';
 import sql from '$lib/server/database';
 
 export async function getInvitationByToken(token: string) {
@@ -13,8 +12,9 @@ export async function getInvitationByToken(token: string) {
   return result[0];
 }
 
-// invite by username
-export async function inviteUserByUsername(tripId: number, username: string, invitedByUserId: string) {
+// 🔥 NEW FUNCTION to invite by username
+export async function addUserToTripByUsername(tripId: number, username: string, invitedByUserId: string) {
+  // Find the user by username first
   const userResult = await sql`
     SELECT id FROM users
     WHERE username = ${username}
@@ -27,15 +27,12 @@ export async function inviteUserByUsername(tripId: number, username: string, inv
     throw new Error(`User with username "${username}" not found.`);
   }
 
-  const token = uuidv4();
-
+  // Insert into trip_members or whatever table tracks trip memberships
   const insertResult = await sql`
-    INSERT INTO trip_invitations (trip_id, username, token, status)
-    VALUES (${tripId}, ${username}, ${token}, 'pending')
+    INSERT INTO trip_members (trip_id, user_id, invited_by_user_id)
+    VALUES (${tripId}, ${user.id}, ${invitedByUserId})
     RETURNING *;
   `;
 
   return insertResult[0];
 }
-
- 

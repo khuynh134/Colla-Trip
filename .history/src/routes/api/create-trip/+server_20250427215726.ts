@@ -49,12 +49,6 @@ export async function POST({ request }) {
             RETURNING id
         `;
 
-        // Automatically add creator as member
-        await sql`
-            INSERT INTO trip_members (trip_id, user_id, invited_by_user_id)
-            VALUES (${newTrip.id}, ${firebaseUID}, ${firebaseUID})
-        `;
-
         return json({ success: true, id: newTrip.id });
 
     } catch (err) {

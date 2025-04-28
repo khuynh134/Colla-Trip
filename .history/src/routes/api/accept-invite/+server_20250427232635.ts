@@ -1,7 +1,8 @@
-import { json, type RequestEvent } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import sql from '$lib/server/database.js';
+import { type RequestEvent } from '@sveltejs/kit';
 
-export async function POST({ request, locals }: RequestEvent) {
+export async function POST({ request, locals }: RequestEvent) { 
   try {
     const { invite_id } = await request.json();
 
@@ -10,11 +11,11 @@ export async function POST({ request, locals }: RequestEvent) {
       return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Corrected field usage
+    // 1. Find the authenticated user
     const [user] = await sql`
       SELECT id, email, username
       FROM users
-      WHERE firebase_uid = ${firebaseUser.firebaseUid}
+      WHERE firebase_uid = ${firebaseUser.uid}
       LIMIT 1;
     `;
 
@@ -22,6 +23,7 @@ export async function POST({ request, locals }: RequestEvent) {
       return json({ error: 'User not found' }, { status: 404 });
     }
 
+    // 2. Find the invitation
     const [invite] = await sql`
       SELECT *
       FROM trip_invitations
@@ -35,16 +37,19 @@ export async function POST({ request, locals }: RequestEvent) {
       return json({ error: 'Invalid or expired invitation.' }, { status: 404 });
     }
 
+    // 3. Validate that this user matches the invite
     if (invite.email !== user.email && invite.username !== user.username) {
       return json({ error: 'You are not authorized to accept this invitation.' }, { status: 403 });
     }
 
+    // 4. Add the user to trip_members
     await sql`
       INSERT INTO trip_members (trip_id, user_id)
       VALUES (${invite.trip_id}, ${user.id})
       ON CONFLICT DO NOTHING;
     `;
 
+    // 5. Update invitation status to accepted
     await sql`
       UPDATE trip_invitations
       SET status = 'accepted'

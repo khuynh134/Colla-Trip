@@ -22,14 +22,14 @@ if (!currentUser) {
 }
 
 const token = await currentUser.getIdToken(true);
+console.log('Token from Firebase:', token);  // Add this line
 
 const res = await fetch('/api/invite-username', {
     method: 'POST',
     headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Content-Type': 'application/json'
     },
-    credentials: 'include',
+    credentials: 'include', 
     body: JSON.stringify({
         tripId: tripId,
         username: username

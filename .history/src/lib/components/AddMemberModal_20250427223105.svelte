@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	
+	import { getAuth } from 'firebase/auth'; 
 	import { auth } from '$lib/firebase'; 
 
 	const dispatch = createEventDispatcher();
@@ -22,17 +22,17 @@ if (!currentUser) {
 }
 
 const token = await currentUser.getIdToken(true);
+console.log('Token from Firebase:', token);  // Add this line
 
 const res = await fetch('/api/invite-username', {
     method: 'POST',
     headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Content-Type': 'application/json'
     },
-    credentials: 'include',
+    credentials: 'include', // 🔥 Add this line!
     body: JSON.stringify({
         tripId: tripId,
-        username: username
+        username: usernameInput
     })
 });
 			if (!res.ok) {
@@ -41,7 +41,7 @@ const res = await fetch('/api/invite-username', {
 				return;
 			}
 
-			dispatch('close'); 
+			dispatch('close'); // ✅ If you want the modal to close after invite
 		} catch (err) {
 			console.error('Error inviting member:', err);
 			errorMessage = 'Something went wrong. Please try again.';

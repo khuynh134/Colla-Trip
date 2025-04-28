@@ -11,8 +11,10 @@
 	  "skipLibCheck": true,
 	  "sourceMap": true,
 	  "strict": true,
-	                  
+	  "baseUrl": ".",                 
 	  "types": [],
-	  
+	  "paths": {
+		"$lib/*": ["src/lib/*"]
+	  }
 	}
   }
