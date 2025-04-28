@@ -1,6 +1,6 @@
 // src/hooks.server.ts
 import { adminAuth as auth } from '$lib/server/firebase-admin';
-import sql from '$lib/server/database'; // ⬅️ Import your database
+import sql from '$lib/server/database'; // Make sure you import your Postgres instance
 import type { Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -11,29 +11,27 @@ export const handle: Handle = async ({ event, resolve }) => {
     try {
       const decodedToken = await auth.verifyIdToken(token);
 
-      // Fetch corresponding user from Postgres using Firebase UID
-      const dbUserResult = await sql`
-        SELECT id, email, username
+      // Now fetch the user from Postgres
+      const userResult = await sql`
+        SELECT id, firebase_uid
         FROM users
         WHERE firebase_uid = ${decodedToken.uid}
         LIMIT 1;
       `;
 
-      const dbUser = dbUserResult[0];
+      const dbUser = userResult[0];
 
       if (dbUser) {
         event.locals.user = {
-          id: dbUser.id, // Postgres ID
-          email: dbUser.email,
-          username: dbUser.username,
-          firebaseUid: decodedToken.uid
+          id: dbUser.id,              // Postgres ID
+          firebaseUid: dbUser.firebase_uid // Firebase UID
         };
       } else {
-        console.warn('No matching user found in database for Firebase UID');
+        console.error('User not found in database');
         event.locals.user = null;
       }
     } catch (error) {
-      console.error('Error verifying token:', error);
+      console.error('Error verifying token or fetching user:', error);
       event.locals.user = null;
     }
   } else {
