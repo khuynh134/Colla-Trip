@@ -4,6 +4,7 @@ import sql from '$lib/server/database.js';
 export async function POST({ request }) {
     try {
         const body = await request.json();
+        console.log('BODY RECEIVED:', body); // <--- ADD THIS LINE
         const { token, status } = body;
 
         if (!token || !status) {
