@@ -130,10 +130,14 @@ export async function GET({ request }) {
       FROM trips t
       LEFT JOIN trip_members tm ON tm.trip_id = t.id
       LEFT JOIN users u ON u.id = tm.user_id
-      WHERE t.owner_uid = ${firebaseUID} OR u.firebase_uid = ${firebaseUID}
-      WHERE t.owner_uid = ${firebaseUID} OR tm.user_id = (
-        SELECT id FROM users WHERE firebase_uid = ${firebaseUID}
+      WHERE 
+      (
+        t.owner_uid = ${firebaseUID}
+        OR u.firebase_uid = ${firebaseUID}
+        OR tm.user_id = (
+          SELECT id FROM users WHERE firebase_uid = ${firebaseUID}
       )
+    )
       ORDER BY t.start_date DESC
     `;
 
