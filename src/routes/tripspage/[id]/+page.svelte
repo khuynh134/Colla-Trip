@@ -113,23 +113,13 @@
     inviteMessage = '';
     addMemberModalOpen = false;
 
-  } catch (error) {
+  } 
+  catch (error) {
     console.error('Error sending invitation:', error);
     triggerToast('An error occurred. Please try again.');
   }
 }
 
-
-    emailInput = '';
-    usernameInput = '';
-    inviteMessage = '';
-    addMemberModalOpen = false;
-
-  } catch (error) {
-    console.error('Error sending invitation:', error);
-    triggerToast('An error occurred. Please try again.');
-  }
-}
 
     // Mock function to search for users
     function searchUsers() {
