@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { auth } from '$lib/firebase'; 
+	import { auth } from '$lib/firebase';
 
 	const dispatch = createEventDispatcher();
 
@@ -15,17 +15,20 @@
 		errorMessage = '';
 
 		try {
-			// Wait for fresh current user from Firebase
-			const currentUser = await new Promise((resolve, reject) => {
-				const unsubscribe = auth.onAuthStateChanged((user) => {
-					unsubscribe();
-					if (user) resolve(user);
-					else reject(new Error('User not authenticated.'));
-				});
-			});
+			let currentUser = auth.currentUser;
 
-			// Get fresh ID token
-			const token = await (currentUser as any).getIdToken(true);
+			// If no user yet, wait for it
+			if (!currentUser) {
+				currentUser = await new Promise((resolve, reject) => {
+					const unsubscribe = auth.onAuthStateChanged((user) => {
+						unsubscribe();
+						if (user) resolve(user);
+						else reject(new Error('User not authenticated.'));
+					});
+				});
+			}
+
+			const token = await currentUser.getIdToken(true);
 
 			const res = await fetch('/api/trip-invites', {
 				method: 'POST',
@@ -36,7 +39,7 @@
 				body: JSON.stringify({
 					tripId,
 					username,
-					message: '' // optional placeholder
+					message: '' 
 				}),
 				credentials: 'include'
 			});
