@@ -14,6 +14,7 @@
   import type { SubmitFunction } from '@sveltejs/kit'
   import { fetchUnsplashImage } from '$lib/utils/unsplash'; 
   import { authenticatedFetch } from '$lib/utils/authenticatedFetch';
+  import type { Notification } from '$lib/stores/notifications';
 
 
   // Form data variables 
@@ -28,7 +29,13 @@
   export let sidebarExtended = false;
   export let sidebarWidth = '80px';
 
-  export let invites = writable([]);
+  interface Invite {
+  id: number;
+  trip_title: string;
+}
+
+export let invites = writable<Invite[]>([]);
+ 
 
   let sidebarTransition = '';
   let invitedMembers: string[] = [''];
@@ -36,8 +43,10 @@
 
   // Reactive statement to get unread notification count
   $: unreadNotificationsCount = $notifications.filter(n => !n.read).length;
-  $: sidebarExtended = isHovered || get(notificationsPanelOpen);
-  $: sidebarWidth = sidebarExtended ? '300px' : '80px';  // Keep this as a reactive statement
+  let sidebarIsActuallyExtended = false;
+
+  $: sidebarIsActuallyExtended = isHovered || $notificationsPanelOpen;  
+  $: sidebarWidth = sidebarIsActuallyExtended ? '300px' : '80px';// Keep this as a reactive statement
 
   // Notification count for trip polling (Example: Unread notifications)
   let tripPollNotifications = 3; // Dynamic value, adjust based on logic
@@ -54,6 +63,21 @@
      }
    }
   
+   async function handleAcceptInvite(notification: Notification) {
+  console.log('Accepting invite notification:', notification);
+  if (notification && notification.id) {
+    await respondToInvite(notification.id, 'accept');
+    notifications.markAsRead(notification.id);
+  }
+}
+
+async function handleDeclineInvite(notification: Notification) {
+  console.log('Declining invite notification:', notification);
+  if (notification && notification.id) {
+    await respondToInvite(notification.id, 'decline');
+    notifications.markAsRead(notification.id);
+  }
+}
 
   // Initialize sidebar transition on mount
   onMount(() => {
@@ -151,13 +175,13 @@ function handleMouseLeave() {
   function toggleNotifications() {
   notificationsPanelOpen.update(open => !open);
 }
-  function handleNotificationAction(notification) {
-    if (notification.action?.href) {
-      goto(notification.action.href);
-    }
-    notifications.markAsRead(notification.id);
-    notificationsOpen = false;
+function handleNotificationAction(notification: Notification) {
+  if (notification.action?.href) {
+    goto(notification.action.href);
   }
+  notifications.markAsRead(notification.id);
+  notificationsPanelOpen.set(false); // (small fix here from your earlier typo: it’s notificationsPanelOpen, not notificationsOpen)
+}
 
   async function handleManualSubmit() {
     try {
@@ -262,8 +286,8 @@ function handleMouseLeave() {
 <nav
 class="fixed left-0 top-0 h-full bg-[#3598db] text-white p-4 flex flex-col {sidebarTransition}"
 style="width: {sidebarWidth};"
-on:mouseenter={handleMouseEnter}
-on:mouseleave={handleMouseLeave}
+onmouseenter={handleMouseEnter}
+onmouseleave={handleMouseLeave}
 aria-label="Sidebar"
 >
   <div class="space-y-8 mt-40"> 
@@ -273,7 +297,7 @@ aria-label="Sidebar"
       <a 
         href="/create-trip" 
         class="flex items-center p-1 hover:bg-blue-600 rounded-lg transition-colors" 
-        on:click|preventDefault={handleCreateTripClick}
+        onclick={handleCreateTripClick}
       >
         <div class="bg-[#85e9eb] text-cyan rounded-full p-2 shadow-lg hover:shadow-xl hover:scale-105 transition-all">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="Create Trip">
@@ -289,7 +313,7 @@ aria-label="Sidebar"
       <a 
         href="#" 
         class="relative flex items-center p-3 mt-4 hover:bg-blue-600 rounded-lg transition-colors"
-        on:click|preventDefault={toggleNotifications}
+        onclick={toggleNotifications}
       >
         <div class="relative">
           <Mail class="w-7 h-7 text-white group-hover:text-gray-200 transition-colors" />
@@ -309,14 +333,14 @@ aria-label="Sidebar"
         <div class="flex space-x-2 mt-2">
           <button 
             class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
-            on:click={() => respondToInvite(invite.id, 'accept')}
+            onclick={() => respondToInvite(invite.id, 'accept')}
           >
             Accept
           </button>
 
           <button 
             class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-            on:click={() => respondToInvite(invite.id, 'decline')}
+            onclick={() => respondToInvite(invite.id, 'decline')}
           >
             Decline
           </button>
@@ -410,15 +434,16 @@ aria-label="Sidebar"
 {#if $notificationsPanelOpen}
 <div 
   class="fixed inset-y-0 right-0 w-96 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out 
-         {$notificationsPanelOpen ? 'translate-x-0' : 'translate-x-full'}
+         {$notificationsPanelOpen ? 'translate-x-0' : 'translate-x-full'}"
   style={`left: calc(${sidebarWidth} + 0px);`}
 >
   <div class="p-6">
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-2xl font-bold">Notifications</h2>
       <button 
-        on:click={() => notificationsPanelOpen.set(false)}
+        onclick={() => notificationsPanelOpen.set(false)}
         class="text-gray-500 hover:text-gray-700"
+        aria-label="Close Notifications Panel"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -427,57 +452,58 @@ aria-label="Sidebar"
     </div>
     
     {#if $notifications.length === 0 && $invites.length === 0}
-  <div class="text-center text-gray-500 py-4">
-    No notifications
-  </div>
-{:else}
-  {#if $invites.length > 0}
-    <div class="text-center text-gray-500 py-4">
-      You have new trip invitations!
-    </div>
-  {/if}
-
-  <ul class="space-y-4">
-    {#each $notifications as notification (notification.id)}
-      <li class="bg-gray-100 p-4 rounded-lg transition-colors space-y-2">
-        <div class="flex justify-between items-center">
-          <h3 class="font-bold">{notification.title}</h3>
-          <span class="text-sm text-gray-500">
-            {new Date(notification.created_at).toLocaleTimeString()}
-          </span>
+      <div class="text-center text-gray-500 py-4">
+        No notifications
+      </div>
+    {:else}
+      {#if $invites.length > 0}
+        <div class="text-center text-gray-500 py-4">
+          You have new trip invitations!
         </div>
+      {/if}
 
-        <p class="text-gray-600">{notification.message}</p>
+      <ul class="space-y-4">
+        {#each $notifications as notification (notification.id)}
+          <li class="bg-gray-100 p-4 rounded-lg transition-colors space-y-2">
+            <div class="flex justify-between items-center">
+              <h3 class="font-bold">{notification.title}</h3>
+              <span class="text-sm text-gray-500">
+                {new Date(notification.timestamp).toLocaleTimeString()}
+              </span>
+            </div>
 
-        {#if notification.type === 'trip_invitation'}
-          <div class="flex gap-2 mt-2">
-            <button 
-              class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition"
-              on:click={() => handleAcceptInvite(notification)}
-            >
-              Accept
-            </button>
-            <button 
-              class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition"
-              on:click={() => handleDeclineInvite(notification)}
-            >
-              Decline
-            </button>
-          </div>
-        {:else if notification.action}
-          <button 
-            class="text-blue-500 mt-2"
-            on:click={() => handleNotificationAction(notification)}
-          >
-            {notification.action.label}
-          </button>
-        {/if}
-      </li>
-    {/each}
-  </ul>
+            <p class="text-gray-600">{notification.message}</p>
+
+            {#if notification.type === 'invite'}
+              <div class="flex gap-2 mt-2">
+                <button 
+                  class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition"
+                  onclick={() => handleAcceptInvite(notification)}
+                >
+                  Accept
+                </button>
+                <button 
+                  class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition"
+                  onclick={() => handleDeclineInvite(notification)}
+                >
+                  Decline
+                </button>
+              </div>
+            {:else if notification.action}
+              <button 
+                class="text-blue-500 mt-2"
+                onclick={() => handleNotificationAction(notification)}
+              >
+                {notification.action?.label || 'View'}
+              </button>
+            {/if}
+          </li>
+        {/each}
+      </ul>
+    {/if}
+  </div>
+</div>
 {/if}
- 
-
 <!-- Create Trip Form Panel -->
 <div
 class="fixed inset-0 flex items-center justify-center z-50"
