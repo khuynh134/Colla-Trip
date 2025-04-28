@@ -18,31 +18,29 @@
 
     try {
         const currentUser = auth.currentUser;
-        console.log('Current auth user:', currentUser);
-
         if (!currentUser) {
             throw new Error('Not authenticated.');
         }
 
-        console.log('User email:', currentUser.email);
-
         const token = await currentUser.getIdToken(true);
-        console.log('Token that will be sent:', token);
 
-        const origin = window.location.origin;
+		console.log('Current auth user:', auth.currentUser);
+		if (auth.currentUser) {
+  			console.log('User email:', auth.currentUser.email);
+		}
 
         const res = await fetch(`${origin}/api/trip-invites`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-                tripId: tripId,
-                username: username
-            })
-        });
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    },
+    credentials: 'include',
+    body: JSON.stringify({
+        tripId: tripId,
+        username: username
+    })
+});
 
         if (!res.ok) {
             const errorData = await res.json();
@@ -58,8 +56,6 @@
         loading = false;
     }
 }
-
-     
 </script>
 
 <div class="p-6">
