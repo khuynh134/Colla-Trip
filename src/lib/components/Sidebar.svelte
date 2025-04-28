@@ -145,10 +145,21 @@ function handleMouseLeave() {
   
     async function respondToInvite(token: string, status: 'accepted' | 'declined') {
   try {
+    const currentUser = getAuth().currentUser;
+    if (!currentUser) {
+      console.error('No Firebase user found.');
+      return;
+    }
+
+    const idToken = await currentUser.getIdToken(true); // <-- Get Firebase ID token
+
     const res = await fetch('/api/invite-response', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, status })  // <-- MUST BE { token, status }
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${idToken}` // <-- Add Firebase token here
+      },
+      body: JSON.stringify({ token, status })
     });
 
     if (res.ok) {
