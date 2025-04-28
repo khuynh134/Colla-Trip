@@ -1,6 +1,6 @@
 // src/routes/api/trip-invites/+server.ts
 import { json } from '@sveltejs/kit';
-import sql from '$lib/server/database.js';
+import sql from '$lib/server/database.js';// s
 
 export async function POST({ request }) {
   try {
