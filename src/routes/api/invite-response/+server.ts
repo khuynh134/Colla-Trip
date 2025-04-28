@@ -27,7 +27,7 @@ const result = await sql`
             return json({ error: 'Invite not found or already handled' }, { status: 404 });
         }
 
-        return json({ message: `Invite ${response} successfully!` });
+        return json({ message: `Invite ${status} successfully!` });
     } catch (error) {
         console.error('Error handling invite response:', error);
         return json({ error: 'Internal Server Error' }, { status: 500 });
