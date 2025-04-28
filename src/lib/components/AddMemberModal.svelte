@@ -15,13 +15,17 @@
 		errorMessage = '';
 
 		try {
-			const currentUser = auth.currentUser;
+			// Wait for fresh current user from Firebase
+			const currentUser = await new Promise((resolve, reject) => {
+				const unsubscribe = auth.onAuthStateChanged((user) => {
+					unsubscribe();
+					if (user) resolve(user);
+					else reject(new Error('User not authenticated.'));
+				});
+			});
 
-			if (!currentUser) {
-				throw new Error('Not authenticated.');
-			}
-
-			const token = await currentUser.getIdToken(true);
+			// Get fresh ID token
+			const token = await (currentUser as any).getIdToken(true);
 
 			const res = await fetch('/api/trip-invites', {
 				method: 'POST',
@@ -29,12 +33,12 @@
 					'Content-Type': 'application/json',
 					'Authorization': `Bearer ${token}`
 				},
-				credentials: 'include',
 				body: JSON.stringify({
 					tripId,
 					username,
 					message: '' // optional placeholder
-				})
+				}),
+				credentials: 'include'
 			});
 
 			if (!res.ok) {

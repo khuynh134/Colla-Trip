@@ -4,17 +4,14 @@ import { adminAuth } from '$lib/server/firebase-admin';
 
 export async function POST({ request }) {
   try {
-    const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
+    console.log('Incoming request headers:', JSON.stringify(Object.fromEntries(request.headers), null, 2));
+    const authHeader = request.headers.get('authorization');
 
     if (!authHeader) {
       return json({ error: 'Missing Authorization header' }, { status: 401 });
     }
 
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
-
-    if (!token) {
-      return json({ error: 'Missing Authorization token' }, { status: 401 });
-    }
 
     const decoded = await adminAuth.verifyIdToken(token);
 
@@ -28,7 +25,6 @@ export async function POST({ request }) {
       return json({ error: 'Missing username or trip ID' }, { status: 400 });
     }
 
-    // Insert the invitation
     await sql`
       INSERT INTO trip_invitations (trip_id, username, message, status, token)
       VALUES (
