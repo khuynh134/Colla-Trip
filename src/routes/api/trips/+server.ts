@@ -30,7 +30,7 @@ export async function POST({ request }) {
       tripName = formData.get('tripName')?.toString() ?? '';
       startDate = formData.get('tripStartDate')?.toString() ?? '';
       endDate = formData.get('tripEndDate')?.toString() ?? '';
-      members = []; // You can improve parsing formData members later
+      members = []; // Parsing form members for formData is skipped here
       tripLocation = formData.get('tripLocation')?.toString() ?? '';
       tripTotalDays = Number((formData.get('tripTotalDays')?.toString() ?? '0'));
     }
@@ -131,13 +131,8 @@ export async function GET({ request }) {
       LEFT JOIN trip_members tm ON tm.trip_id = t.id
       LEFT JOIN users u ON u.id = tm.user_id
       WHERE 
-      (
         t.owner_uid = ${firebaseUID}
         OR u.firebase_uid = ${firebaseUID}
-        OR tm.user_id = (
-          SELECT id FROM users WHERE firebase_uid = ${firebaseUID}
-      )
-    )
       ORDER BY t.start_date DESC
     `;
 
