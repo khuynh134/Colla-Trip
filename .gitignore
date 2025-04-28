@@ -30,3 +30,5 @@ vite.config.ts.timestamp-*
 # VS Code settings
 .vscode/settings.json.env
 .env.local
+
+.history/
