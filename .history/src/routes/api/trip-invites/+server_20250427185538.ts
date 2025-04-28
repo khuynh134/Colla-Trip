@@ -47,4 +47,9 @@ export async function POST({ request }) {
   }
 }
 
-   
+    return json({ success: true });
+  } catch (error) {
+    console.error('Error in trip-invites API:', error);
+    return json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
