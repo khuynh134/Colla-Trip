@@ -35,8 +35,9 @@ export const actions = {
                 tripLocation = body.tripLocation;
                 tripTotalDays = body.tripTotalDays;
                 tripImageUrl = body.tripImageUrl || 'https://source.unsplash.com/400x300/?travel'; 
+                // Ensure fallback image if tripImageUrl is blank
                 
-                members = Array.isArray(body.members) ? body.members : [];
+                                members = Array.isArray(body.members) ? body.members : [];
             } else {
                 //handle form data request
                 const formData = await request.formData();

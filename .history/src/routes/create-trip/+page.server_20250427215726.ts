@@ -34,8 +34,7 @@ export const actions = {
                 endDate = body.tripEndDate;
                 tripLocation = body.tripLocation;
                 tripTotalDays = body.tripTotalDays;
-                tripImageUrl = body.tripImageUrl || 'https://source.unsplash.com/400x300/?travel'; 
-                
+                tripImageUrl = body.tripImageUrl || ''; 
                 members = Array.isArray(body.members) ? body.members : [];
             } else {
                 //handle form data request
