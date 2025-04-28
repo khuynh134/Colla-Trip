@@ -148,7 +148,7 @@ function handleMouseLeave() {
     const res = await fetch('/api/invite-response', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, status }) // <--- send status not response
+      body: JSON.stringify({ token, status })  // <-- MUST BE { token, status }
     });
 
     if (res.ok) {
