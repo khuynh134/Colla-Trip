@@ -10,49 +10,35 @@
 	let errorMessage = '';
 
 	async function handleInvite() {
-		loading = true;
-		errorMessage = '';
+  loading = true;
+  errorMessage = '';
 
-		try {
-			const currentUser = await new Promise((resolve, reject) => {
-				const unsubscribe = auth.onAuthStateChanged((user) => {
-					unsubscribe();
-					if (user) resolve(user);
-					else reject(new Error('User not authenticated.'));
-				});
-			});
+  try {
+    const res = await fetch('/api/trip-invites', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        tripId,
+        username,
+        message: ''
+      }),
+      credentials: 'include'
+    });
 
-			const token = await (currentUser as any).getIdToken(true);
+    if (!res.ok) {
+      const errorData = await res.json();
+      errorMessage = errorData.error || 'Failed to send invite.';
+      return;
+    }
 
-			// 👇 THE FIX: window.location.origin
-			const apiUrl = `${window.location.origin}/api/trip-invites`;
-
-			const res = await fetch(apiUrl, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${token}`
-				},
-				credentials: 'include',
-				body: JSON.stringify({
-					tripId,
-					username,
-					message: '' 
-				})
-			});
-
-			if (!res.ok) {
-				const errorData = await res.json();
-				errorMessage = errorData.error || 'Failed to send invite.';
-				return;
-			}
-
-			dispatch('close');
-		} catch (err) {
-			console.error('Error inviting member:', err);
-			errorMessage = 'Something went wrong. Please try again.';
-		} finally {
-			loading = false;
-		}
-	}
+    dispatch('close');
+  } catch (err) {
+    console.error('Error inviting member:', err);
+    errorMessage = 'Something went wrong. Please try again.';
+  } finally {
+    loading = false;
+  }
+}
 </script>
