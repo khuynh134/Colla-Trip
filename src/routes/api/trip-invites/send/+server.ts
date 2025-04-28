@@ -1,7 +1,7 @@
 // src/routes/api/trip-invites/send/+server.ts
 
 import { json } from '@sveltejs/kit';
-import sql from '$lib/server/database'; // your database connection
+import sql from '$lib/server/database.js';
 import { randomBytes } from 'crypto';
 import nodemailer from 'nodemailer'; // we'll use nodemailer to send emails
 

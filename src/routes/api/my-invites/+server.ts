@@ -1,5 +1,5 @@
 // src/routes/api/my-invites/+server.ts
-import { sql } from '$lib/server/db';
+import sql from '$lib/server/database.js';
 import { getAuth } from '$lib/server/auth'; // or wherever you manage auth
 
 export async function GET({ locals }) {
