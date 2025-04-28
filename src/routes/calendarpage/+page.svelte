@@ -179,13 +179,13 @@
                     <h1 class="text-2xl sm:text-3xl font-bold">Calendar</h1>
                     <div class="ml-4 flex space-x-2">
                         <button 
-                            on:click={addEvent}
+                            onclick={addEvent}
                             class="px-3 py-1 bg-[#3598db] text-white rounded-lg hover:bg-blue-600 transition-colors"
                         >
                             + Event
                         </button>
                         <button 
-                            on:click={exportAllToGCal}
+                            onclick={exportAllToGCal}
                             class="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -199,20 +199,20 @@
                 </div>
                 <div class="flex flex-wrap space-x-2 sm:space-x-4 justify-center">
                     <button 
-                        on:click={() => currentDate = new Date()} 
+                        onclick={() => currentDate = new Date()} 
                         class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors mb-2 sm:mb-0"
                     >
                         Today
                     </button>
                     <div class="flex mb-2 sm:mb-0">
                         <button 
-                            on:click={() => changeMonth(-1)} 
+                            onclick={() => changeMonth(-1)} 
                             class="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-l-lg transition-colors"
                         >
                             &lt;
                         </button>
                         <button 
-                            on:click={() => changeMonth(1)} 
+                            onclick={() => changeMonth(1)} 
                             class="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-r-lg transition-colors"
                         >
                             &gt;
@@ -222,7 +222,7 @@
                         {#each ['month', 'week', 'day', 'agenda'] as view}
                             <button 
                                 class="{currentView === view ? 'bg-[#3598db] text-white' : 'bg-gray-200 hover:bg-gray-300'} px-3 py-2 transition-colors"
-                                on:click={() => currentView = view}
+                                onclick={() => currentView = view}
                             >
                                 {view.charAt(0).toUpperCase() + view.slice(1)}
                             </button>
@@ -315,7 +315,7 @@
                                     <div class="font-medium">{event.title}</div>
                                     <button 
                                         class="text-green-600 hover:text-green-800"
-                                        on:click={() => exportEventToGCal(event)}
+                                        onclick={() => exportEventToGCal(event)}
                                         title="Export to Google Calendar"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

@@ -518,7 +518,7 @@ style="visibility: {$createFormOpen ? 'visible' : 'hidden'};"
       <h2 class="text-2xl font-bold text-gray-800">Create New Trip</h2>
       <button
         type="button"
-        on:click={closeCreateForm}
+        onclick={closeCreateForm}
         class="text-gray-500 hover:text-gray-700"
         aria-label="Close form"
       >
@@ -610,7 +610,7 @@ style="visibility: {$createFormOpen ? 'visible' : 'hidden'};"
                   id="member-{index}"
                   placeholder="Enter email address"
                   value={member}
-                  on:input={(e: Event) => updateMember(index, (e.target as HTMLInputElement).value)}
+                  oninput={(e: Event) => updateMember(index, (e.target as HTMLInputElement).value)}
                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"
                 />
 
@@ -619,7 +619,7 @@ style="visibility: {$createFormOpen ? 'visible' : 'hidden'};"
               {#if index === invitedMembers.length - 1}
                 <button
                   type="button"
-                  on:click={addNewMemberField}
+                  onclick={addNewMemberField}
                   class="bg-[#3598db] text-white p-3 rounded-lg hover:bg-blue-600 transition-colors"
                   aria-label="Add member"
                 >
@@ -642,7 +642,7 @@ style="visibility: {$createFormOpen ? 'visible' : 'hidden'};"
        <!-- Submit button -->
         <button
           type="button"
-          on:click={handleManualSubmit}
+          onclick={handleManualSubmit}
           class="w-full bg-[#3598db] text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors"
           >
           Create Trip
@@ -657,8 +657,8 @@ style="visibility: {$createFormOpen ? 'visible' : 'hidden'};"
  <button
    type="button"
    class="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-40 cursor-default"
-   on:click={closeCreateForm}
-   on:keydown={(e) => e.key === 'Escape' && closeCreateForm()}
+   onclick={closeCreateForm}
+   onkeydown={(e) => e.key === 'Escape' && closeCreateForm()}
    aria-label="Close modal overlay"
  ></button>
 {/if}

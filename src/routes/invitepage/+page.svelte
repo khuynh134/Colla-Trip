@@ -98,13 +98,13 @@
 
             <div class="flex flex-col gap-3 mt-6">
                 <button 
-                    on:click={handleAccept}
+                    onclick={handleAccept}
                     class="px-6 py-3 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition-all"
                 >
                     Accept Invitation
                 </button>
                 <button 
-                    on:click={handleDecline}
+                    onclick={handleDecline}
                     class="px-6 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 transition-all"
                 >
                     Decline Invitation
@@ -117,13 +117,13 @@
                         <p class="text-gray-600 mb-6">Are you sure you want to decline this trip invitation? This cannot be undone.</p>
                         <div class="flex justify-center gap-4">
                             <button 
-                                on:click={handleDeclineConfirmed}
+                                onclick={handleDeclineConfirmed}
                                 class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md"
                             >
                                 Yes, Decline
                             </button>
                             <button 
-                                on:click={() => confirmDeclineOpen = false}
+                                onclick={() => confirmDeclineOpen = false}
                                 class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-md"
                             >
                                 Cancel

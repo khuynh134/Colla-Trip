@@ -296,7 +296,7 @@ function formatDisplayDate(dateString: string | Date | null) {
                     required 
                 ></textarea>
                 <!-- Create New Activity Button-->
-                 <GradientButton type="submit" on:click={handleCreateActivity} class="rounded-xl whitespace-nowrap border border-sky-400 bg-sky-400 px-5 py-2.5 text-center text-sm font-medium text-white shadow-sm transition-all
+                 <GradientButton type="submit" onclick={handleCreateActivity} class="rounded-xl whitespace-nowrap border border-sky-400 bg-sky-400 px-5 py-2.5 text-center text-sm font-medium text-white shadow-sm transition-all
                     hover:border-sky-700 hover:bg-sky-700 focus:ring focus:ring-primary-200 disabled:cursor-not-allowed disabled:border-primary-300 disabled:bg-primary-300">
                     Create New Activity
                 </GradientButton>
@@ -322,8 +322,8 @@ function formatDisplayDate(dateString: string | Date | null) {
                        
                         <p class="text-gray-700 dark:text-gray-400 mb-2">Activity's Details: {activity.description}</p>
                         <div class="flex flex-wrap justify-between items-center">
-                            <Button on:click={() => deleteActivity(activity.id)} class="bg-sky-400 text-white hover:border-sky-700 hover:bg-sky-700">Delete</Button>
-                            <Button on:click={() => voteActivity(activity.id)} class="bg-sky-400 text-white hover:border-sky-700 hover:bg-sky-700 ">Vote</Button>
+                            <Button onclick={() => deleteActivity(activity.id)} class="bg-sky-400 text-white hover:border-sky-700 hover:bg-sky-700">Delete</Button>
+                            <Button onclick={() => voteActivity(activity.id)} class="bg-sky-400 text-white hover:border-sky-700 hover:bg-sky-700 ">Vote</Button>
                         </div>
  
                     </div>
@@ -334,11 +334,11 @@ function formatDisplayDate(dateString: string | Date | null) {
       
         <!-- Display Polling Results -->
         <div class="flex justify-center p-3.5 m-5 px-8 gap-4">
-            <GradientButton on:click={(event) => clearResults(event)} class="rounded-xl whitespace-nowrap border border-sky-400 bg-sky-400 px-5 py-2.5 text-center text-sm font-medium text-white shadow-sm transition-all
+            <GradientButton onclick={(event) => clearResults(event)} class="rounded-xl whitespace-nowrap border border-sky-400 bg-sky-400 px-5 py-2.5 text-center text-sm font-medium text-white shadow-sm transition-all
                 hover:border-sky-700 hover:bg-sky-700 focus:ring focus:ring-primary-200 disabled:cursor-not-allowed disabled:border-primary-300 disabled:bg-primary-300">
                 Clear Polling Results
             </GradientButton>
-            <GradientButton on:click={(event) => viewResults(event)} class="rounded-xl whitespace-nowrap border border-sky-400 bg-sky-400 px-5 py-2.5 text-center text-sm font-medium text-white shadow-sm transition-all
+            <GradientButton onclick={(event) => viewResults(event)} class="rounded-xl whitespace-nowrap border border-sky-400 bg-sky-400 px-5 py-2.5 text-center text-sm font-medium text-white shadow-sm transition-all
                 hover:border-sky-700 hover:bg-sky-700 focus:ring focus:ring-primary-200 disabled:cursor-not-allowed disabled:border-primary-300 disabled:bg-primary-300">
                 View Polling Results
             </GradientButton>

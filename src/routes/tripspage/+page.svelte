@@ -956,7 +956,7 @@ onMount(() => {
                                 id="username" 
                                 placeholder="Search for user" 
                                 bind:value={usernameInput} 
-                                on:input={searchUsers}
+                                oninput={searchUsers}
                                 class="pl-10"
                             />
                         </div>
@@ -996,10 +996,10 @@ onMount(() => {
                 </div>
                 
                 <div class="flex justify-center gap-4">
-                    <Button color="alternative" on:click={() => addMemberModalOpen = false}>
+                    <Button color="alternative" onclick={() => addMemberModalOpen = false}>
                         Cancel
                     </Button>
-                    <Button color="success" on:click={inviteMember}>
+                    <Button color="success" onclick={inviteMember}>
                         Send Invitation
                     </Button>
                 </div>
@@ -1015,7 +1015,7 @@ onMount(() => {
                 </h3>
                 
                 <div class="flex justify-center gap-4">
-                    <Button color="alternative" on:click={() => shareTripModalOpen = false}>
+                    <Button color="alternative" onclick={() => shareTripModalOpen = false}>
                         Close
                     </Button>
                 </div>

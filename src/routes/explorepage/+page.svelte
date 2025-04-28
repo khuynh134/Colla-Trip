@@ -287,13 +287,13 @@
                 <div class="flex space-x-3">
                     <button 
                         class="px-4 py-1.5 bg-white text-indigo-600 rounded-lg font-medium hover:bg-gray-100 transition-colors shadow-sm"
-                        on:click={handleRegister}
+                        onclick={handleRegister}
                     >
                         Register to Start
                     </button>
                     <button 
                         class="px-4 py-1.5 border border-white/50 text-white rounded-lg font-medium hover:bg-white/10 transition-colors"
-                        on:click={enableDemoMode}
+                        onclick={enableDemoMode}
                     >
                         Continue as Guest
                     </button>
@@ -338,7 +338,7 @@
                     <!-- Dropdown Menu for Category -->
                     <Dropdown style="position: absolute; top: 60px; z-index: 3000; max-height: 300px; overflow-y: auto; width: auto; border-radius: 0.5rem; background-color: white; border: 1px solid rgba(209, 213, 219, 0.5); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
                         {#each items as { label, icon, categoryId }}
-                            <DropdownItem on:click={() => updateCategory(categoryId, label)}
+                            <DropdownItem onclick={() => updateCategory(categoryId, label)}
                                 class="hover:bg-blue-50 {selectedCategoryId === categoryId ? 'bg-blue-100 font-medium' : ''}"
                             > 
                                 <div class="flex items-center py-1">
@@ -363,7 +363,7 @@
                         <Search size="md" class="w-full pl-10 rounded-xl border-0 shadow-md py-2.5 text-gray-700 placeholder-gray-400 focus:ring-2 focus:ring-blue-300" bind:value={location} placeholder="Enter location..." />
                     </div>
                     
-                    <Button on:click={executeSearch} class="w-full sm:w-auto !p-2.5 rounded-xl border-0 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-md transition-all">
+                    <Button onclick={executeSearch} class="w-full sm:w-auto !p-2.5 rounded-xl border-0 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-md transition-all">
                         {#if isLoading}
                             <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -456,7 +456,7 @@
                                             {:else}
                                                 <button 
                                                     class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-500 text-white rounded-lg shadow-md hover:from-indigo-700 hover:to-blue-600 transition-all flex items-center gap-2"
-                                                    on:click={handleRegister}
+                                                    onclick={handleRegister}
                                                 >
                                                     <UserPlus class="w-4 h-4" />
                                                     Register to View
@@ -473,13 +473,13 @@
                 <!-- Custom Navigation Controls -->
                 <div class="flex justify-between items-center absolute top-1/2 left-0 right-0 transform -translate-y-1/2 px-4">
                     <Button class="bg-white/70 backdrop-blur-sm p-3 rounded-full shadow-md hover:bg-white transition-all border-0"
-                        on:click={() => index = (index - 1 + sharedTrips.length) % sharedTrips.length}
+                        onclick={() => index = (index - 1 + sharedTrips.length) % sharedTrips.length}
                     >
                         <ChevronLeft class="w-5 h-5 text-gray-800" />
                     </Button>
 
                     <Button class="bg-white/70 backdrop-blur-sm p-3 rounded-full shadow-md hover:bg-white transition-all border-0"
-                        on:click={() => index = (index + 1) % sharedTrips.length}
+                        onclick={() => index = (index + 1) % sharedTrips.length}
                     >
                         <ChevronRight class="w-5 h-5 text-gray-800" />
                     </Button>
@@ -490,7 +490,7 @@
                     {#each sharedTrips as _, i}
                         <button 
                             class="w-3 h-3 rounded-full transition-all {i === index ? 'bg-blue-600 w-6' : 'bg-gray-300 hover:bg-gray-400'}"
-                            on:click={() => index = i}
+                            onclick={() => index = i}
                         ></button>
                     {/each}
                 </div>
@@ -530,7 +530,7 @@
                                 <p class="text-indigo-600 text-sm mb-3">Register an account to save your favorite places and create custom itineraries.</p>
                                 <button 
                                     class="px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
-                                    on:click={handleRegister}
+                                    onclick={handleRegister}
                                 >
                                     Create an Account
                                 </button>
@@ -607,7 +607,7 @@
                                     {:else}
                                         <button 
                                             class="text-indigo-600 text-sm font-medium hover:text-indigo-800 transition-colors flex items-center"
-                                            on:click={handleRegister}
+                                            onclick={handleRegister}
                                         >
                                             <UserPlus class="h-4 w-4 mr-1" />
                                             Register to Save
@@ -641,7 +641,7 @@
                 <p class="text-indigo-100 max-w-2xl mx-auto mb-6">Create an account to unlock the full potential of our travel planning tools, save your favorite destinations, and collaborate with friends.</p>
                 <button 
                     class="px-6 py-3 bg-white text-indigo-600 rounded-lg font-bold hover:bg-indigo-50 transition-colors shadow-md"
-                    on:click={handleRegister}
+                    onclick={handleRegister}
                 >
                     Register Now
                 </button>

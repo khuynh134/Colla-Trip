@@ -149,7 +149,7 @@
         class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent mb-4"
     />
     <button 
-        on:click={handleAcceptInvite}
+        onclick={handleAcceptInvite}
         class="w-full bg-cyan-600 text-white py-3 rounded-lg hover:bg-cyan-700 transition-all"
     >
         Accept Invite

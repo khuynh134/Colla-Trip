@@ -270,7 +270,7 @@ async function ensureSession() {
              <button
                 type="button"
                 class="w-full h-full cursor-pointer"
-                on:click={() => {createFormOpen.set(true)}}
+                onclick={() => {createFormOpen.set(true)}}
               >
                 <div class="flex flex-col items-center text-center">
                   <div class="bg-blue-500 text-white p-3 rounded-lg mb-3">
@@ -285,7 +285,7 @@ async function ensureSession() {
           {:else}
         <Card
           class="p-4 shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-          on:click={() => {
+          onclick={() => {
             if (action.title === 'My Trips') {
               navigateToTrips();
             } else if (action.title === 'Calendar') {
@@ -403,14 +403,14 @@ async function ensureSession() {
               {#each recentTrips as trip}
                 <button
                   class="flex items-center border-b border-gray-100 pb-4 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
-                  on:click={() => goto(`/tripspage/${trip.id}`)}
+                  onclick={() => goto(`/tripspage/${trip.id}`)}
                 >
                   <!-- ... trip item content ... -->
             </button>
               {/each}
               <button
                 class="text-blue-500 font-medium hover:text-blue-600 transition-colors flex items-center mt-2"
-                on:click={() => goto('/totaltripspage')}
+                onclick={() => goto('/totaltripspage')}
               >
                 <span>View all trips</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -422,7 +422,7 @@ async function ensureSession() {
                 <p>No trips found. Create your first trip to get started!</p>
                 <button
                   class="mt-4 text-blue-500 hover:text-blue-600"
-                  on:click={() => goto('/create-trip')}
+                  onclick={() => goto('/create-trip')}
                 >
                   Create a trip
                 </button>

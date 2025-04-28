@@ -91,7 +91,7 @@ const response = await authenticatedFetch('/api/trips');
         <h1>My Trips</h1>
         
             {#each trips as trip}
-                <button on:click={() => navigateToTrip(trip.id)} class="trip-card">
+                <button onclick={() => navigateToTrip(trip.id)} class="trip-card">
                     <Card>
                       <!-- 🖼️ Display trip image -->
                     <img

@@ -101,7 +101,7 @@
             <!-- Dashboard Button (only show when authenticated) -->
             {#if $isAuthenticated}
             <button 
-                on:click={goToDashboard}
+                onclick={goToDashboard}
                 class="absolute left-1/2 transform -translate-x-1/2 bg-white text-[#3598db] px-20 py-1.5 rounded hover:bg-gray-100 transition-colors font-bold"
             >
                 Dashboard
@@ -126,7 +126,7 @@
             
             <!-- Login button - Flush to the right edge -->
             <button 
-                on:click={toggleLogin} 
+                onclick={toggleLogin} 
                 class="ml-4 mr-0 bg-white text-[#3598db] px-3 py-1 rounded hover:bg-gray-100 transition-colors font-bold"
             >
                 {$isAuthenticated ? 'Log Out' : 'Log In'}
@@ -136,7 +136,7 @@
             {#if !$isAuthenticated}
                 <button 
                     class="md:hidden ml-3 p-2"
-                    on:click={() => isMenuOpen = !isMenuOpen}
+                    onclick={() => isMenuOpen = !isMenuOpen}
                     aria-label="Toggle menu"
                 >
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

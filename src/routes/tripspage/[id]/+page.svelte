@@ -1096,7 +1096,7 @@
                                 id="username" 
                                 placeholder="Search for user" 
                                 bind:value={usernameInput} 
-                                on:input={searchUsers}
+                                oninput={searchUsers}
                                 class="pl-10"
                             />
                         </div>
@@ -1136,10 +1136,10 @@
                 </div>
                 
                 <div class="flex justify-center gap-4">
-                    <Button color="alternative" on:click={() => addMemberModalOpen = false}>
+                    <Button color="alternative" onclick={() => addMemberModalOpen = false}>
                         Cancel
                     </Button>
-                    <Button color="success" on:click={inviteMember}>
+                    <Button color="success" onclick={inviteMember}>
                         Send Invitation
                     </Button>
                 </div>
@@ -1211,10 +1211,10 @@
             </div>
 
                    <div class="flex justify-center gap-4">
-                    <Button color="alternative" on:click={() => shareTripModalOpen = false}>
+                    <Button color="alternative" onclick={() => shareTripModalOpen = false}>
                         Close
                     </Button>
-                    <Button color="green" on:click={shareTrip}>
+                    <Button color="green" onclick={shareTrip}>
                         Share This Trip
                     </Button>
                     </div>
@@ -1235,14 +1235,14 @@
                 <div class="mb-4">
                     <Label for="deleteTrip" class="mb-2">Delete Trip</Label>
                     <p class="text-sm text-gray-500">This action cannot be undone.</p>
-                    <Button color="red" on:click={deleteTrip}>
+                    <Button color="red" onclick={deleteTrip}>
                         Delete Trip
                     </Button>
                 </div>
                 
                 <!-- Settings Content -->
                 <div class="flex justify-center gap-4">
-                    <Button color="alternative" on:click={() => settingsModalOpen = false}>
+                    <Button color="alternative" onclick={() => settingsModalOpen = false}>
                         Close
                     </Button>
                 </div>
