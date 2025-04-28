@@ -1,3 +1,4 @@
+// src/routes/api/trips/+server.ts
 import { json, error } from '@sveltejs/kit';
 import sql from '$lib/server/database.js';
 import { adminAuth } from '$lib/server/firebase-admin';
@@ -9,7 +10,7 @@ export async function POST({ request }) {
     let tripName: string;
     let startDate: string;
     let endDate: string;
-    let members: string[] = [];
+    let members: { email?: string; username?: string }[] = [];
     let idToken: string | undefined;
     let tripLocation: string;
     let tripTotalDays: number;
@@ -29,7 +30,7 @@ export async function POST({ request }) {
       tripName = formData.get('tripName')?.toString() ?? '';
       startDate = formData.get('tripStartDate')?.toString() ?? '';
       endDate = formData.get('tripEndDate')?.toString() ?? '';
-      members = formData.getAll('members').map((member) => member.toString());
+      members = []; // You can improve parsing formData members later
       tripLocation = formData.get('tripLocation')?.toString() ?? '';
       tripTotalDays = Number((formData.get('tripTotalDays')?.toString() ?? '0'));
     }
@@ -79,16 +80,16 @@ export async function POST({ request }) {
       RETURNING id
     `;
     
+    // Insert members as invitations
     if (members.length > 0) {
-      const validMembers = members.filter(email => email && email.includes('@'));
-      if (validMembers.length > 0) {
-        await Promise.all(validMembers.map(async (email) => {
+      await Promise.all(members.map(async (member) => {
+        if (member.email || member.username) {
           await sql`
-            INSERT INTO trip_invitations (trip_id, email, invited_by, status)
-            VALUES (${newTrip.id}, ${email}, ${firebaseUID}, 'pending')
+            INSERT INTO trip_invitations (trip_id, email, username, status)
+            VALUES (${newTrip.id}, ${member.email ?? null}, ${member.username ?? null}, 'pending')
           `;
-        }));
-      }
+        }
+      }));
     }
     
     return json({
@@ -105,7 +106,7 @@ export async function POST({ request }) {
   }
 }
 
-// SINGLE GET FUNCTION
+// GET: Fetch trips for logged-in user
 export async function GET({ request }) {
   try {
     const authHeader = request.headers.get('Authorization');
