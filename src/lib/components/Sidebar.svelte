@@ -411,7 +411,7 @@ aria-label="Sidebar"
 <div 
   class="fixed inset-y-0 right-0 w-96 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out 
          {$notificationsPanelOpen ? 'translate-x-0' : 'translate-x-full'}
-  style="left: calc({sidebarWidth} + 0px);"
+  style={`left: calc(${sidebarWidth} + 0px);`}
 >
   <div class="p-6">
     <div class="flex justify-between items-center mb-4">
