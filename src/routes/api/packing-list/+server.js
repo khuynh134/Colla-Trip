@@ -51,38 +51,7 @@ export async function POST({ request }) {
     }
 }
 
-//GET: Fetch packing list items
-export async function GET() {
-    try {
-        const trip_id = URL.searchParams.get('trip_id');
-        if(!trip_id) {
-            return json(
-                {error: 'Trip ID is required to fetch packing list items'},
-                {status: 400}
-            );
-        }
-        const items = await sql`
-            SELECT
-                packing_list_id AS id,
-                item_name AS name, 
-                item_quantity AS quantity, 
-                created_by_name AS created_by,
-                checked,
-                created_at
-            FROM packing_list 
-            WHERE trip_id = ${trip_id}
-            ORDER BY created_at DESC
-        `
-    return json(items);
-    } catch (err) {
-        console.error('Error fetching packing list items:', err);
-        return json({
-            error: 'Failed to fetch packing list items',
-            status: 500,
-        });
-    }; 
-
-}// DELETE item
+// DELETE item
 export async function DELETE({ request}) {
     try {
         const { id, trip_id } = await request.json(); 
@@ -114,9 +83,6 @@ export async function DELETE({ request}) {
         );
     }
 }
-
-import { json } from '@sveltejs/kit';
-import sql from '$lib/server/database.js'; // Import the PostgreSQL client
 
 // GET: Fetch packing list items for a specific trip
 export async function GET({ url }) {
