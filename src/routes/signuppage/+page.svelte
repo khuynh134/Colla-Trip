@@ -140,7 +140,7 @@ goto(redirectUrl);
             <p class="text-red-600 text-center mb-4">{errorMessage}</p>
         {/if}
         
-        <form on:submit={handleSignUp} class="space-y-6">
+        <form onsubmit={handleSignUp} class="space-y-6">
             <div>
                 <label for="firstName" class="block text-gray-700 mb-2">First Name</label>
                 <input 

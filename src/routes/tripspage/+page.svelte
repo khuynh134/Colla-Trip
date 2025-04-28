@@ -733,7 +733,7 @@ onMount(() => {
                                             bind:newItemName
                                             bind:newItemQuantity
                                             bind:creatorName
-                                            on:submit={addItem}
+                                            onsubmit={addItem}
                                             
                                         />
                                     </div>

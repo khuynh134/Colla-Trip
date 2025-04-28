@@ -82,7 +82,7 @@
 
 		{#if !loggedIn}
 			<!-- Login Form -->
-			<form on:submit|preventDefault={handleLogin} class="space-y-6">
+			<form onsubmit={(e) => { e.preventDefault(); handleLogin(e); }} class="space-y-6">
 				<div>
 					<label for="email" class="block text-gray-700 mb-2">Email</label>
 					<input 

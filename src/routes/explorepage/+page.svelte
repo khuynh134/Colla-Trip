@@ -317,7 +317,7 @@
 
         <!-- Search Bar with Glassmorphism -->
         <div class="relative z-10 bg-white/30 p-6 rounded-xl backdrop-blur-sm border border-white/50 shadow-lg mb-10">
-            <form class="flex flex-col sm:flex-row gap-3" on:submit|preventDefault={executeSearch}>
+            <form class="flex flex-col sm:flex-row gap-3" onsubmit={(e) => { e.preventDefault(); executeSearch(); }}>
                 <div class="relative">
                     <Button class="w-full sm:w-auto rounded-xl whitespace-nowrap border-0 bg-gradient-to-r from-blue-500 to-cyan-500 px-5 py-2.5 text-center text-sm font-medium text-white shadow-md transition-all hover:from-blue-600 hover:to-cyan-600 focus:ring focus:ring-blue-300">
                         <div class="flex items-center">

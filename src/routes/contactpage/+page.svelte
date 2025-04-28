@@ -99,7 +99,7 @@
         </div>
       {/if}
       
-      <form class="space-y-6" on:submit={handleSubmit}>
+      <form class="space-y-6" onsubmit={handleSubmit}>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label for="first-name" class="block text-gray-700 mb-2">First Name</label>
