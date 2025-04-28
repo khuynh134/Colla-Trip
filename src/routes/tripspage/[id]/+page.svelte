@@ -9,6 +9,7 @@
     import {page} from '$app/stores';
     import { getAuth } from 'firebase/auth';
     import { triggerToast } from '$lib/stores/notifications';
+    import AddMemberModal from '$lib/components/AddMemberModal.svelte';
    
 
 
@@ -34,6 +35,9 @@
     let sidebarExtended = $state(false);
     let sidebarWidth = $state('80px');
     let createFormOpen = $state(false);
+
+  let showAddMemberModal = false; // controls showing the modal
+
 
     // Add Member Modal state
     let addMemberModalOpen = $state(false);
@@ -83,25 +87,20 @@
         console.error('Error sending email invitation:', errorData);
         triggerToast('Failed to send email invitation. Please try again.');
       }
-    } else {
+    } 
+    else if (inviteMethod === 'username') {
       const res = await fetch('/api/trip-invites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method: 'username', recipient: usernameInput, trip_id: tripId, message: inviteMessage })
+        body: JSON.stringify({ 
+          username: usernameInput,
+          tripId: tripId,
+          message: inviteMessage
+        })
       });
 
       if (res.ok) {
-        notifications.addNotification({
-          id: Date.now(),
-          type: 'invite',
-          title: 'Trip Invitation Sent',
-          message: `Invitation sent to ${usernameInput} for ${tripData.title}`,
-          timestamp: new Date(),
-          read: false,
-          action: { label: 'View Trip', href: `/tripspage/${tripId}` }
-        });
         triggerToast('Username invitation sent successfully!');
-        
       } else {
         const errorData = await res.json();
         console.error('Error sending username invitation:', errorData);
@@ -114,11 +113,13 @@
     inviteMessage = '';
     addMemberModalOpen = false;
 
-  } catch (error) {
+  } 
+  catch (error) {
     console.error('Error sending invitation:', error);
     triggerToast('An error occurred. Please try again.');
   }
 }
+
 
     // Mock function to search for users
     function searchUsers() {
@@ -1249,5 +1250,6 @@
          </Modal>
 
     {/if}
+    
     </div>
 </div>

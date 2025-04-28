@@ -10,7 +10,7 @@ export async function POST({ request }) {
     let tripName: string;
     let startDate: string;
     let endDate: string;
-    let members: string[] = [];
+    let members: { email?: string; username?: string }[] = [];
     let idToken: string | undefined;
     let tripLocation: string;
     let tripTotalDays: number;
@@ -30,7 +30,7 @@ export async function POST({ request }) {
       tripName = formData.get('tripName')?.toString() ?? '';
       startDate = formData.get('tripStartDate')?.toString() ?? '';
       endDate = formData.get('tripEndDate')?.toString() ?? '';
-      members = formData.getAll('members').map((member) => member.toString());
+      members = []; // You can improve parsing formData members later
       tripLocation = formData.get('tripLocation')?.toString() ?? '';
       tripTotalDays = Number((formData.get('tripTotalDays')?.toString() ?? '0'));
     }
@@ -60,15 +60,9 @@ export async function POST({ request }) {
     const startDateObj = new Date(startDate);
     const endDateObj = new Date(endDate);
     
-    if (isNaN(startDateObj.getTime())) {
+    if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
       throw error(400, {
-        message: 'Invalid start date'
-      });
-    }
-    
-    if (isNaN(endDateObj.getTime())) {
-      throw error(400, {
-        message: 'Invalid end date'
+        message: 'Invalid start or end date'
       });
     }
     
@@ -80,29 +74,22 @@ export async function POST({ request }) {
     
     tripTotalDays = Math.floor((endDateObj.getTime() - startDateObj.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     
-    // Insert trip into database
     const [newTrip] = await sql`
       INSERT INTO trips (name, start_date, end_date, owner_uid, location, total_days)
       VALUES (${tripName}, ${startDateObj}, ${endDateObj}, ${firebaseUID}, ${tripLocation}, ${tripTotalDays})
       RETURNING id
     `;
     
-    // Process member invites
+    // Insert members as invitations
     if (members.length > 0) {
-      const validMembers = members.filter(email => email && email.includes('@'));
-      
-      if (validMembers.length > 0) {
-        // Insert invites into the database
-        await Promise.all(validMembers.map(async (email) => {
+      await Promise.all(members.map(async (member) => {
+        if (member.email || member.username) {
           await sql`
-            INSERT INTO trip_invites (trip_id, email, invited_by, status)
-            VALUES (${newTrip.id}, ${email}, ${firebaseUID}, 'pending')
+            INSERT INTO trip_invitations (trip_id, email, username, status)
+            VALUES (${newTrip.id}, ${member.email ?? null}, ${member.username ?? null}, 'pending')
           `;
-          
-          // Here you would typically send an email invite
-          // This would require integration with an email service
-        }));
-      }
+        }
+      }));
     }
     
     return json({
@@ -113,23 +100,15 @@ export async function POST({ request }) {
     
   } catch (err) {
     console.error('Trip creation error:', err);
-    
-    if (typeof err === 'object' && err !== null && 'status' in err) {
-      if (err instanceof Error && 'body' in err) {
-        throw error(err.status as number, err.body as any);
-      }
-    }
-    
     throw error(500, {
       message: 'Failed to create trip. Please try again.'
     });
   }
 }
 
-// GET: Fetch trips for the authenticated user And members of the trip
+// GET: Fetch trips for logged-in user
 export async function GET({ request }) {
   try {
-    // Extract the authentication token from the header
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw error(401, { message: 'Missing authentication token' });
@@ -152,13 +131,16 @@ export async function GET({ request }) {
       LEFT JOIN trip_members tm ON tm.trip_id = t.id
       LEFT JOIN users u ON u.id = tm.user_id
       WHERE t.owner_uid = ${firebaseUID} OR u.firebase_uid = ${firebaseUID}
+      WHERE t.owner_uid = ${firebaseUID} OR tm.user_id = (
+        SELECT id FROM users WHERE firebase_uid = ${firebaseUID}
+      )
       ORDER BY t.start_date DESC
     `;
 
-        // Return trips in the response
-        return json(trips);
-      } catch (err) {
-        console.error('Error fetching trips:', err);
-        throw error(500, { message: 'Failed to fetch trips. Please try again.' });
-      }
-    }
+    return json(trips);
+
+  } catch (err) {
+    console.error('Error fetching trips:', err);
+    throw error(500, { message: 'Failed to fetch trips. Please try again.' });
+  }
+}

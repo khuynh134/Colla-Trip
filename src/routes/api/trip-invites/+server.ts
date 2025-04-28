@@ -1,22 +1,23 @@
 // src/routes/api/trip-invites/+server.ts
-import sql from '$lib/server/database.js';
 import { json } from '@sveltejs/kit';
+import sql from '$lib/server/database.js';// s
 
 export async function POST({ request }) {
   try {
-    const { method, recipient, trip_id, message } = await request.json();
+    const { username, tripId, message } = await request.json();
 
-    if (!recipient || !trip_id) {
-      return json({ error: 'Missing recipient or trip ID' }, { status: 400 });
+    // Basic validation (still good practice)
+    if (!username || !tripId) {
+      return json({ error: 'Missing username or trip ID' }, { status: 400 });
     }
 
-    // Insert invitation for registered user (by username)
+    // Insert the invitation directly without any auth
     await sql`
       INSERT INTO trip_invitations (trip_id, username, message, status, token)
       VALUES (
-        ${trip_id},
-        ${recipient},
-        ${message},
+        ${tripId},
+        ${username},
+        ${message || ''},
         'pending',
         encode(gen_random_bytes(16), 'hex')
       )
@@ -24,7 +25,7 @@ export async function POST({ request }) {
 
     return json({ success: true });
   } catch (error) {
-    console.error('Error in trip-invites API:', error);
-    return json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Error creating trip invite:', error);
+    return json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

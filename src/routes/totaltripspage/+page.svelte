@@ -4,6 +4,7 @@
     import { getAuth, onAuthStateChanged } from 'firebase/auth';
     import { Card} from 'flowbite-svelte';
     import { Calendar, MapPin } from 'lucide-svelte';
+    import { authenticatedFetch } from '$lib/utils/authenticatedFetch';
     let trips: { id: number; name: string; location: string; startDate: string; endDate: string;  image_url?: string }[] = [];
     let loading = true; 
     let error: string | null; 
@@ -43,12 +44,9 @@
                     loading = false;
                     return;
                 }
-                const token = await user.getIdToken();
-                const response = await fetch('/api/trips', {
-                     headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
+                
+                
+const response = await authenticatedFetch('/api/trips');
                 if (!response.ok) {
                     const errorData = await response.json().catch( () => null);
                     throw new Error(errorData?.message || 'Failed to fetch trips');

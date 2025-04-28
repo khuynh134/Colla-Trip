@@ -1,23 +1,15 @@
-import sql from '$lib/server/database.js'; // Database connection
+import sql from '$lib/server/database.js';
 import type { RequestHandler } from '@sveltejs/kit';
 
 export const POST: RequestHandler = async ({ request }) => {
     try {
         const { firebase_uid, email, username, profile, roles, token, invite_code } = await request.json();
 
-        console.log('firebase_uid:', firebase_uid);
-        console.log('email:', email);
-        console.log('username:', username);
-        console.log('profile:', profile);
-        console.log('roles:', roles);
-        console.log('token:', token);
-        console.log('invite_code:', invite_code);
-
         if (!firebase_uid || !email || !username || !profile || !roles) {
             throw new Error('Missing required fields');
         }
 
-        // ✅ 1. Insert the user into "users" table
+        // 1. Insert user into users table
         const [user] = await sql`
             INSERT INTO users (firebase_uid, email, username, profile, roles)
             VALUES (${firebase_uid}, ${email}, ${username}, ${profile}, ${roles})
@@ -30,9 +22,9 @@ export const POST: RequestHandler = async ({ request }) => {
             RETURNING id, firebase_uid, email, username;
         `;
 
-        console.log('✅ User saved successfully:', user);
+        console.log('✅ User created:', user);
 
-        // ✅ 2. If token and invite_code provided, process the invite
+        // 2. If token + invite_code exist, handle trip join
         if (token && invite_code) {
             const [invite] = await sql`
                 SELECT * FROM trip_invitations
@@ -44,37 +36,38 @@ export const POST: RequestHandler = async ({ request }) => {
             `;
 
             if (!invite) {
-                throw new Error('Invalid invitation code or invitation already used.');
+                console.warn('⚠️ Invalid or expired invitation.');
+            } else {
+                // Insert into trip_members
+                await sql`
+                    INSERT INTO trip_members (trip_id, user_id)
+                    VALUES (${invite.trip_id}, ${user.id});
+                `;
+
+                // Update invite status
+                await sql`
+                    UPDATE trip_invitations
+                    SET status = 'accepted'
+                    WHERE id = ${invite.id};
+                `;
+
+                console.log(`✅ User ${user.id} added to trip ${invite.trip_id}`);
             }
-
-            console.log('✅ Valid invite found:', invite);
-
-            // ✅ 3. Insert user into trip_members
-            await sql`
-                INSERT INTO trip_members (trip_id, user_id)
-                VALUES (${invite.trip_id}, ${user.id});
-            `;
-
-            console.log(`✅ User ${user.id} added to trip ${invite.trip_id}`);
-
-            // ✅ 4. Mark the invitation as accepted
-            await sql`
-                UPDATE trip_invitations
-                SET status = 'accepted'
-                WHERE id = ${invite.id};
-            `;
-
-            console.log(`✅ Invitation ${invite.id} marked as accepted.`);
         }
 
-        // ✅ 5. Finally, return user info
-        return new Response(JSON.stringify(user), {
+        // 3. Response
+        return new Response(JSON.stringify({
+            id: user.id,
+            firebase_uid: user.firebase_uid,
+            email: user.email,
+            username: user.username
+        }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
         });
 
     } catch (error: any) {
-        console.error('❌ Database Error:', error);
+        console.error('❌ Error saving user:', error);
         return new Response(JSON.stringify({ error: 'Failed to save user', details: error.message }), {
             status: 500
         });

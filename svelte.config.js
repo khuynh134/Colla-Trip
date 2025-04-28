@@ -15,7 +15,7 @@ const config = {
 			external: ['pg-native']
 		}),
 		alias: {
-			$lib: 'src/lib'
+			$lib: './src/lib'
 		}
 	}
 };

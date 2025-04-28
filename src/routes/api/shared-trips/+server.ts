@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import sql from '$lib/server/database';
+import sql from '$lib/server/database.js';
 import { fetchUnsplashImage } from '$lib/server/unsplash';
 
 export async function GET() {

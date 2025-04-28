@@ -6,13 +6,14 @@
   import { LogIn, LogOut } from 'lucide-svelte';
   import { createFormOpen } from '$lib/stores/createFormStore';
   import { notifications } from '$lib/stores/notifications';
-
+  import { writable } from 'svelte/store';
 
   import { user } from '$lib/stores/authStore';
   import { getAuth} from 'firebase/auth';
   import type { User as FirebaseUser } from 'firebase/auth';
   import type { SubmitFunction } from '@sveltejs/kit'
   import { fetchUnsplashImage } from '$lib/utils/unsplash'; 
+  import { authenticatedFetch } from '$lib/utils/authenticatedFetch';
 
   // Form data variables 
   let tripName = '';
@@ -22,11 +23,11 @@
   let tripTotalDays = 0;
   let formError: string | null = null; // Declare formError
 
-
   // Props
   export let sidebarExtended = false;
   export let sidebarWidth = '80px';
   export let notificationsOpen = false; // New prop to control notifications panel
+  export let invites = writable([]);
 
   let sidebarTransition = '';
   let invitedMembers: string[] = [''];
@@ -52,12 +53,24 @@
      }
    }
   
+
   // Initialize sidebar transition on mount
   onMount(() => {
     sidebarTransition = 'transition-all duration-500 ease-in-out';
     console.log('Auth status on mount:', $isAuthenticated, $user);
   });
-
+ onMount(async () => {
+    try {
+      const res = await authenticatedFetch('/api/my-invites');
+      if (res.ok) {
+        invites.set(await res.json());
+      } else {
+        console.error('Failed to load invites');
+      }
+    } catch (err) {
+      console.error('Error loading invites:', err);
+    }
+  });
 function handleMouseEnter() {
   isHovered = true;
 }
@@ -104,26 +117,76 @@ function handleMouseLeave() {
   }
     */
   
-  async function handleAuthButton(): Promise<void> {
-    if ($isAuthenticated) {
-      // User is logged in, log them out
-      const result = await logout();
-      if (result.success) {
-        goto('/'); // Redirect to home page after logout
-      }
-    } else {
-      // User is not logged in, redirect to login page
-      goto('/loginpage');
-    }
-  }  
+  async function acceptInvite(inviteId: number) {
+    try {
+      const res = await fetch('/api/invite-response', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inviteId, action: 'accept' })
+      });
 
-  function toggleNotifications() {
-    notificationsOpen = !notificationsOpen;
-    if (notificationsOpen) {
-      notifications.markAllAsRead();
+      if (res.ok) {
+        // Refresh the invites list
+        const updated = await authenticatedFetch('/api/my-invites');
+        invites.set(await updated.json());
+      } else {
+        console.error('Failed to accept invite');
+      }
+    } catch (error) {
+      console.error('Error accepting invite:', error);
     }
   }
 
+  async function declineInvite(inviteId: number) {
+    try {
+      const res = await fetch('/api/invite-response', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inviteId, action: 'decline' })
+      });
+
+      if (res.ok) {
+        // Refresh the invites list
+        const updated = await authenticatedFetch('/api/my-invites');
+        invites.set(await updated.json());
+      } else {
+        console.error('Failed to decline invite');
+      }
+    } catch (error) {
+      console.error('Error declining invite:', error);
+    }
+  }
+
+  async function handleAuthButton() {
+  const authenticated = $isAuthenticated;
+  if (authenticated) {
+    const result = await logout();
+    if (result.success) {
+      goto('/');
+    }
+  } else {
+    goto('/loginpage');
+  }
+}
+  async function toggleNotifications() {
+  notificationsOpen = !notificationsOpen;
+
+  if (notificationsOpen) {
+    try {
+      const res = await fetch('/api/notifications');
+      if (res.ok) {
+        const data = await res.json();
+        notifications.set(data); // Update your store
+      } else {
+        console.error('Failed to fetch notifications');
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+
+    notifications.markAllAsRead(); // Optionally mark as read once opened
+  }
+}
   function handleNotificationAction(notification) {
     if (notification.action?.href) {
       goto(notification.action.href);
@@ -165,10 +228,8 @@ function handleMouseLeave() {
        //Filter out empty member emails
        const validMembers = invitedMembers.filter(m => m.trim() !== '');
 
-
        //Calculate total days between start and end dates
        let calculatedTotalDays = 0;
-
 
        if ( tripStartDate && tripEndDate) {
          const start = new Date(tripStartDate);
@@ -206,12 +267,9 @@ function handleMouseLeave() {
          body: JSON.stringify(requestedData)
        });
 
-
        console.log('Response status:', response.status);
 
-
        const data = await response.json();
-
 
        if(response.ok) {
          console.log('Response data:', data);
@@ -224,7 +282,7 @@ function handleMouseLeave() {
            goto('/tripspage');
          }
        } else {
-         formError = data.error || `Server error: ${response.status}`;
+        formError = data.error || `Server error: ${response.status}`;
          console.error('Server error:', response.status, data);
        }
      } catch (error) {
@@ -233,7 +291,43 @@ function handleMouseLeave() {
      }
 
   }
+  async function handleAcceptInvite(notification) {
+  try {
+    const res = await fetch('/api/accept-invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invite_id: notification.invite_id }) // pass the invitation id
+    });
 
+    if (res.ok) {
+      notifications.markAsRead(notification.id);
+      notificationsOpen = false;
+      goto('/totaltripspage');
+    } else {
+      console.error('Failed to accept invite.');
+    }
+  } catch (error) {
+    console.error('Error accepting invite:', error);
+  }
+}
+
+async function handleDeclineInvite(notification) {
+  try {
+    const res = await fetch('/api/decline-invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invite_id: notification.invite_id }) 
+    });
+
+    if (res.ok) {
+      notifications.markAsRead(notification.id);
+    } else {
+      console.error('Failed to decline invite.');
+    }
+  } catch (error) {
+    console.error('Error declining invite:', error);
+  }
+}
 
 </script>
 
@@ -276,6 +370,33 @@ aria-label="Sidebar"
               {unreadNotificationsCount}
             </span>
           {/if}
+          {#if $invites.length > 0}
+  <div class="p-4">
+    {#each $invites as invite}
+      <div class="bg-white p-4 rounded shadow mb-4">
+        <div class="text-gray-700">
+          📩 You were invited to trip: <b>{invite.trip_title}</b>
+        </div>
+
+        <div class="flex space-x-2 mt-2">
+          <button 
+            class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+            on:click={() => acceptInvite(invite.id)}
+          >
+            Accept
+          </button>
+
+          <button 
+            class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+            on:click={() => declineInvite(invite.id)}
+          >
+            Decline
+          </button>
+        </div>
+      </div>
+    {/each}
+  </div>
+{/if}
         </div>
 
         <div class="ml-4 {sidebarExtended ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500">
@@ -384,25 +505,41 @@ aria-label="Sidebar"
     {:else}
       <ul class="space-y-4">
         {#each $notifications as notification (notification.id)}
-        <li class="bg-gray-100 p-4 rounded-lg transition-colors">
-          <button 
-            class="w-full text-left p-4 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors"
-            on:click={() => handleNotificationAction(notification)}
-          >
-            <div class="flex justify-between">
-              <h3 class="font-bold">{notification.title}</h3>
-              <span class="text-sm text-gray-500">
-                {notification.timestamp.toLocaleTimeString()}
-              </span>
-            </div>
-            <p class="text-gray-600 mt-2">{notification.message}</p>
-            {#if notification.action}
-              <button class="text-blue-500 mt-2">
-                {notification.action.label}
+        <li class="bg-gray-100 p-4 rounded-lg transition-colors space-y-2">
+          <div class="flex justify-between items-center">
+            <h3 class="font-bold">{notification.title}</h3>
+            <span class="text-sm text-gray-500">
+              {new Date(notification.created_at).toLocaleTimeString()}
+            </span>
+          </div>
+      
+          <p class="text-gray-600">{notification.message}</p>
+      
+          {#if notification.type === 'trip_invitation'}
+            <div class="flex gap-2 mt-2">
+              <button 
+                class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition"
+                on:click={() => handleAcceptInvite(notification)}
+              >
+                Accept
               </button>
-            {/if}
-          </li>
-        {/each}
+              <button 
+                class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition"
+                on:click={() => handleDeclineInvite(notification)}
+              >
+                Decline
+              </button>
+            </div>
+          {:else if notification.action}
+            <button 
+              class="text-blue-500 mt-2"
+              on:click={() => handleNotificationAction(notification)}
+            >
+              {notification.action.label}
+            </button>
+          {/if}
+        </li>
+      {/each}
       </ul>
     {/if}
   </div>
@@ -449,7 +586,6 @@ style="visibility: {$createFormOpen ? 'visible' : 'hidden'};"
            />
       </div>
 
-
        <!-- Start Date -->
         <div>
            <label for="tripStartDate" class ="block text-sm font-medium text-gray-700 mb-2">
@@ -478,7 +614,6 @@ style="visibility: {$createFormOpen ? 'visible' : 'hidden'};"
             />
         </div>
 
-
         <!-- Total Days Display (read-only)-->
          {#if tripTotalDays > 0}
           <div>
@@ -490,7 +625,6 @@ style="visibility: {$createFormOpen ? 'visible' : 'hidden'};"
             </p>
           </div>
          {/if}
-
 
         <!-- Location -->
          <div>
@@ -507,7 +641,6 @@ style="visibility: {$createFormOpen ? 'visible' : 'hidden'};"
             />
          </div>
 
-
         <div>
           <p class="block text-sm font-medium text-gray-700 mb-2">Invite Members</p>
           {#each invitedMembers as member, index}
@@ -523,9 +656,7 @@ style="visibility: {$createFormOpen ? 'visible' : 'hidden'};"
                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"
                 />
 
-
               </label>
-
 
               {#if index === invitedMembers.length - 1}
                 <button
@@ -534,15 +665,14 @@ style="visibility: {$createFormOpen ? 'visible' : 'hidden'};"
                   class="bg-[#3598db] text-white p-3 rounded-lg hover:bg-blue-600 transition-colors"
                   aria-label="Add member"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
                 </button>
               {/if}
             </div>
           {/each}
         </div>
-
 
         <!-- Error Display -->
          {#if formError}
@@ -550,7 +680,6 @@ style="visibility: {$createFormOpen ? 'visible' : 'hidden'};"
               {formError}
             </div>
           {/if}
-
 
        <!-- Submit button -->
         <button
@@ -575,4 +704,3 @@ style="visibility: {$createFormOpen ? 'visible' : 'hidden'};"
    aria-label="Close modal overlay"
  ></button>
 {/if}
-

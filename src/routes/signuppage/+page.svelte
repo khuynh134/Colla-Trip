@@ -2,7 +2,6 @@
     import { goto } from '$app/navigation';
     import { auth } from '$lib/firebase';
     import { getAuth, validatePassword, createUserWithEmailAndPassword } from 'firebase/auth';
-	import { Users } from 'lucide-svelte';
     import { page } from '$app/stores';
 
     let token = '';
@@ -19,8 +18,6 @@
     let errorMessage = ''; 
     let success: boolean | undefined = undefined;
     let isLoading = false;
-
-    // (No need for onMount anymore!)
 
     async function validatePasswords(): Promise<boolean> {
         if (password !== confirmPassword) {
@@ -42,86 +39,95 @@
     }
 
     async function isUsernameUnique(username: string): Promise<boolean> {
-    try {
-        const res = await fetch('/api/check-username', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username })
-        });
-
-        if (!res.ok) {
-            throw new Error('Failed to check username uniqueness.');
-        }
-
-        const data = await res.json();
-        return !data.exists; // true if username is unique
-    } catch (err) {
-        console.error('Error checking username uniqueness:', err);
-        return false; // safer to block signup if error happens
+        // TODO: Implement username uniqueness check later
+        return true; 
     }
-}
 
     async function handleSignUp(event: Event) {
-    event.preventDefault();
-    isLoading = true;
-    errorMessage = '';
-    success = undefined;
+        event.preventDefault();
+        isLoading = true;
+        errorMessage = '';
+        success = undefined;
 
-    if (!await validatePasswords()) {
-        isLoading = false;
-        return;
-    }
-
-    const isUnique = await isUsernameUnique(username);
-    if (!isUnique) {
-        errorMessage = 'Username is already taken';
-        success = false;
-        isLoading = false;
-        return;
-    }
-
-    try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;  // ✅ NOW you have user.uid and user.email
-
-        const requestBody: any = {
-            firebase_uid: user.uid,
-            email: user.email,
-            username: username,
-            profile: `${firstName} ${lastName}`,
-            roles: ['user'],
-            token: token
-        };
-
-        if (inviteCode.trim() !== '') {
-            requestBody.invite_code = inviteCode;
+        if (!await validatePasswords()) {
+            isLoading = false;
+            return;
         }
 
-        const response = await fetch('/api/users', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody)
-        });
-
-        if (!response.ok) {
-            throw new Error('Error saving user to database');
+        const isUnique = await isUsernameUnique(username);
+        if (!isUnique) {
+            errorMessage = 'Username is already taken';
+            success = false;
+            isLoading = false;
+            return;
         }
 
-        success = true;
-        if (token) {
-            goto('/invite-success');
-        } else {
-            goto('/dashboardpage'); // ✅ new users go straight to their dashboard!
-        }
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
 
-    } catch (error) {
-        console.error('Error signing up:', error);
-        errorMessage = 'Error signing up. Please try again.';
-        success = false;
-    } finally {
-        isLoading = false;
+            const requestBody: any = {
+                firebase_uid: user.uid,
+                email: user.email,
+                username: username,
+                profile: `${firstName} ${lastName}`,
+                roles: ['user'],
+                token: token
+            };
+
+            if (inviteCode.trim() !== '') {
+                requestBody.invite_code = inviteCode;
+            }
+
+            const response = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                throw new Error('Error saving user to database');
+            }
+
+            success = true;
+
+            // If inviteCode exists, auto-accept the invitation
+            if (inviteCode.trim() !== '' && token.trim() !== '') {
+            try {
+                const acceptResponse = await fetch('/api/accept-invite', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    token,
+                    invite_code: inviteCode,
+                    email: user.email, // important!
+                })
+                });
+
+                if (!acceptResponse.ok) {
+                console.error('Failed to auto-accept invite after signup');
+                } else {
+                console.log('Invite auto-accepted after signup ✅');
+                }
+            } catch (error) {
+                console.error('Error auto-accepting invite after signup:', error);
+            }
+            }
+
+// Then redirect
+const redirectUrl = '/totaltripspage'; // Since they already joined a trip
+goto(redirectUrl);
+            
+            
+
+        } catch (error) {
+            console.error('Error signing up:', error);
+            errorMessage = 'Error signing up. Please try again.';
+            success = false;
+        } finally {
+            isLoading = false;
+        }
     }
-}
 </script>
 
 <div class="min-h-screen bg-gradient-to-r from-[#84eaeb] to-[#3598db] flex flex-col items-center justify-center p-4">
@@ -135,8 +141,6 @@
         {/if}
         
         <form on:submit={handleSignUp} class="space-y-6">
-
-
             <div>
                 <label for="firstName" class="block text-gray-700 mb-2">First Name</label>
                 <input 
@@ -144,8 +148,8 @@
                     type="text" 
                     bind:value={firstName} 
                     placeholder="Enter your first name"
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"
                     required
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                 />
             </div>
 
@@ -156,8 +160,8 @@
                     type="text" 
                     bind:value={lastName} 
                     placeholder="Enter your last name"
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"
                     required
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                 />
             </div>
 
@@ -168,8 +172,8 @@
                     type="text" 
                     bind:value={username} 
                     placeholder="Choose a username"
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"
                     required
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                 />
                 <p class="text-sm text-gray-500 mt-1">Username must be unique</p>
             </div>
@@ -181,11 +185,11 @@
                     type="email" 
                     bind:value={email} 
                     placeholder="Enter your email"
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"
                     required
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                 />
             </div>
-            
+
             <div>
                 <label for="password" class="block text-gray-700 mb-2">Password</label>
                 <input 
@@ -193,11 +197,11 @@
                     type="password" 
                     bind:value={password} 
                     placeholder="Enter your password"
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"
                     required
                     minlength="8"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                 />
-                <p class="text-sm text-gray-500 mt-1">Password must be at least 8 characters long, must contain lower case, uppercase & a number</p>
+                <p class="text-sm text-gray-500 mt-1">Password must be at least 8 characters, with uppercase, lowercase, and a number.</p>
             </div>
 
             <div>
@@ -207,11 +211,12 @@
                     type="password" 
                     bind:value={confirmPassword} 
                     placeholder="Re-enter your password"
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"
                     required
                     minlength="8"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                 />
             </div>
+
             <div>
                 <label for="inviteCode" class="block text-red-700 mb-2">Invitation Code (optional)</label>
                 <input 
@@ -219,14 +224,14 @@
                     type="text"
                     bind:value={inviteCode}
                     placeholder="Enter your 6-digit invite code (optional)"
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3598db] focus:border-transparent"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                 />
             </div>
- 
+
             <button 
                 type="submit" 
-                class="w-full bg-[#3598db] text-white py-3 rounded-lg hover:bg-[#3598db]/90 transition-colors disabled:opacity-50"
                 disabled={isLoading}
+                class="w-full bg-cyan-600 text-white py-3 rounded-lg hover:bg-cyan-700 transition-colors disabled:opacity-50"
             >
                 {isLoading ? 'Signing up...' : 'Sign Up'}
             </button>

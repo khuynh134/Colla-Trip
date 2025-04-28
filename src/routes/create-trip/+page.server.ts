@@ -34,7 +34,8 @@ export const actions = {
                 endDate = body.tripEndDate;
                 tripLocation = body.tripLocation;
                 tripTotalDays = body.tripTotalDays;
-                tripImageUrl = body.tripImageUrl || ''; 
+                tripImageUrl = body.tripImageUrl || 'https://source.unsplash.com/400x300/?travel'; 
+                
                 members = Array.isArray(body.members) ? body.members : [];
             } else {
                 //handle form data request
@@ -153,7 +154,7 @@ export const actions = {
  
  
             //otherwise redirect
-            throw redirect(303, `/tripspage/${newTrip.id}`);
+            return redirect(303, `/tripspage/${newTrip.id}`);
         } catch (err) {
             console.error('trip creation error:', err);
  
