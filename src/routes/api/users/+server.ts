@@ -84,7 +84,7 @@ export const GET: RequestHandler = async ({ request }) => {
         const firebaseUid = decoded.uid;
 
         const [user] = await sql`
-            SELECT id, username, email
+            SELECT id, username, email, avatar_url
             FROM users
             WHERE firebase_uid = ${firebaseUid}
             LIMIT 1;
@@ -99,5 +99,35 @@ export const GET: RequestHandler = async ({ request }) => {
     } catch (error: any) {
         console.error('❌ Error fetching user info:', error);
         return new Response(JSON.stringify({ error: 'Failed to fetch user' }), { status: 500 });
+    }
+};
+export const PUT: RequestHandler = async ({ request }) => {
+    try {
+        const authHeader = request.headers.get('authorization');
+        if (!authHeader) return new Response('Unauthorized', { status: 401 });
+
+        const token = authHeader.split(' ')[1];
+        const decoded = await verifyIdToken(token);
+        const firebaseUid = decoded.uid;
+
+        const { avatar_url } = await request.json();
+        if (!avatar_url) return new Response('Missing avatar_url', { status: 400 });
+
+        const [updatedUser] = await sql`
+            UPDATE users
+            SET avatar_url = ${avatar_url}, updated_at = NOW()
+            WHERE firebase_uid = ${firebaseUid}
+            RETURNING id, username, email, avatar_url;
+        `;
+
+        return new Response(JSON.stringify(updatedUser), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    } catch (err) {
+        console.error('❌ Error updating avatar:', err);
+        return new Response(JSON.stringify({ error: 'Failed to update avatar' }), {
+            status: 500
+        });
     }
 };

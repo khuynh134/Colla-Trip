@@ -57,12 +57,12 @@
 }
 
 const availableIcons = [
-  'https://i.pravatar.cc/150?img=1',
-  'https://i.pravatar.cc/150?img=2',
-  'https://i.pravatar.cc/150?img=3',
-  'https://i.pravatar.cc/150?img=4',
-  'https://i.pravatar.cc/150?img=5',
-  'https://i.pravatar.cc/150?img=6'
+  'https://api.dicebear.com/7.x/pixel-art/svg?seed=astronaut',
+  'https://api.dicebear.com/7.x/bottts/svg?seed=galaxy',
+  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=banana',
+  'https://api.dicebear.com/7.x/thumbs/svg?seed=rainbow',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=magic',
+  'https://api.dicebear.com/7.x/pixel-art/svg?seed=robot'
 ];
 
 let selectedIcon = '';
@@ -191,19 +191,23 @@ async function ensureSession() {
   async function updateProfileIcon() {
   try {
     const token = await auth.currentUser?.getIdToken();
-    const res = await fetch('/api/users/profile', {
+    const res = await fetch('/api/users', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify({ profile: selectedIcon })
+      body: JSON.stringify({ avatar_url: selectedIcon })
     });
 
     if (!res.ok) throw new Error('Failed to update icon');
 
     const updated = await res.json();
-    dbUser = updated;
+    
+    // 🔄 Update local state immediately
+    dbUser = { ...dbUser, avatar_url: selectedIcon };
+    selectedIcon = '';
+
     alert('Icon updated!');
   } catch (err) {
     console.error(err);
@@ -255,7 +259,7 @@ async function ensureSession() {
     alert(`Navigating to trip ${id}`);
   }
 
-  let dbUser = $state<{ username: string; email: string } | null>(null);
+  let dbUser = $state<{ username: string; email: string; avatar_url?: string } | null>(null);
 
 onMount(async () => {
   try {
@@ -297,7 +301,11 @@ onMount(async () => {
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-12 mb-8">
         <div class="flex items-center">
           <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center mr-4">
-            <img src={userData.avatar} alt="User avatar" class="h-12 w-12 rounded-full" />
+            <img
+              src={dbUser?.avatar_url || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=default'}
+              alt="User avatar"
+              class="h-12 w-12 rounded-full"
+            />
           </div>
           <div>
             {#if $userStore}
