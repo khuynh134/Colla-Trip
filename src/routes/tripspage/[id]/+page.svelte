@@ -53,6 +53,7 @@
     
     let searchResults = $state<TripUser[]>([]);
     let inviteMessage = $state('');
+    let confirmDeleteModalOpen = $state(false);
 
      // Function to handle member invitation
      async function inviteMember() {
@@ -178,11 +179,11 @@
                 const errorData = await response.json();
                 throw new Error('Failed to share trip');
             }
-            alert ('Trip shared successfully!');
+            triggerToast('Trip shared successfully!');
             shareTripModalOpen = false;
         } catch (error) {
             console.error('Error sharing trip:', error);
-            alert('Failed to share trip. Please try again.');
+            triggerToast('Failed to share trip. Please try again.');
         }
     }
 
@@ -538,7 +539,7 @@ async function addItem(event: Event) {
         pollInterval = setInterval(loadVoteResults, 5000);
         } catch (error) {
             console.error('Error voting for activity:', error);
-            alert('An error occurred. Please try again.');
+            triggerToast('An error occurred. Please try again.');
             
         } finally {
             pendingVotes = pendingVotes - 1; 
@@ -565,7 +566,7 @@ let tripBudgets = $state<Array<{ id: number; username: string; proposed_budget: 
 async function submitBudget() {
   try {
     if (!newBudget || newBudget <= 0) {
-      alert('Please enter a valid budget amount.');
+      triggerToast('Please enter a valid budget amount.');
       return;
     }
 
@@ -597,10 +598,10 @@ async function submitBudget() {
 
     newBudget = null; // Reset form
     await loadBudgets(); // Reload list
-    alert('Budget submitted!');
+    triggerToast('Budget submitted!');
   } catch (err) {
     console.error('Error submitting budget:', err);
-    alert('Error submitting budget. Try again.');
+    triggerToast('Error submitting budget. Try again.');
   }
 }
 
@@ -624,11 +625,6 @@ async function loadBudgets() {
     console.error('Error loading budgets:', err);
   }
 }
-
-// Make sure budgets load when the page loads
-onMount(() => {
-  loadBudgets();
-});
 
     //states for trip schedule
     let tripSchedule = $state<Array<{
@@ -663,50 +659,47 @@ onMount(() => {
     }
     // Function to delete the trip 
     async function deleteTrip() {
-        if(!confirm('Are you sure you want to delete this trip? This action cannot be undone.')) { return;}
-
-        try {
-            const response = await fetch(`/api/trips/${tripId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to delete trip');
+    try {
+        const response = await fetch(`/api/trips/${tripId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
             }
-            alert('Trip deleted successfully!');
-            // Redirect to the trips page after deleting
-            window.location.href= '/totaltripspage';
-        } catch (error) {
-            console.error('Error deleting trip:', error);
-            alert('Failed to delete trip. Please try again.');
+        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to delete trip');
         }
-    } 
+        triggerToast('Trip deleted successfully!');
+        window.location.href= '/totaltripspage';
+    } catch (error) {
+        console.error('Error deleting trip:', error);
+        triggerToast('Failed to delete trip. Please try again.');
+    }
+}
 
     onMount(() => {
-        (async () => {
-            // Load packing list
-            loadPackingList();
-            //load trip data 
-            loadTripData();
-            //Update the global highlights store
-            loadHighlights();
-            // Load trip schedule
-            loadSchedule(); 
-            // Load voting results asynchronously
-            loadVoteResults(); // initial load
+  (async () => {
+    // Load all necessary data
+    await Promise.all([
+      loadBudgets(),
+      loadPackingList(),
+      loadTripData(),
+      loadHighlights(),
+      loadSchedule(),
+      loadVoteResults()
+    ]);
 
-            // Set up polling interval to poll every 5 seconds
-            pollInterval = setInterval(loadVoteResults, 5000);
+     // Start polling vote results every 5 seconds
+     pollInterval = setInterval(loadVoteResults, 5000);
 
-            // Trigger animation after component mounts
-            setTimeout(() => {
-                animateProgress = true;
-            }, 300);
-        })();
+    // Trigger animation after component mounts
+    setTimeout(() => {
+    animateProgress = true;
+    }, 300);
+    })();
 
+        // Load trip data when the component mounts
         // Cleanup function to clear polling interval
         return () => {
             if (pollInterval) clearInterval(pollInterval);
@@ -770,7 +763,11 @@ onMount(() => {
                                 </div>
                                                           
                                   
-                                    <!-- Tooltip-like member list -->
+                                <div class="flex items-center relative group">
+                                    <User class="w-5 h-5 text-cyan-600 mr-2" />
+                                    <span>{tripData.members.length} traveler{tripData.members.length === 1 ? '' : 's'}</span>
+                                  
+                                    <!-- Tooltip that appears on hover -->
                                     <div class="absolute left-0 top-8 mt-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none p-3 z-10">
                                       <h4 class="text-sm font-semibold text-gray-700 mb-2">Members:</h4>
                                       {#if tripData.members.length > 0}
@@ -784,8 +781,6 @@ onMount(() => {
                                       {/if}
                                     </div>
                                   </div>
-                            </div>
-                        </div>
 
                         <!-- Button Group - FIXED -->
                         <div class="flex space-x-3">
@@ -1086,53 +1081,54 @@ onMount(() => {
         <!-- Widgets Section -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Budget Widget -->
-                <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                    <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-lg font-semibold text-gray-800">Budget Overview</h2>
-                        <BadgeDollarSign class="w-6 h-6 text-cyan-600" />
-                    </div>
-                    
-                    <div class="text-3xl font-bold mb-1 text-gray-800">
-                        ${averageBudget.toLocaleString()}
-                    </div>
-                    <div class="text-sm text-gray-500 mb-4">
-                        Group Average Budget
-                    </div>
-                    
-                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div class="h-full bg-cyan-600 rounded-full transition-all duration-1000 ease-out"
-                             style="width: 100%"></div> <!-- Always 100% -->
-                    </div>
-                    
-                    <div class="mt-2 text-sm text-gray-600 flex justify-between">
-                        <span>Spent: $0</span>
-                        <span>Remaining: ${averageBudget.toLocaleString()}</span>
-                    </div>
+              
+              <!-- Budget Widget -->
+              <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                <div class="flex items-center justify-between mb-4">
+                  <h2 class="text-lg font-semibold text-gray-800">Budget Overview</h2>
+                  <BadgeDollarSign class="w-6 h-6 text-cyan-600" />
                 </div>
-
-                <!-- Packing List Widget -->
-                <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                    <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-lg font-semibold text-gray-800">Packing List</h2>
-                        <Luggage class="w-6 h-6 text-cyan-600" />
-                    </div>
-                    <div class="space-y-3">
-                        {#each packingList as item (item.id)}
-                            <label class="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded-md transition-colors">
-                                <input 
-                                type="checkbox" 
-                                bind:checked={item.checked} 
-                                class="rounded text-cyan-600 focus:ring-cyan-500" 
-                                onchange={() => toggleItemChecked(item.id, item.checked)} 
-                            />
-                                <span class="ml-2 text-gray-700 {item.checked ? 'line-through text-gray-400' : ''}">
-                                    {item.name}
-                                </span>
-                            </label>
-                        {/each}
-                    </div>
+          
+                <div class="text-3xl font-bold mb-1 text-gray-800">
+                  ${averageBudget.toLocaleString()}
                 </div>
+                <div class="text-sm text-gray-500 mb-4">
+                  Group Average Budget
+                </div>
+          
+                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div class="h-full bg-cyan-600 rounded-full transition-all duration-1000 ease-out" style="width: 100%"></div>
+                </div>
+          
+                <div class="mt-2 text-sm text-gray-600 flex justify-between">
+                  <span>Spent: $0</span> <!-- You can improve this later to show tripData.budget.spent -->
+                  <span>Remaining: ${averageBudget.toLocaleString()}</span> <!-- Same -->
+                </div>
+              </div>
+          
+              <!-- Packing List Widget -->
+              <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                <div class="flex items-center justify-between mb-4">
+                  <h2 class="text-lg font-semibold text-gray-800">Packing List</h2>
+                  <Luggage class="w-6 h-6 text-cyan-600" />
+                </div>
+          
+                <div class="space-y-3">
+                  {#each packingList as item (item.id)}
+                    <label class="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded-md transition-colors">
+                      <input 
+                        type="checkbox" 
+                        bind:checked={item.checked} 
+                        class="rounded text-cyan-600 focus:ring-cyan-500"
+                        onchange={() => toggleItemChecked(item.id, item.checked)}
+                      />
+                      <span class="ml-2 text-gray-700 {item.checked ? 'line-through text-gray-400' : ''}">
+                        {item.name}
+                      </span>
+                    </label>
+                  {/each}
+                </div>
+              </div>
 
                 <!-- Trip Highlights Widget -->
                 <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
@@ -1289,6 +1285,29 @@ onMount(() => {
             </div>
         </Modal>
 
+        <Modal bind:open={confirmDeleteModalOpen} size="md" autoclose={false}>
+            <div class="text-center p-6">
+              <Trash class="mx-auto mb-4 text-red-500 w-12 h-12" />
+              <h3 class="mb-5 text-lg font-semibold text-gray-700">
+                Confirm Deletion
+              </h3>
+              <p class="text-gray-500 mb-6">
+                Are you sure you want to delete this trip? This action cannot be undone.
+              </p>
+              <div class="flex justify-center gap-4">
+                <Button color="alternative" onclick={() => confirmDeleteModalOpen = false}>
+                  Cancel
+                </Button>
+                <Button color="red" onclick={async () => {
+                  confirmDeleteModalOpen = false;
+                  await deleteTrip();
+                }}>
+                  Yes, Delete
+                </Button>
+              </div>
+            </div>
+          </Modal>
+
         <!-- Share Trip Modal -->
         <Modal bind:open={shareTripModalOpen} size="md" autoclose={false} class="w-full"
         on:open={() => {
@@ -1378,7 +1397,7 @@ onMount(() => {
                 <div class="mb-4">
                     <Label for="deleteTrip" class="mb-2">Delete Trip</Label>
                     <p class="text-sm text-gray-500">This action cannot be undone.</p>
-                    <Button color="red" onclick={deleteTrip}>
+                    <Button color="red" onclick={() => confirmDeleteModalOpen = true}>
                         Delete Trip
                     </Button>
                 </div>
