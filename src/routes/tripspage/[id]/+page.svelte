@@ -1032,7 +1032,7 @@ async function loadBudgets() {
                                         {pollNotifications}
                                     </span>
                                 {/if}
-
+                        
                                 <span class="text-gray-700 group-hover:text-cyan-600 transition-colors font-medium">Polling</span>
                             </span>
                             <div class="bg-white rounded-lg shadow-md p-6 mt-2">
@@ -1043,7 +1043,7 @@ async function loadBudgets() {
                                             <div class="h-12 bg-gray-100 rounded-md"></div>
                                         {/each}
                                     </div>
-                                {:else if error }
+                                {:else if error}
                                     <div class="text-red-500 p-4 bg-red-50 rounded-md">
                                         {error}
                                         <button onclick={loadVoteResults} class="mt-2 px-4 py-2 bg-red-500 text-white rounded">
@@ -1062,14 +1062,12 @@ async function loadBudgets() {
                                                 >
                                                     <span class="text-gray-500">{result.votes}</span>
                                                 </button>
-                                                
                                             </div>
                                         {/each}
                                     </div>
                                 {:else}
                                     <p class="text-gray-700">Polling details will appear here.</p>
-                                {/if}
-                                    
+                                {/if} <!-- This closes the main {#if} block -->
                             </div>
                         </TabItem>
                     </Tabs>
@@ -1077,7 +1075,7 @@ async function loadBudgets() {
                 </div>
             </div>
         </div>
-    
+  
 
         <!-- Widgets Section -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
