@@ -15,16 +15,20 @@
     let dateInputRef: HTMLInputElement | null = null;
 
     onMount(() => {
-        if (dateInputRef) {
-        flatpickr(dateInputRef, {
-            dateFormat: "Y-m-d", // yyyy-mm-dd
-            allowInput: true,
-            altInput: true,
-            altFormat: "F j, Y",
-            defaultDate: new Date(),
-        });
-        }
-    });
+	if (dateInputRef) {
+		flatpickr(dateInputRef, {
+			dateFormat: "Y-m-d", // Display format
+			altInput: true,
+			altFormat: "F j, Y",
+			defaultDate: new Date(),
+			allowInput: true,
+			onChange: function (selectedDates) {
+				// This is the key fix:
+				userSelectedActivityDate = selectedDates[0] ?? null;
+			}
+		});
+	}
+});
 
     // Sidebar state
     let sidebarExtended = $state(false);
