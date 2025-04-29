@@ -28,7 +28,12 @@ export async function GET({ request }) {
       ORDER BY activities.activity_date ASC
     `;
 
-    return json(activities);
+    const formatted = activities.map((a) => ({
+      ...a,
+      date: a.date.toISOString().split('T')[0], // ✨ 'YYYY-MM-DD'
+    }));
+
+    return json(formatted);
   } catch (error) {
     console.error('Error fetching schedule:', error);
     return new Response('Internal Server Error', { status: 500 });

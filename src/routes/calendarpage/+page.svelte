@@ -49,8 +49,8 @@
             events = data.map((activity: any): CalendarEvent => ({
                 id: activity.id,
                 title: activity.title,
-                start: new Date(activity.date),
-                end: new Date(activity.date),
+                start: safeUTCDate(activity.date),
+	            end: safeUTCDate(activity.date),
                 color: '#27ae60',
                 type: 'activity',
                 description: activity.description
@@ -60,6 +60,10 @@
             console.error('Error loading events:', err);
         }
     });
+    function safeUTCDate(dateStr: string) {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        return new Date(Date.UTC(year, month - 1, day));
+    }
 
     // Utility functions
     function getDaysInMonth(year: number, month: number): number {
@@ -93,17 +97,26 @@
 
         return days;
     }
+    // function getEventsForDate(date: Date): CalendarEvent[] {
+    //     return events.filter(event => {
+    //         const eventStart = new Date(event.start);
+    //         const eventEnd = new Date(event.end);
 
+    //         const dateToCheck = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    //         const startToCheck = new Date(eventStart.getFullYear(), eventStart.getMonth(), eventStart.getDate());
+    //         const endToCheck = new Date(eventEnd.getFullYear(), eventEnd.getMonth(), eventEnd.getDate());
+
+    //         return dateToCheck >= startToCheck && dateToCheck <= endToCheck;
+    //     });
+    // }
     function getEventsForDate(date: Date): CalendarEvent[] {
+        const checkDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
         return events.filter(event => {
-            const eventStart = new Date(event.start);
-            const eventEnd = new Date(event.end);
+            const eventStart = new Date(event.start.getFullYear(), event.start.getMonth(), event.start.getDate());
+            const eventEnd = new Date(event.end.getFullYear(), event.end.getMonth(), event.end.getDate());
 
-            const dateToCheck = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-            const startToCheck = new Date(eventStart.getFullYear(), eventStart.getMonth(), eventStart.getDate());
-            const endToCheck = new Date(eventEnd.getFullYear(), eventEnd.getMonth(), eventEnd.getDate());
-
-            return dateToCheck >= startToCheck && dateToCheck <= endToCheck;
+            return checkDate >= eventStart && checkDate <= eventEnd;
         });
     }
 
