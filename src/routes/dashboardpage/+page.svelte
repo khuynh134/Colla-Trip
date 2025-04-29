@@ -220,6 +220,29 @@ async function ensureSession() {
     // Navigation logic would go here
     alert(`Navigating to trip ${id}`);
   }
+
+  let dbUser = $state<{ username: string; email: string } | null>(null);
+
+onMount(async () => {
+  try {
+    if (!auth.currentUser) return;
+
+    const token = await auth.currentUser.getIdToken();
+    const res = await fetch('/api/users', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (res.ok) {
+      dbUser = await res.json();
+    } else {
+      console.warn('Failed to load user from DB');
+    }
+  } catch (err) {
+    console.error('Error fetching user:', err);
+  }
+});
 </script>
 
 
@@ -244,8 +267,8 @@ async function ensureSession() {
           </div>
           <div>
             {#if $userStore}
-              <h1 class="text-2xl font-extrabold text-gray-900">
-                Welcome, {$userStore.displayName ?? $userStore.email}!
+            <h1 class="text-2xl font-extrabold text-gray-900">
+                Welcome, {dbUser ? dbUser.username : 'there'}!
               </h1>
               <p class="text-gray-600 mt-1 text-sm">Ready to plan your next adventure?</p>
             {:else}

@@ -1,5 +1,6 @@
 import sql from '$lib/server/database.js';
 import type { RequestHandler } from '@sveltejs/kit';
+import { verifyIdToken } from '$lib/server/firebase-admin'; 
 
 export const POST: RequestHandler = async ({ request }) => {
     try {
@@ -71,5 +72,32 @@ export const POST: RequestHandler = async ({ request }) => {
         return new Response(JSON.stringify({ error: 'Failed to save user', details: error.message }), {
             status: 500
         });
+    }
+};
+export const GET: RequestHandler = async ({ request }) => {
+    try {
+        const authHeader = request.headers.get('authorization');
+        if (!authHeader) return new Response('Unauthorized', { status: 401 });
+
+        const token = authHeader.split(' ')[1];
+        const decoded = await verifyIdToken(token);
+        const firebaseUid = decoded.uid;
+
+        const [user] = await sql`
+            SELECT id, username, email
+            FROM users
+            WHERE firebase_uid = ${firebaseUid}
+            LIMIT 1;
+        `;
+
+        if (!user) return new Response('User not found', { status: 404 });
+
+        return new Response(JSON.stringify(user), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    } catch (error: any) {
+        console.error('❌ Error fetching user info:', error);
+        return new Response(JSON.stringify({ error: 'Failed to fetch user' }), { status: 500 });
     }
 };
