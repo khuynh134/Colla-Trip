@@ -1,132 +1,92 @@
 <script lang="ts">
+    import { onMount } from 'svelte';
+    import { writable } from 'svelte/store';
     import { goto } from '$app/navigation';
-    import { A, Card } from 'flowbite-svelte';
-    import Sidebar from '$lib/components/Sidebar.svelte';
-    import { Tabs, TabItem, Modal, Button, Input, Label, Radio, RadioButton } from 'flowbite-svelte';
-    import {writable} from 'svelte/store'; 
-    import PackingListForm from '../PackingList/PackingListForm.svelte';
-    import { notifications } from '$lib/stores/notifications';
-    import {page} from '$app/stores';
+    import { page } from '$app/stores';
     import { getAuth } from 'firebase/auth';
     import { triggerToast } from '$lib/stores/notifications';
-    import AddMemberModal from '$lib/components/AddMemberModal.svelte';
-  
+    import { highlights, refreshHighlights, addHighlight, removeHighlight, type Highlight } from '$lib/stores/highlights';
+    import PackingListForm from '../PackingList/PackingListForm.svelte';
+    import { notifications } from '$lib/stores/notifications';
 
-
-    import { 
-        Luggage,
-        Calendar,
-        Receipt,
-        MapPin,
-        BadgeDollarSign,
-        Vote,
-        User,
-        Clock,
-        Share2,
-        PlusCircle,
-        UserPlus,
-        Mail,
-        Search,
-        Settings,
-        Trash
+    import {
+        A, Card, Tabs, TabItem, Modal, Button, Input, Label
+    } from 'flowbite-svelte';
+    import {
+        Luggage, Calendar, Receipt, MapPin, BadgeDollarSign,
+        Vote, User, Clock, Share2, PlusCircle, UserPlus, Mail,
+        Search, Settings, Trash
     } from 'lucide-svelte';
 
-    // State management for sidebar
+    import AddMemberModal from '$lib/components/AddMemberModal.svelte';
+    import Sidebar from '$lib/components/Sidebar.svelte';
+
+    // UI State
     let sidebarExtended = $state(false);
     let sidebarWidth = $state('80px');
     let createFormOpen = $state(false);
-
-  let showAddMemberModal = false; // controls showing the modal
-
-
-    // Add Member Modal state
+    let showAddMemberModal = false;
     let addMemberModalOpen = $state(false);
     let inviteMethod = $state('email');
     let emailInput = $state('');
     let usernameInput = $state('');
-    type TripUser = {
-        id: number;
-        username: string;
-        name: string;
-        avatar: string;
-    };
-    
-    let searchResults = $state<TripUser[]>([]);
     let inviteMessage = $state('');
     let confirmDeleteModalOpen = $state(false);
+    let shareTripModalOpen = $state(false);
+    let settingsModalOpen = $state(false);
+    let imageLoaded = false;
+    let animateProgress = $state(false);
 
-     // Function to handle member invitation
-     async function inviteMember() {
-  try {
-    if (inviteMethod === 'email' && !emailInput) {
-      triggerToast('Please enter an email address');
-      return;
-    }
+    // Trip Data
+    const { data } = $props();
+    const tripId = $page.params.id;
+    let tripData = $state({
+        id: tripId,
+        title: '',
+        location: '',
+        startDate: '',
+        endDate: '',
+        owner: '',
+        members: [] as Array<{ username: string }>,
+        loading: false,
+        error: null as string | null,
+        budget: { spent: 0, total: 0, percentage: 0 },
+        imageUrl: ''
+    });
 
-    if (inviteMethod === 'username' && !usernameInput) {
-      triggerToast('Please enter a username');
-      return;
-    }
+    let averageBudget = $state(0);
+    let tripBudgets = $state<Array<{ id: number; username: string; proposed_budget: number }>>([]);
+    let newBudget = $state<number | null>(null);
 
-    if (!tripId) {
-      console.error('Missing trip ID');
-      triggerToast('Trip ID not found.');
-      return;
-    }
+    let tripSchedule = $state<Array<{ id: number; title: string; description: string; date: string; votes: number }>>([]);
+    let scheduleLoading = $state(false);
+    let scheduleError = $state<string | null>(null);
 
-    if (inviteMethod === 'email') {
-      const res = await fetch('/api/invite-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tripId, email: emailInput, message: inviteMessage })
-      });
+    let packingList = $state<Array<{ id: number; name: string; quantity: number; created_by: string; checked: boolean }>>([]);
+    let newItemName = $state('');
+    let newItemQuantity = $state(1);
+    let creatorName = $state('');
+    let packingListLoading = $state(false);
+    let packingListError = $state<string | null>(null);
+    let packingListEmpty = $state(false);
 
-      if (res.ok) {
-        triggerToast('Email invitation sent successfully!');
-      } else {
-        const errorData = await res.json();
-        console.error('Error sending email invitation:', errorData);
-        triggerToast('Failed to send email invitation. Please try again.');
-      }
-    } 
-    else if (inviteMethod === 'username') {
-      const res = await fetch('/api/trip-invites', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          username: usernameInput,
-          tripId: tripId,
-          message: inviteMessage
-        })
-      });
+    let voteResults = $state<Array<{ id: number; name: string; votes: number }>>([]);
+    let isLoading = $state(false);
+    let error = $state<string | null>(null);
+    let pollNotifications = $state(0);
+    let pollInterval = $state<NodeJS.Timeout | null>(null);
 
-      if (res.ok) {
-        triggerToast('Username invitation sent successfully!');
-      } else {
-        const errorData = await res.json();
-        console.error('Error sending username invitation:', errorData);
-        triggerToast('Failed to send username invitation. Please try again.');
-      }
-    }
+    let loading = $state(false);
+    let errorMessage: string | null = null;
 
-    emailInput = '';
-    usernameInput = '';
-    inviteMessage = '';
-    addMemberModalOpen = false;
+    let tripActivities = $state<Array<{ id: number; title: string; description: string; date: string; votes: number }>>([]);
 
-  } 
-  catch (error) {
-    console.error('Error sending invitation:', error);
-    triggerToast('An error occurred. Please try again.');
-  }
-}
+    // Member Search
+    type TripUser = { id: number; username: string; name: string; avatar: string };
+    let searchResults = $state<TripUser[]>([]);
 
-
-    // Mock function to search for users
     function searchUsers() {
-        // In a real application, this would make an API call to search for users
         if (usernameInput.length > 2) {
-            // Mock results
             searchResults = [
                 { id: 1, username: 'traveler123', name: 'John Doe', avatar: '/images/avatar1.jpg' },
                 { id: 2, username: 'wanderlust', name: 'Jane Smith', avatar: '/images/avatar2.jpg' },
@@ -137,570 +97,224 @@
         }
     }
 
-    // Function to select a user from search results
     function selectUser(user: TripUser) {
-    usernameInput = user.username;
-    searchResults = [];
+        usernameInput = user.username;
+        searchResults = [];
     }
 
-    //export trip data
-    const { data } = $props();
-    //Get the trip ID from the URL
-    const tripId = $page.params.id;
-    
-    let averageBudget = $state(0); // Calculated average
-    let tripData = $state({
-    id: tripId,
-    title: '',
-    location: '',
-    startDate: '',
-    endDate: '',
-    owner: '',
-    members: [] as Array<{ username: string }>, // <-- NEW
-    loading: false,
-    error: null as string | null,
-    budget: {
-        spent: 0,
-        total: averageBudget,
-        percentage: 0
-    },
-    imageUrl: ''
-});
-
-    // Function to share trip
-    async function shareTrip() {
+    async function inviteMember() {
         try {
-            const response = await fetch('/api/shared-trips', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json' },
-                body: JSON.stringify({ tripId: tripData.id })
-            });
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error('Failed to share trip');
+            if (inviteMethod === 'email' && !emailInput) {
+                triggerToast('Please enter an email address');
+                return;
             }
-            triggerToast('Trip shared successfully!');
-            shareTripModalOpen = false;
+            if (inviteMethod === 'username' && !usernameInput) {
+                triggerToast('Please enter a username');
+                return;
+            }
+            let endpoint = inviteMethod === 'email' ? '/api/invite-email' : '/api/trip-invites';
+            let body = inviteMethod === 'email'
+                ? { tripId, email: emailInput, message: inviteMessage }
+                : { username: usernameInput, tripId, message: inviteMessage };
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (res.ok) {
+                triggerToast(`${inviteMethod === 'email' ? 'Email' : 'Username'} invitation sent!`);
+                emailInput = '';
+                usernameInput = '';
+                inviteMessage = '';
+                addMemberModalOpen = false;
+            } else {
+                const errData = await res.json();
+                console.error('Error inviting:', errData);
+                triggerToast('Failed to send invitation. Try again.');
+            }
         } catch (error) {
-            console.error('Error sharing trip:', error);
-            triggerToast('Failed to share trip. Please try again.');
+            console.error('Invite error:', error);
+            triggerToast('An error occurred. Please try again.');
         }
     }
 
     async function loadTripData() {
         try {
-            console.log('Loading trip data for ID:', tripId);
             tripData.loading = true;
             tripData.error = null;
+            let headers = new Headers({ 'Content-Type': 'application/json' });
 
-              // Get authentication token if available
-              let headers = new Headers({
-                'Content-Type': 'application/json'
-            });
-            
             try {
                 const auth = getAuth();
                 const currentUser = auth.currentUser;
-                
                 if (currentUser) {
                     const token = await currentUser.getIdToken();
                     headers.append('Authorization', `Bearer ${token}`);
-                    console.log('Added auth token to request');
                 }
-            } catch (authError) {
-                console.warn('Failed to get auth token:', authError);
-                // Continue without auth
-            }
-            // Make API result
+            } catch { }
+
             const response = await fetch(`/api/trips/${tripId}`, { headers });
-            if (!response.ok) {
-                if (response.status === 404) {
-                    throw new Error(`Trip not found: ${tripId}`);
-                }
-                throw new Error(`Failed to load trip: ${response.statusText}`);
-            }
-            
+            if (!response.ok) throw new Error('Failed to load trip');
             const data = await response.json();
-            console.log('Trip data received:', data);
-            
-            tripData = {
-                ...tripData,
-                title: data.title,
-                location: data.location,
-                startDate: data.startDate,
-                endDate: data.endDate,
-                imageUrl: data.imageUrl,
-                members: data.members || [], // ✅ NEW LINE
-                loading: false,
-                error: null
-            };
 
-            // Calculate budget percentage
-            const spent = data.budget.spent || 0;
-            const total = data.budget.total || 0;
-            tripData.budget.spent = spent;
-            tripData.budget.total = total;
-            tripData.budget.percentage = total > 0 ? Math.round((spent / total) * 100) : 0;
+            tripData = { ...tripData, ...data, loading: false, error: null };
+            const { spent, total } = data.budget || {};
+            tripData.budget = { spent: spent || 0, total: total || 0, percentage: total ? Math.round((spent / total) * 100) : 0 };
 
-            // Calculate average budget
             if (tripData.members.length > 0) {
                 averageBudget = Math.round(total / tripData.members.length);
-            } else {
-                averageBudget = 0;
             }
         } catch (error) {
-            console.error('Error loading trip:', error);
             tripData.error = (error as Error).message;
             tripData.loading = false;
         }
     }
 
-    function calculateDuration(start: string, end: string){
-        const startDate = new Date(start);
-        const endDate = new Date(end);
-        const diff = endDate.getTime() - startDate.getTime();
-        const days = Math.ceil(diff / (1000 * 3600 * 24)) + 1; // Add 1 to include the start date 
-        return `${days} ${days === 1 ? 'day' : 'days'}`;
+    async function loadBudgets() {
+        try {
+            const res = await fetch(`/api/trip-budgets?trip_id=${tripId}`);
+            if (!res.ok) throw new Error('Failed to fetch budgets');
+            tripBudgets = await res.json();
+            averageBudget = tripBudgets.length > 0
+                ? Math.round(tripBudgets.reduce((acc, item) => acc + Number(item.proposed_budget), 0) / tripBudgets.length)
+                : 0;
+        } catch (err) {
+            console.error('Error loading budgets:', err);
+        }
     }
 
-    // Share Trip Modal state
-    let shareTripModalOpen = $state(false);
+    async function submitBudget() {
+        try {
+            if (!newBudget || newBudget <= 0) {
+                triggerToast('Please enter a valid budget.');
+                return;
+            }
+            let headers = new Headers({ 'Content-Type': 'application/json' });
+            try {
+                const auth = getAuth();
+                const currentUser = auth.currentUser;
+                if (currentUser) {
+                    const token = await currentUser.getIdToken();
+                    headers.append('Authorization', `Bearer ${token}`);
+                }
+            } catch { }
 
-    // Setting Modal state
-    let settingsModalOpen = $state(false);
+            const res = await fetch('/api/trip-budgets', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ trip_id: tripId, proposed_budget: newBudget })
+            });
+            if (!res.ok) throw new Error('Failed to submit budget');
 
-    //states for packing list 
-    let packingList = $state<Array<{ 
-        id: number, 
-        name: string,
-        quantity: number,
-        created_by: string,
-        checked: boolean // Added 'checked' property
-    }>>([]);
+            newBudget = null;
+            await loadBudgets();
+            triggerToast('Budget submitted!');
+        } catch (err) {
+            console.error('Error submitting budget:', err);
+            triggerToast('Error submitting budget.');
+        }
+    }
 
-    let newItemName = $state(''); // Declare newItemName
-    let newItemQuantity = $state(1); // Declare newItemQuantity with a default value
-    let creatorName = $state(''); // Declare creatorName
-    let travelersModalOpen = $state(false);
-
-    let packingListLoading = $state(false);
-    let packingListError = $state<string | null>(null);
-    let packingListEmpty = $state(false);
-
-    //fetch packing list from API 
     async function loadPackingList() {
         try {
-            packingListLoading = true; 
+            packingListLoading = true;
             packingListError = null;
-            const response = await fetch(`/api/packing-list?trip_id=${tripId}`);
-            if (!response.ok) throw new Error('Failed to load packing list items');
+            const res = await fetch(`/api/packing-list?trip_id=${tripId}`);
+            if (!res.ok) throw new Error('Failed to load packing list');
 
-            const data = await response.json();
-            if (!Array.isArray(data)) {
-            throw new Error('Invalid data format received from API');
-        }
-            packingList = data.map(item => ({
-                ...item,
-                checked: false
-            }))
-            packingListEmpty = packingList.length === 0; 
-            
-        } catch (error) {
-            packingListError = `Failed to load packing list: ${(error as Error).message}`;
-            console.error('Error fetching packing list:', error);
+            const data = await res.json();
+            packingList = data.map(item => ({ ...item, checked: false }));
+            packingListEmpty = packingList.length === 0;
+        } catch (err) {
+            packingListError = `Failed to load packing list: ${(err as Error).message}`;
         } finally {
-            packingListLoading = false; 
+            packingListLoading = false;
+        }
+    }
+
+    async function addItem(event: Event) {
+        event.preventDefault();
+        try {
+            const res = await fetch(`/api/packing-list`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newItemName, quantity: newItemQuantity, created_by: creatorName, trip_id: tripId })
+            });
+            if (!res.ok) throw new Error('Failed to add item');
+            await loadPackingList();
+            newItemName = '';
+            newItemQuantity = 1;
+            creatorName = '';
+        } catch (err) {
+            console.error('Add item error:', err);
+            packingListError = 'Failed to add item.';
+        }
+    }
+
+    async function deleteItem(itemId: number) {
+        try {
+            const res = await fetch(`/api/packing-list`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: itemId, trip_id: tripId })
+            });
+            if (!res.ok) throw new Error('Failed to delete item');
+            packingList = packingList.filter(item => item.id !== itemId);
+        } catch (err) {
+            console.error('Delete item error:', err);
+            packingListError = 'Failed to delete item.';
         }
     }
 
     async function toggleItemChecked(itemId: number, isChecked: boolean) {
-    try {
-        const response = await fetch('/api/packing-list', {
-            method: 'PATCH', // Use PATCH to update the item
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                id: itemId,
-                checked: isChecked
-            })
-        });
-
-        if (!response.ok) throw new Error('Failed to update item state');
-
-        // Update the local state
-        packingList = packingList.map(item =>
-            item.id === itemId ? { ...item, checked: isChecked } : item
-        );
-    } catch (error) {
-        console.error('Error updating item state:', error);
-        packingListError = 'Failed to update item. Please try again.';
-    }
-}
-    
-
-async function addItem(event: Event) {
-    event.preventDefault();  // <-- this is the missing part!
-
-    try {
-        const response = await fetch(`/api/packing-list`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                name: newItemName,
-                quantity: newItemQuantity,
-                created_by: creatorName,
-                trip_id: tripId
-            })
-        });
-
-        if (!response.ok) throw new Error('Error adding item to packing list');
-
-        await loadPackingList();
-
-        newItemName = '';
-        newItemQuantity = 1;
-        creatorName = '';
-    } catch (error) {
-        console.error('Error adding item:', error);
-        packingListError = 'Failed to add item. Please try again.';
-    } finally {
-        packingListLoading = false;
-    }
-}
-   
-    async function deleteItem(itemId: number) {
         try {
-        const response = await fetch(`/api/packing-list`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: itemId, trip_id: tripId }) // <-- ADD trip_id to be safe
-        });
-            if (!response.ok) {
-                throw new Error('Failed to delete item');
-            }
-            // Remove the item from the packing list
-            packingList = packingList.filter(item => item.id !== itemId);
-        } catch (error) {
-            console.error('Error deleting item:', error);
-            packingListError = 'Failed to delete item. Please try again.';
-        } finally {
-            packingListLoading = false; 
-        }
-    }
-
-
-    // Mock packing items
-    const packingItems = [
-        { id: 1, name: 'Passport', checked: true },
-        { id: 2, name: 'Clothes', checked: true },
-        { id: 3, name: 'Toiletries', checked: false },
-        { id: 4, name: 'Medications', checked: true },
-        { id: 5, name: 'Phone Charger', checked: false },
-        { id: 6, name: 'Camera', checked: false },
-        { id: 7, name: 'Travel Adapter', checked: false }
-    ];
-
-    // Add Items to packingItem list 
-    function addPackingItem() {
-        const newId = packingItems.length > 0 ? Math.max(...packingItems.map(item => item.id || 0)) + 1 : 1;
-        packingItems.push({ id: newId, name: '', checked: false }); 
-    }
-  
-    // For the progress bar animation
-    import { onMount } from 'svelte';
-
-    let imageLoaded = false; // Declare imageLoaded variable
-
-    //import for highlights 
-    import { highlights, refreshHighlights, addHighlight, removeHighlight, type Highlight} from '$lib/stores/highlights'; 
-	import { stringify } from 'postcss';
-
-   
-    let animateProgress = $state(false);
-
-    let loading = $state(false);
-    let errorMessage: string | null; 
-
-    // Function to load highlights
-    async function loadHighlights() { 
-        try {
-            await refreshHighlights(tripId); // Pass the tripId to the refreshHighlights function
-        } catch (error) {
-            console.error('Error loading highlights:', error);
-            errorMessage = 'Failed to load highlights. Please try again.';
-        }  
-    }
-     // Add a highlight for the specific trip
-     async function handleAddHighlight(activityId: number) {
-        try {
-            loading = true;
-            errorMessage = null;
-            await addHighlight(tripId, activityId); // Pass the tripId to add a highlight for the current trip
-        } catch (error) {
-            console.error('Error adding highlight:', error);
-            errorMessage = 'Failed to add highlight. Please try again.';
-        } finally {
-            loading = false;
-        }
-    }
-
-    // Remove a highlight for the specific trip
-    async function handleRemoveHighlight(activityId: number) {
-        try {
-            loading = true;
-            errorMessage = null;
-            await removeHighlight(tripId, activityId); // Pass the tripId to remove a highlight for the current trip
-        } catch (error) {
-            console.error('Error removing highlight:', error);
-            errorMessage = 'Failed to remove highlight. Please try again.';
-        } finally {
-            loading = false;
-        }
-    }
-
-    // State for polling notifications
-    let pollNotifications = $state(0);
-
-    // Function to increment poll notifications
-    function incrementPollNotifications() {
-        pollNotifications += 1;
-    }
-
-    //Vote results
-    let voteResults = $state<Array<{ id: number, name: string, votes: number }>>([]);
-    let isLoading = $state(false);
-    let error = $state<string | null>(null); 
-    let pollInterval = $state<NodeJS.Timeout | null>(null); 
-
-    //Fetch results from API 
-    async function loadVoteResults() {
-        try{
-            const res = await fetch(`/api/trips/${tripId}/activities?order=votes`);
-            const data = await res.json();
-            voteResults = data.map((a: { id: number; name: string; votes: number; updated_at: string }) => ({
-                id: a.id,
-                name: a.name,
-                votes: a.votes,
-                updated_at: a.updated_at
-            }));
-            // Update poll notifications
-            pollNotifications = voteResults.reduce((acc, result) => acc + result.votes, 0);
-
+            const res = await fetch(`/api/packing-list`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: itemId, checked: isChecked })
+            });
+            if (!res.ok) throw new Error('Failed to update item');
+            packingList = packingList.map(item => item.id === itemId ? { ...item, checked: isChecked } : item);
         } catch (err) {
-            
-            console.error('Error fetching voting results:', err);
-        } finally {
-            isLoading = false; 
+            packingListError = 'Failed to update item.';
         }
     }
 
-    // Declare tripActivities state 
-    let tripActivities = $state<Array<{
-        id: number;
-        title: string;
-        description: string;
-        date: string;
-        votes: number } >>([]);
-
-    // Function to load Activity details for Share Trip Modal
-    async function loadActivities() {
+    async function shareTrip() {
         try {
-            const response = await fetch(`/api/trips/${tripId}/activities`);
-            if (!response.ok) {
-                throw new Error('Failed to load activity details');
-            }
-            const data = await response.json();
-            tripActivities = data;
-        } catch (error) {
-            console.error('Error fetching activity details:', error);
+            const res = await fetch('/api/shared-trips', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tripId: tripData.id })
+            });
+            if (!res.ok) throw new Error('Failed to share trip');
+            triggerToast('Trip shared successfully!');
+            shareTripModalOpen = false;
+        } catch (err) {
+            console.error('Share trip error:', err);
+            triggerToast('Failed to share trip.');
         }
     }
 
-    let pendingVotes = $state(0);
-
-    async function voteForActivity(activityId: number) {
-        try {
-            const response = await fetch(`/api/trips/${tripId}/activities`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: activityId, vote: 1})
-        }); 
-        if(!response.ok) {
-            const errorData = await response.json(); 
-            throw new Error(errorData.error || 'Failed to vote');
-        }
-        //after voting, refresh the results
-        await loadVoteResults();
-        if( pollInterval) clearInterval(pollInterval);
-        pollInterval = setInterval(loadVoteResults, 5000);
-        } catch (error) {
-            console.error('Error voting for activity:', error);
-            triggerToast('An error occurred. Please try again.');
-            
-        } finally {
-            pendingVotes = pendingVotes - 1; 
-        }
-    }
-    //formatting the date 
-    function formatDate(dateString: string){
-        if(!dateString) return '';
+    function formatDate(dateString: string) {
+        if (!dateString) return '';
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            timeZone: 'UTC'
-        });
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
     }
 
-    let newBudget = $state<number | null>(null); // User's input
-let tripBudgets = $state<Array<{ id: number; username: string; proposed_budget: number }>>([]); // All budgets
+    onMount(async () => {
+        await Promise.all([
+            loadTripData(),
+            loadBudgets(),
+            loadPackingList(),
+            refreshHighlights(tripId),
+            loadSchedule(),
+            loadVoteResults()
+        ]);
 
+        pollInterval = setInterval(loadVoteResults, 5000);
+        setTimeout(() => { animateProgress = true; }, 300);
 
-
-// Submit a budget
-async function submitBudget() {
-  try {
-    if (!newBudget || newBudget <= 0) {
-      triggerToast('Please enter a valid budget amount.');
-      return;
-    }
-
-    // Get token (if you need to authenticate) — or use your existing auth code
-    let headers = new Headers({
-      'Content-Type': 'application/json'
-    });
-    try {
-      const auth = getAuth();
-      const currentUser = auth.currentUser;
-      if (currentUser) {
-        const token = await currentUser.getIdToken();
-        headers.append('Authorization', `Bearer ${token}`);
-      }
-    } catch (err) {
-      console.warn('No auth token available:', err);
-    }
-
-    const response = await fetch('/api/trip-budgets', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        trip_id: tripId,
-        proposed_budget: newBudget
-      })
-    });
-
-    if (!response.ok) throw new Error('Failed to submit budget.');
-
-    newBudget = null; // Reset form
-    await loadBudgets(); // Reload list
-    triggerToast('Budget submitted!');
-  } catch (err) {
-    console.error('Error submitting budget:', err);
-    triggerToast('Error submitting budget. Try again.');
-  }
-}
-
-// Load budgets for the trip
-async function loadBudgets() {
-  try {
-    const res = await fetch(`/api/trip-budgets?trip_id=${tripId}`);
-    if (!res.ok) throw new Error('Failed to fetch budgets.');
-
-    const data = await res.json();
-    tripBudgets = data;
-
-    if (tripBudgets.length > 0) {
-      const total = tripBudgets.reduce((acc, item) => acc + Number(item.proposed_budget), 0);
-      averageBudget = Math.round(total / tripBudgets.length);
-    } else {
-      averageBudget = 0;
-    }
-
-  } catch (err) {
-    console.error('Error loading budgets:', err);
-  }
-}
-
-    //states for trip schedule
-    let tripSchedule = $state<Array<{
-        id: number;
-        title: string;
-        description: string;
-        date: string;
-        votes: number;
-    }>>([]);
-    let scheduleLoading = $state(false);
-    let scheduleError = $state<string | null>(null);
-  
-    //Load trip schedule in Schedule Tab 
-    async function loadSchedule() {
-        try {
-            scheduleLoading = true; 
-            scheduleError = null; 
-
-            const response = await fetch(`/api/schedule/${tripId}`);
-            if (!response.ok) {
-                throw new Error(`Failed to load schedule: ${response.status}`);
-            }
-            tripSchedule = await response.json(); 
-            // Process and display the schedule data
-        } catch (error) {
-            scheduleError = `Failed to load schedule: ${(error as Error).message}`;
-            console.error('Error fetching schedule:', error);
-        } finally {
-            scheduleLoading = false; 
-        }
-
-    }
-    // Function to delete the trip 
-    async function deleteTrip() {
-    try {
-        const response = await fetch(`/api/trips/${tripId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to delete trip');
-        }
-        triggerToast('Trip deleted successfully!');
-        window.location.href= '/totaltripspage';
-    } catch (error) {
-        console.error('Error deleting trip:', error);
-        triggerToast('Failed to delete trip. Please try again.');
-    }
-}
-
-    onMount(() => {
-  (async () => {
-    // Load all necessary data
-    await Promise.all([
-      loadBudgets(),
-      loadPackingList(),
-      loadTripData(),
-      loadHighlights(),
-      loadSchedule(),
-      loadVoteResults()
-    ]);
-
-     // Start polling vote results every 5 seconds
-     pollInterval = setInterval(loadVoteResults, 5000);
-
-    // Trigger animation after component mounts
-    setTimeout(() => {
-    animateProgress = true;
-    }, 300);
-    })();
-
-        // Load trip data when the component mounts
-        // Cleanup function to clear polling interval
         return () => {
             if (pollInterval) clearInterval(pollInterval);
         };
@@ -715,35 +329,37 @@ async function loadBudgets() {
     />
 
     <div class="transition-all duration-500 ease-in-out" style="margin-left: {sidebarWidth};">
+  
         {#if tripData.error}
-            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
-                <p class="font-bold">Error loading trip data</p>
-                <p>{tripData.error}</p>
-                <button
-                    onclick={loadTripData}
-                    class="mt-2 px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red:600">
-                    Retry
-                </button>
-            </div>
+          <!-- Show error -->
+          <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+            <p class="font-bold">Error loading trip data</p>
+            <p>{tripData.error}</p>
+            <button
+              onclick={loadTripData}
+              class="mt-2 px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red:600">
+              Retry
+            </button>
+          </div>
         
         {:else if tripData.loading}
-            <div class="animate-pulse space-y-4">
-                <!-- Header Loading -->
-                <div class="h-8 bg-gray-200 rounded w-3/4"></div>
-                <div class="flex space-x-4">
-                    <div class="h-4 bg-gray-200 rounded w-1/4"></div>
-                </div>
-        
-                 <!-- Tabs Loading -->
-                <div class="flex space-x-4 border-b">
-                    {#each ['Schedule', 'Budget', 'Packing', 'Polling'] as tab}
-                    <div class="h-10 bg-gray-200 rounded w-24"></div>
-                    {/each}
-                </div>
-        
-                <!-- Content Loading -->
-                <div class="h-64 bg-gray-200 rounded"></div>
+          <!-- Loading State -->
+          <div class="animate-pulse space-y-4">
+            <!-- Header Loading -->
+            <div class="h-8 bg-gray-200 rounded w-3/4"></div>
+            <div class="flex space-x-4">
+              <div class="h-4 bg-gray-200 rounded w-1/4"></div>
             </div>
+            <!-- Tabs Loading -->
+            <div class="flex space-x-4 border-b">
+              {#each ['Schedule', 'Budget', 'Packing', 'Polling'] as tab}
+                <div class="h-10 bg-gray-200 rounded w-24"></div>
+              {/each}
+            </div>
+            <!-- Content Loading -->
+            <div class="h-64 bg-gray-200 rounded"></div>
+          </div>
+      
         {:else}
         <!-- Trip Header -->
         <div class="bg-white border-b shadow-sm">
@@ -1408,7 +1024,7 @@ async function loadBudgets() {
                     </Button>
                 </div>
             </div>
-         </Modal>
-    
+         </Modal>   
+        {/if} 
     </div>
 </div>
