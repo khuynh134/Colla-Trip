@@ -7,8 +7,9 @@
     import { page } from '$app/stores';
     import { goto } from '$app/navigation';
     import { isAuthenticated } from '$lib/stores/authStore'; 
-    import { Flatpickr } from 'flowbite-svelte';
-    let userSelectedActivityDate: Date | null = new Date();
+    import Flatpickr from 'svelte-flatpickr';    
+    import 'flatpickr/dist/flatpickr.css';    
+   
 
     // Sidebar state
     let sidebarExtended = $state(false);
