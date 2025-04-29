@@ -360,7 +360,7 @@
             <div class="h-64 bg-gray-200 rounded"></div>
           </div>
       
-        {:else}
+          {/if} 
         <!-- Trip Header -->
         <div class="bg-white border-b shadow-sm">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -377,6 +377,7 @@
                                     <Calendar class="w-5 h-5 text-cyan-600 mr-2" />
                                     <span>{formatDate(tripData.startDate)} - {formatDate(tripData.endDate)}</span>
                                 </div>
+                          
                                                           
                                   
                                 <div class="flex items-center relative group">
@@ -1025,6 +1026,6 @@
                 </div>
             </div>
          </Modal>   
-        {/if} 
+       
     </div>
 </div>
