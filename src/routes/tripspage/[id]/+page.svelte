@@ -542,6 +542,80 @@
         });
     }
 
+    let newBudget = $state<number | null>(null); // User's input
+let tripBudgets = $state<Array<{ id: number; username: string; proposed_budget: number }>>([]); // All budgets
+
+let averageBudget = $state(0); // Calculated average
+
+// Submit a budget
+async function submitBudget() {
+  try {
+    if (!newBudget || newBudget <= 0) {
+      alert('Please enter a valid budget amount.');
+      return;
+    }
+
+    // Get token (if you need to authenticate) — or use your existing auth code
+    let headers = new Headers({
+      'Content-Type': 'application/json'
+    });
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        const token = await currentUser.getIdToken();
+        headers.append('Authorization', `Bearer ${token}`);
+      }
+    } catch (err) {
+      console.warn('No auth token available:', err);
+    }
+
+    const response = await fetch('/api/trip-budgets', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        trip_id: tripId,
+        proposed_budget: newBudget
+      })
+    });
+
+    if (!response.ok) throw new Error('Failed to submit budget.');
+
+    newBudget = null; // Reset form
+    await loadBudgets(); // Reload list
+    alert('Budget submitted!');
+  } catch (err) {
+    console.error('Error submitting budget:', err);
+    alert('Error submitting budget. Try again.');
+  }
+}
+
+// Load budgets for the trip
+async function loadBudgets() {
+  try {
+    const res = await fetch(`/api/trip-budgets?trip_id=${tripId}`);
+    if (!res.ok) throw new Error('Failed to fetch budgets.');
+
+    const data = await res.json();
+    tripBudgets = data;
+
+    if (tripBudgets.length > 0) {
+      const total = tripBudgets.reduce((acc, item) => acc + Number(item.proposed_budget), 0);
+      averageBudget = Math.round(total / tripBudgets.length);
+    } else {
+      averageBudget = 0;
+    }
+
+  } catch (err) {
+    console.error('Error loading budgets:', err);
+  }
+}
+
+// Make sure budgets load when the page loads
+onMount(() => {
+  loadBudgets();
+});
+
     //states for trip schedule
     let tripSchedule = $state<Array<{
         id: number;
@@ -820,7 +894,55 @@
                                 <span class="text-gray-700 group-hover:text-cyan-600 transition-colors font-medium">Budget</span>
                             </span>
                             <div class="bg-white rounded-lg shadow-md p-6 mt-2">
-                                <p class="text-gray-700">Budget details will appear here.</p>
+                                <div class="space-y-6">
+
+                                    <!-- Submit New Budget -->
+                                    <form on:submit|preventDefault={submitBudget} class="space-y-4">
+                                      <div>
+                                        <label for="budget" class="block text-sm font-medium text-gray-700">Enter Your Budget ($)</label>
+                                        <input
+                                          id="budget"
+                                          type="number"
+                                          min="0"
+                                          bind:value={newBudget}
+                                          placeholder="e.g., 1500"
+                                          required
+                                          class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
+                                        />
+                                      </div>
+                                  
+                                      <button
+                                        type="submit"
+                                        class="w-full bg-cyan-600 text-white py-2 rounded-md hover:bg-cyan-700 transition"
+                                      >
+                                        Submit Budget
+                                      </button>
+                                    </form>
+                                  
+                                    <!-- Show Submitted Budgets -->
+                                    <div class="mt-6">
+                                      <h3 class="text-lg font-semibold text-gray-800 mb-2">All Members' Budgets</h3>
+                                  
+                                      {#if tripBudgets.length > 0}
+                                        <ul class="divide-y divide-gray-200">
+                                          {#each tripBudgets as budget}
+                                            <li class="py-2 flex justify-between">
+                                              <span class="text-gray-700">{budget.username}</span>
+                                              <span class="font-medium text-cyan-700">${budget.proposed_budget}</span>
+                                            </li>
+                                          {/each}
+                                        </ul>
+                                  
+                                        <!-- Average Budget -->
+                                        <div class="mt-4 text-gray-800">
+                                          <strong>Average Budget:</strong> ${averageBudget}
+                                        </div>
+                                      {:else}
+                                        <p class="text-gray-500">No budgets submitted yet.</p>
+                                      {/if}
+                                    </div>
+                                  
+                                  </div>
                             </div>
                         </TabItem>
 
