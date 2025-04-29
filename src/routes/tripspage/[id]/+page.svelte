@@ -665,7 +665,7 @@
                                             bind:newItemName
                                             bind:newItemQuantity
                                             bind:creatorName
-                                            onsubmit={addItem}
+                                            on:submit={addItem}
                                             
                                         />
                                     </div>

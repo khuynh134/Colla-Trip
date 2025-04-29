@@ -7,12 +7,12 @@
     import { createEventDispatcher} from 'svelte';
     const dispatch = createEventDispatcher();
 
-    function handleSubmit() {
-        dispatch('submit'); 
+    function handleSubmit(event: Event) {
+        dispatch('submit', event); 
     }
 </script>
 
-<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-4">
+<form on:submit|preventDefault={(e) => handleSubmit(e)} class="space-y-4">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <!-- Item Name -->
         <div class="md:col-span-2">
