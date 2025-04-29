@@ -122,13 +122,6 @@ async function ensureSession() {
 
 
 
-    // Redirect if not logged in (backup to layout protection)
-    onMount(() => {
-        if (!$isAuthenticated) {
-            goto('/loginpage');
-        }
-    });
-
     function handleCreateClick() {
       createFormOpen.set(true);
     }
@@ -184,13 +177,51 @@ async function ensureSession() {
   // Initialize trip activity chart
   let chartRendered = false;
   
-  onMount(() => {
-    renderTripActivityChart();
-  });
 
-  async function updateProfileIcon() {
+  async function createUserIfNeeded() {
   try {
-    const token = await auth.currentUser?.getIdToken();
+    const user = auth.currentUser;
+    if (!user) {
+      console.error('❌ No user logged in.');
+      return;
+    }
+
+    const token = await user.getIdToken(true);
+
+    const payload = {
+      firebase_uid: user.uid,
+      email: user.email,
+      username: user.displayName || user.email?.split('@')[0] || 'Anonymous', 
+      profile: {},         // optional empty object for now
+      roles: ['user'],      // default role
+      token: token,
+      invite_code: ''       // optional, if no invite just leave it blank
+    };
+
+    console.log('📨 Creating user with payload:', payload);
+
+    const res = await fetch('/api/users', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || 'Failed to create user');
+    }
+
+    console.log('✅ User created or updated!');
+  } catch (err) {
+    console.error('❌ Error creating user:', err);
+  }
+}
+
+async function updateProfileIcon() {
+  try {
+    const token = await auth.currentUser?.getIdToken(true);
     const res = await fetch('/api/users', {
       method: 'PUT',
       headers: {
@@ -200,17 +231,19 @@ async function ensureSession() {
       body: JSON.stringify({ avatar_url: selectedIcon })
     });
 
-    if (!res.ok) throw new Error('Failed to update icon');
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || 'Failed to update icon');
+    }
 
     const updated = await res.json();
-    
-    // 🔄 Update local state immediately
-    dbUser = { ...dbUser, avatar_url: selectedIcon };
-    selectedIcon = '';
+
+    dbUser = { ...dbUser, avatar_url: updated.avatar_url };  // ← update your local dbUser
+    selectedIcon = '';  // ← reset the picker
 
     alert('Icon updated!');
   } catch (err) {
-    console.error(err);
+    console.error('❌ Error updating avatar:', err);
     alert('Something went wrong updating your icon.');
   }
 }
@@ -261,11 +294,21 @@ async function ensureSession() {
 
   let dbUser = $state<{ username: string; email: string; avatar_url?: string } | null>(null);
 
-onMount(async () => {
+  onMount(async () => {
   try {
+    if (!$isAuthenticated) {
+      goto('/loginpage');
+      return;
+    }
+
     if (!auth.currentUser) return;
 
     const token = await auth.currentUser.getIdToken();
+
+    // 1. Make sure user exists in DB (only if not found)
+    await createUserIfNeeded();
+
+    // 2. Fetch the user from DB
     const res = await fetch('/api/users', {
       headers: {
         Authorization: `Bearer ${token}`
@@ -277,8 +320,12 @@ onMount(async () => {
     } else {
       console.warn('Failed to load user from DB');
     }
+
+    // 3. Render trip activity chart
+    renderTripActivityChart();
+
   } catch (err) {
-    console.error('Error fetching user:', err);
+    console.error('Error during dashboard onMount:', err);
   }
 });
 </script>
