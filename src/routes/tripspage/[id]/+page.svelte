@@ -20,7 +20,7 @@
 
     import AddMemberModal from '$lib/components/AddMemberModal.svelte';
     import Sidebar from '$lib/components/Sidebar.svelte';
-
+//this
     // UI State
     let sidebarExtended = $state(false);
     let sidebarWidth = $state('80px');
@@ -360,7 +360,7 @@
             <div class="h-64 bg-gray-200 rounded"></div>
           </div>
       
-          {/if} 
+        {:else}
         <!-- Trip Header -->
         <div class="bg-white border-b shadow-sm">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -684,14 +684,19 @@
                                     </div>
                                 {:else}
                                     <p class="text-gray-700">Polling details will appear here.</p>
-                                {/if} <!-- This closes the main {#if} block -->
+                                                    {/if}
+                                                </div>
+                                            </TabItem>
+                                        </Tabs>
+                                    </div>
+                                </div>
                             </div>
-                        </TabItem>
-                    </Tabs>
+                        <!-- Removed unmatched {/if} -->
+                   
                   
                 </div>
             </div>
-        </div>
+      
   
 
         <!-- Widgets Section -->
@@ -789,7 +794,7 @@
                 </div>
             </div>
         </div>
-
+    {/if} 
         
 
         <!-- Add Member Modal -->
