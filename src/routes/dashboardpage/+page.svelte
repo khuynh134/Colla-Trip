@@ -243,8 +243,15 @@ async function ensureSession() {
             <img src={userData.avatar} alt="User avatar" class="h-12 w-12 rounded-full" />
           </div>
           <div>
-            <h1>Welcome, {$userStore ? ($userStore.displayName || $userStore.email) : 'there'}!</h1>
-            <p class="text-gray-600 mt-1">Ready to plan your next adventure?</p>
+            {#if $userStore}
+              <h1 class="text-2xl font-extrabold text-gray-900">
+                Welcome, {$userStore.displayName ?? $userStore.email}!
+              </h1>
+              <p class="text-gray-600 mt-1 text-sm">Ready to plan your next adventure?</p>
+            {:else}
+              <h1 class="text-2xl font-extrabold text-gray-900">Welcome!</h1>
+              <p class="text-gray-600 mt-1 text-sm">Please log in to see your dashboard.</p>
+            {/if}
           </div>
         </div>
         <div class="w-full md:w-1/3">
