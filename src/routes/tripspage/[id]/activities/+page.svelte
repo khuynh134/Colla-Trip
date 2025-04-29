@@ -11,7 +11,7 @@
     import 'flatpickr/dist/flatpickr.min.css'; 
    
 
-    let userSelectedActivityDate: Date | null = new Date();
+    
     let dateInputRef: HTMLInputElement | null = null;
 
     onMount(() => {
