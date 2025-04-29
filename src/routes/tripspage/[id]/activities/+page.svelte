@@ -7,9 +7,24 @@
     import { page } from '$app/stores';
     import { goto } from '$app/navigation';
     import { isAuthenticated } from '$lib/stores/authStore'; 
-    import Flatpickr from 'svelte-flatpickr';    
-    import 'flatpickr/dist/flatpickr.css';    
+    import flatpickr from 'flatpickr';
+    import 'flatpickr/dist/flatpickr.min.css'; 
    
+
+    let userSelectedActivityDate: Date | null = new Date();
+    let dateInputRef: HTMLInputElement | null = null;
+
+    onMount(() => {
+        if (dateInputRef) {
+        flatpickr(dateInputRef, {
+            dateFormat: "Y-m-d", // yyyy-mm-dd
+            allowInput: true,
+            altInput: true,
+            altFormat: "F j, Y",
+            defaultDate: new Date(),
+        });
+        }
+    });
 
     // Sidebar state
     let sidebarExtended = $state(false);
@@ -317,16 +332,11 @@ function formatDisplayDate(dateString: string | Date | null) {
                     required
                 />
                 <!-- Date Picker -->
-                <Flatpickr 
-                    bind:value={userSelectedActivityDate}
-                    options={{
-                        dateFormat: "Y-m-d", // yyyy-mm-dd
-                        allowInput: true,
-                        altInput: true,
-                        altFormat: "F j, Y",
-                        defaultDate: new Date(),
-                        wrap: false,
-                    }}
+               
+                <input
+                    type="text"
+                    bind:this={dateInputRef}
+                    class="border border-gray-300 dark:border-gray-700 focus:ring focus:ring-primary-200 rounded-md w-full p-2 mb-4"
                 />
                 
                 <p class="text-gray-700 dark:text-gray-400 mb-2 font-bold">Activity Description: </p>
