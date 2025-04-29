@@ -171,66 +171,64 @@
     }
 
     async function loadBudgets() {
+  try {
+    const res = await fetch(`/api/trip-budgets?trip_id=${tripId}`);
+    if (!res.ok) throw new Error('Failed to fetch budgets.');
+
+    const data = await res.json();
+    tripBudgets = data;
+
+    if (tripBudgets.length > 0) {
+      const total = tripBudgets.reduce((acc, item) => acc + Number(item.proposed_budget), 0);
+      averageBudget = Math.round(total / tripBudgets.length);
+    } else {
+      averageBudget = 0;
+    }
+
+  } catch (err) {
+    console.error('Error loading budgets:', err);
+  }
+}
+
+    async function submitBudget() {
+  try {
+    if (!newBudget || newBudget <= 0) {
+      alert('Please enter a valid budget amount.');
+      return;
+    }
+
+    let headers = new Headers({ 'Content-Type': 'application/json' });
+
     try {
-        const res = await fetch(`/api/trip-budgets?trip_id=${tripId}`);
-        if (!res.ok) throw new Error('Failed to fetch budgets');
-        
-        const data = await res.json();
-        tripBudgets = data; // Assuming the API returns an array of budgets
-
-        if (tripBudgets.length > 0) {
-            console.log('Budgets received:', tripBudgets);
-        const total = tripBudgets.reduce((acc, item) => {
-            // Safely parse as float regardless of string/number
-            const budget = parseFloat(String(item.proposed_budget));
-            return acc + (isNaN(budget) ? 0 : budget);
-        }, 0);
-        console.log('Total budget:', total);
-        console.log('Count:', tripBudgets.length);
-
-        averageBudget = Math.round(total / tripBudgets.length);
-        } else {
-        averageBudget = 0;
-        }
-
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        const token = await currentUser.getIdToken();
+        headers.append('Authorization', `Bearer ${token}`);
+      }
     } catch (err) {
-        console.error('Error loading budgets:', err);
-        averageBudget = 0; // fallback
-    }
+      console.warn('No auth token available:', err);
     }
 
-    async function submitBudget(event: Event) {
-        event.preventDefault();
-        try {
-            if (!newBudget || newBudget <= 0) {
-                triggerToast('Please enter a valid budget.');
-                return;
-            }
-            let headers = new Headers({ 'Content-Type': 'application/json' });
-            try {
-                const auth = getAuth();
-                const currentUser = auth.currentUser;
-                if (currentUser) {
-                    const token = await currentUser.getIdToken();
-                    headers.append('Authorization', `Bearer ${token}`);
-                }
-            } catch { }
+    const response = await fetch('/api/trip-budgets', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        trip_id: tripId,
+        proposed_budget: newBudget
+      })
+    });
 
-            const res = await fetch('/api/trip-budgets', {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({ trip_id: tripId, proposed_budget: newBudget })
-            });
-            if (!res.ok) throw new Error('Failed to submit budget');
+    if (!response.ok) throw new Error('Failed to submit budget.');
 
-            newBudget = null;
-            await loadBudgets();
-            triggerToast('Budget submitted!');
-        } catch (err) {
-            console.error('Error submitting budget:', err);
-            triggerToast('Error submitting budget.');
-        }
-    }
+    newBudget = null; // Reset form
+    await loadBudgets(); // Refresh list
+    alert('Budget submitted!');
+  } catch (err) {
+    console.error('Error submitting budget:', err);
+    alert('Error submitting budget. Try again.');
+  }
+}
 
     async function loadPackingList() {
         try {
@@ -339,7 +337,8 @@
         return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
     }
 
-    onMount(async () => {
+    onMount(() => {
+    (async () => {
         await Promise.all([
             loadTripData(),
             loadBudgets(),
@@ -351,11 +350,13 @@
 
         pollInterval = setInterval(loadVoteResults, 5000);
         setTimeout(() => { animateProgress = true; }, 300);
+    })();
 
-        return () => {
-            if (pollInterval) clearInterval(pollInterval);
-        };
-    });
+    
+    return () => {
+        if (pollInterval) clearInterval(pollInterval);
+    };
+});
 </script>
 
 <div class="min-h-screen bg-gradient-to-b from-[#e0f7fa] to-[#b2ebf2]">
