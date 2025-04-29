@@ -366,6 +366,36 @@
         }
     }
 
+    async function deleteTrip() {
+        if(!confirm('Are you sure you want to delete this trip? This action cannot be undone.')) {return;} 
+        try {
+            const response = await fetch(`/api/trips/${tripId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            if(!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to delete trip');
+            }
+            alert('Trip deleted successfully');
+            window.location.href = '/totaltripspage';
+        } catch (error) {
+            console.error('Error deleting trip:', error);
+            alert('Failed to delete trip. Please try again.');
+        }
+    }
+
+    async function loadActivities() {
+        try {
+            const response = await fetch(`/api/trips/${tripId}/activities`);
+            if(!response.ok) { throw new Error('Failed to load activity details'); }
+            const data = await response.json();
+            tripActivities = data;
+        } catch (error) {
+            console.error('Error fetching activities details:', error);
+        }
+    }
+
     function formatDate(dateString: string) {
         if (!dateString) return '';
         const date = new Date(dateString);
