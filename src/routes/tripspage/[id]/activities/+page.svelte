@@ -205,23 +205,35 @@ function formatDisplayDate(dateString: string | Date | null) {
     //Function to vote on an activity 
     async function voteActivity(activityId: number) {
         try {
-            const response = await fetch(`/api/trips/${tripId}/activities/poll`,{
+            const response = await fetch(`/api/trips/${tripId}/activities/poll`, {
                 method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ id: activityId, vote: 1})
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: activityId, vote: 1 })
             });
 
-            if( response.ok) {
-                const updated = await response.json();
-                activities = activities.map(a => a.id === updated.id ? updated : a);
-                voteResults = [...voteResults]; 
-            } 
+            if (!response.ok) throw new Error('Failed to vote.');
+
+            const updatedActivity = await response.json();
+            
+            // Update activities list
+            activities = activities.map(a => 
+                a.id === updatedActivity.id 
+                    ? { ...a, votes: updatedActivity.votes } 
+                    : a
+            );
+
+            // Update voteResults if you're displaying them
+            voteResults = voteResults.map(a => 
+                a.id === updatedActivity.id 
+                    ? { ...a, votes: updatedActivity.votes }
+                    : a
+            );
 
             console.log('Voted on Activity');
+
         } catch (error) {
-            console.error('Error voting on activity: ', error);
-            //Display error message to the user
-            alert('Vote failed: ${error.message}');
+            console.error('Error voting on activity:', error);
+            alert(`Vote failed: ${(error as Error).message}`);
         }
     }
 
