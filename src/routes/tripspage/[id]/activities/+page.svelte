@@ -3,10 +3,12 @@
     import Sidebar from '$lib/components/Sidebar.svelte';
     import { onMount } from 'svelte';
     import { enhance } from '$app/forms';
-    import { Datepicker } from 'flowbite-svelte'; 
+    
     import { page } from '$app/stores';
     import { goto } from '$app/navigation';
     import { isAuthenticated } from '$lib/stores/authStore'; 
+    import { Flatpickr } from 'flowbite-svelte';
+    let userSelectedActivityDate: Date | null = new Date();
 
     // Sidebar state
     let sidebarExtended = $state(false);
@@ -140,7 +142,7 @@ function formatDisplayDate(dateString: string | Date | null) {
             // Force refresh the calendar backend
             await fetch('/api/schedule/refresh', { method: 'POST' });
             //Reset user input fields
-            
+
             userInputActivityName = '';
             userInputActivityDescript = '';
             userSelectedActivityDate = null; //reset date picker
@@ -314,11 +316,17 @@ function formatDisplayDate(dateString: string | Date | null) {
                     required
                 />
                 <!-- Date Picker -->
-                <Datepicker 
+                <Flatpickr 
                     bind:value={userSelectedActivityDate}
-                    dateFormat={{ year: 'numeric', month: '2-digit', day: '2-digit' }}
-                     />
-                 <p class="mt-4">Selected date: {userSelectedActivityDate ? formatDisplayDate(userSelectedActivityDate) : 'None'}</p>
+                    options={{
+                        dateFormat: "Y-m-d", // yyyy-mm-dd
+                        allowInput: true,
+                        altInput: true,
+                        altFormat: "F j, Y",
+                        defaultDate: new Date(),
+                        wrap: false,
+                    }}
+                />
                 
                 <p class="text-gray-700 dark:text-gray-400 mb-2 font-bold">Activity Description: </p>
                 <textarea
