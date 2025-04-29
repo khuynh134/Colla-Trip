@@ -1410,8 +1410,6 @@ async function loadBudgets() {
                 </div>
             </div>
          </Modal>
-
-    {/if}
     
     </div>
 </div>
