@@ -1123,7 +1123,15 @@
                 <div class="mb-4">
                     <Label for="deleteTrip" class="mb-2">Delete Trip</Label>
                     <p class="text-sm text-gray-500">This action cannot be undone.</p>
-                    <Button color="red" onclick={() => confirmDeleteModalOpen = true}>
+                    <Button
+                        color="red"
+                        onclick={() => {
+                            settingsModalOpen = false;
+                            setTimeout(() => {
+                            confirmDeleteModalOpen = true;
+                            }, 100); // Let settings modal finish closing before opening confirm
+                        }}
+                        >
                         Delete Trip
                     </Button>
                 </div>
