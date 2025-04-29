@@ -15,21 +15,10 @@
         goto(`/tripspage/${tripId}`);
     }
 
-    // Format a date string into a readable format
-    function formatDate(dateString: string): string{
-        if (!dateString) return 'No date available';
-
+    function formatDate(dateString: string) {
+        if (!dateString) return '';
         const date = new Date(dateString);
-        // Check if the date is valid
-        if (isNaN(date.getTime())) {
-            console.log('Invalid date:', dateString);
-            return 'Invalid date';
-        }
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
     }
 
     // fetch trips when the page loads 
