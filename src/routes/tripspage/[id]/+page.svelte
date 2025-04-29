@@ -258,12 +258,12 @@
     }
     async function loadVoteResults() {
         try {
-            const res = await fetch(`/api/voting-results`);
-            if (!res.ok) throw new Error('Failed to load vote results');
+            const res = await fetch(`/api/voting-results?trip_id=${tripId}`); 
+            if (!res.ok) throw new Error('Failed to load voting results');
             voteResults = await res.json();
-        } catch (err) {
-            console.error('Error loading vote results:', err);
-            error = (err as Error).message;
+        } catch (error) {
+            console.error('Error loading voting results:', error);
+            voteResults = [];
         }
     }
     async function addItem(event: Event) {
