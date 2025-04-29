@@ -246,6 +246,26 @@
         }
     }
 
+    async function loadSchedule() {
+        try {
+            const res = await fetch(`/api/schedule/${tripId}`);
+            if (!res.ok) throw new Error('Failed to load schedule');
+            tripSchedule = await res.json();
+        } catch (err) {
+            console.error('Error loading schedule:', err);
+            scheduleError = (err as Error).message;
+        }
+    }
+    async function loadVoteResults() {
+        try {
+            const res = await fetch(`/api/voting-results`);
+            if (!res.ok) throw new Error('Failed to load vote results');
+            voteResults = await res.json();
+        } catch (err) {
+            console.error('Error loading vote results:', err);
+            error = (err as Error).message;
+        }
+    }
     async function addItem(event: Event) {
         event.preventDefault();
         try {
