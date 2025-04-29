@@ -176,7 +176,7 @@
         if (!res.ok) throw new Error('Failed to fetch budgets');
         
         const data = await res.json();
-        tripBudgets = data;
+        tripBudgets = data; // Assuming the API returns an array of budgets
 
         if (tripBudgets.length > 0) {
             console.log('Budgets received:', tripBudgets);
