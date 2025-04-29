@@ -147,6 +147,7 @@
     //Get the trip ID from the URL
     const tripId = $page.params.id;
     
+    let averageBudget = $state(0); // Calculated average
     let tripData = $state({
         id: tripId,
         title: '',
@@ -159,9 +160,9 @@
         error: null as string | null,
         budget: {
             spent: 0,
-            total: 0,
+            total: averageBudget,
             percentage: 0
-        },
+},
         imageUrl: '' // Added imageUrl property
     });
 
@@ -545,7 +546,7 @@ async function addItem(event: Event) {
     let newBudget = $state<number | null>(null); // User's input
 let tripBudgets = $state<Array<{ id: number; username: string; proposed_budget: number }>>([]); // All budgets
 
-let averageBudget = $state(0); // Calculated average
+
 
 // Submit a budget
 async function submitBudget() {
@@ -1070,19 +1071,22 @@ onMount(() => {
                         <h2 class="text-lg font-semibold text-gray-800">Budget Overview</h2>
                         <BadgeDollarSign class="w-6 h-6 text-cyan-600" />
                     </div>
+                    
                     <div class="text-3xl font-bold mb-1 text-gray-800">
-                        ${tripData.budget.spent.toLocaleString()}
+                        ${averageBudget.toLocaleString()}
                     </div>
                     <div class="text-sm text-gray-500 mb-4">
-                        of ${tripData.budget.total.toLocaleString()} budget
+                        Group Average Budget
                     </div>
+                    
                     <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div class="h-full bg-cyan-600 rounded-full transition-all duration-1000 ease-out"
-                             style="width: {animateProgress ? tripData.budget.percentage : 0}%"></div>
+                             style="width: 100%"></div> <!-- Always 100% -->
                     </div>
+                    
                     <div class="mt-2 text-sm text-gray-600 flex justify-between">
-                        <span>Spent: {tripData.budget.percentage}%</span>
-                        <span>Remaining: ${(tripData.budget.total - tripData.budget.spent).toLocaleString()}</span>
+                        <span>Spent: $0</span>
+                        <span>Remaining: ${averageBudget.toLocaleString()}</span>
                     </div>
                 </div>
 
