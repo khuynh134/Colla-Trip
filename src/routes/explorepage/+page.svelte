@@ -2,6 +2,7 @@
     import { Search, Button, Dropdown, DropdownItem, type InputType } from 'flowbite-svelte';
     import { goto } from '$app/navigation'; // Import for navigation
     import { onMount } from 'svelte';
+    import { isAuthenticated } from '$lib/stores/authStore';
  
     import { 
         Search as SearchIcon,
@@ -43,7 +44,7 @@
     }
 
     // Mock authentication state - replace with your actual auth check
-    let isAuthenticated = false; // Set to false to test the registration button
+    //isAuthenticated.set(true); // Set to false to test the registration button
 
     // Function to handle registration
     function handleRegister() {
@@ -58,7 +59,11 @@
     }
 
     // State for registration banner
-    let showRegistrationBanner = !isAuthenticated;
+    let showRegistrationBanner = true; 
+
+    $: {
+        $isAuthenticated && (showRegistrationBanner = false);
+    }
 
     //List of categories for dropdown 
     const items = [

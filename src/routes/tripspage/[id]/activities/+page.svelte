@@ -5,11 +5,21 @@
     import { enhance } from '$app/forms';
     import { Datepicker } from 'flowbite-svelte'; 
     import { page } from '$app/stores';
+    import { goto } from '$app/navigation';
+    import { isAuthenticated } from '$lib/stores/authStore'; 
 
     // Sidebar state
     let sidebarExtended = $state(false);
     let sidebarWidth = $state('80px');
     let createFormOpen = $state(false);
+
+    // Set the user as authenticated
+    isAuthenticated.set(true);
+
+    function navigateToExplorePage() {
+        // Navigate to the explore page
+        goto('/explorepage');
+    }
 
     // Extract tripId from the route parameters
     const tripId = $page.params.id;
@@ -262,6 +272,15 @@ function formatDisplayDate(dateString: string | Date | null) {
     <div class="container mx-auto p-3 m-5">
     <!-- Sidebar -->
     <Sidebar bind:sidebarExtended bind:sidebarWidth bind:createFormOpen />
+
+    <div class="flex justify-end mb-4">
+        <button
+            onclick={navigateToExplorePage}
+            class="inline-block bg-sky-400 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded transition"
+        >
+            Go to Explore Page 
+        </button>
+    </div>
 
     <!-- Activity Title -->
      <h1 class="text-2xl sm:text-3xl font-bold text-center">Activities Polling</h1>
