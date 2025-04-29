@@ -331,6 +331,41 @@
         }
     }
 
+    async function loadHighlights() {
+        try {
+            await refreshHighlights(tripId);
+        } catch (error) {
+            console.error('Error loading highlights: ', error);
+            errorMessage = 'Failed to load highlights. Please try again.';
+        }
+    }
+
+    async function handleAddHighlight(activityId: number) {
+        try {
+            loading = true;
+            errorMessage = null;
+            await addHighlight(tripId, activityId);
+        } catch (error) {
+            console.error('Error adding highlight:', error);
+            errorMessage = 'Failed to add highlight. Please try again.';
+        } finally {
+            loading = false;
+        } 
+    }
+
+    async function handleRemoveHighlight(activityId: number) {
+        try {
+            loading = true;
+            errorMessage = null;
+            await removeHighlight(tripId, activityId);
+        } catch (error) {
+            console.error('Error removing highlight:', error);
+            errorMessage = 'Failed to remove highlight. Please try again.';
+        } finally {
+            loading = false;
+        }
+    }
+
     function formatDate(dateString: string) {
         if (!dateString) return '';
         const date = new Date(dateString);
@@ -343,6 +378,7 @@
             loadTripData(),
             loadBudgets(),
             loadPackingList(),
+            loadHighlights(),
             refreshHighlights(tripId),
             loadSchedule(),
             loadVoteResults()
