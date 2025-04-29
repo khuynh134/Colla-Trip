@@ -183,7 +183,8 @@
         }
     }
 
-    async function submitBudget() {
+    async function submitBudget(event: Event) {
+        event.preventDefault();
         try {
             if (!newBudget || newBudget <= 0) {
                 triggerToast('Please enter a valid budget.');
@@ -531,7 +532,8 @@
                                 <div class="space-y-6">
 
                                     <!-- Submit New Budget -->
-                                    <form on:submit|preventDefault={submitBudget} class="space-y-4">
+                                    <form onsubmit={submitBudget} class="space-y-4">
+                                        
                                       <div>
                                         <label for="budget" class="block text-sm font-medium text-gray-700">Enter Your Budget ($)</label>
                                         <input
