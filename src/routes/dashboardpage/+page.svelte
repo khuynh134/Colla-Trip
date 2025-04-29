@@ -56,6 +56,16 @@
  }
 }
 
+const availableIcons = [
+  'https://i.pravatar.cc/150?img=1',
+  'https://i.pravatar.cc/150?img=2',
+  'https://i.pravatar.cc/150?img=3',
+  'https://i.pravatar.cc/150?img=4',
+  'https://i.pravatar.cc/150?img=5',
+  'https://i.pravatar.cc/150?img=6'
+];
+
+let selectedIcon = '';
 
 async function ensureSession() {
  if (!browser || !$isAuthenticated || !auth.currentUser) return;
@@ -178,6 +188,30 @@ async function ensureSession() {
     renderTripActivityChart();
   });
 
+  async function updateProfileIcon() {
+  try {
+    const token = await auth.currentUser?.getIdToken();
+    const res = await fetch('/api/users/profile', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ profile: selectedIcon })
+    });
+
+    if (!res.ok) throw new Error('Failed to update icon');
+
+    const updated = await res.json();
+    dbUser = updated;
+    alert('Icon updated!');
+  } catch (err) {
+    console.error(err);
+    alert('Something went wrong updating your icon.');
+  }
+}
+
+
   function renderTripActivityChart() {
     if (typeof window !== 'undefined' && !chartRendered) {
       // This would normally use a chart library
@@ -277,6 +311,32 @@ onMount(async () => {
             {/if}
           </div>
         </div>
+
+        {#if dbUser}
+          <div class="mt-6">
+            <h2 class="font-semibold text-lg mb-2">Select Your Profile Icon</h2>
+            <div class="flex gap-4 flex-wrap">
+              {#each availableIcons as icon}
+                <img
+                  src={icon}
+                  alt="Icon"
+                  class="w-16 h-16 rounded-full border-2 cursor-pointer transition 
+                        {selectedIcon === icon ? 'border-blue-600 scale-110' : 'border-transparent'}"
+                  onclick={() => selectedIcon = icon}
+                />
+              {/each}
+            </div>
+
+            <button
+              class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+              disabled={!selectedIcon}
+              onclick={updateProfileIcon}
+            >
+              Save Icon
+            </button>
+          </div>
+        {/if}
+
         <div class="w-full md:w-1/3">
           <div class="relative">
             <input
