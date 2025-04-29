@@ -149,22 +149,22 @@
     
     let averageBudget = $state(0); // Calculated average
     let tripData = $state({
-        id: tripId,
-        title: '',
-        location: '',
-        startDate: '',
-        endDate: '',
-        travelers: 0,
-        owner: '',
-        loading: false,
-        error: null as string | null,
-        budget: {
-            spent: 0,
-            total: averageBudget,
-            percentage: 0
-},
-        imageUrl: '' // Added imageUrl property
-    });
+    id: tripId,
+    title: '',
+    location: '',
+    startDate: '',
+    endDate: '',
+    owner: '',
+    members: [] as Array<{ username: string }>, // <-- NEW
+    loading: false,
+    error: null as string | null,
+    budget: {
+        spent: 0,
+        total: averageBudget,
+        percentage: 0
+    },
+    imageUrl: ''
+});
 
     // Function to share trip
     async function shareTrip() {
@@ -229,11 +229,24 @@
                 startDate: data.startDate,
                 endDate: data.endDate,
                 imageUrl: data.imageUrl,
-                travelers: data.travelers || 0,
+                members: data.members || [], // ✅ NEW LINE
                 loading: false,
                 error: null
-                
             };
+
+            // Calculate budget percentage
+            const spent = data.budget.spent || 0;
+            const total = data.budget.total || 0;
+            tripData.budget.spent = spent;
+            tripData.budget.total = total;
+            tripData.budget.percentage = total > 0 ? Math.round((spent / total) * 100) : 0;
+
+            // Calculate average budget
+            if (tripData.members.length > 0) {
+                averageBudget = Math.round(total / tripData.members.length);
+            } else {
+                averageBudget = 0;
+            }
         } catch (error) {
             console.error('Error loading trip:', error);
             tripData.error = (error as Error).message;
@@ -267,7 +280,7 @@
     let newItemName = $state(''); // Declare newItemName
     let newItemQuantity = $state(1); // Declare newItemQuantity with a default value
     let creatorName = $state(''); // Declare creatorName
-
+    let travelersModalOpen = $state(false);
 
     let packingListLoading = $state(false);
     let packingListError = $state<string | null>(null);
@@ -755,14 +768,22 @@ onMount(() => {
                                     <Calendar class="w-5 h-5 text-cyan-600 mr-2" />
                                     <span>{formatDate(tripData.startDate)} - {formatDate(tripData.endDate)}</span>
                                 </div>
-                                <div class="flex items-center">
-                                    <User class="w-5 h-5 text-cyan-600 mr-2" />
-                                    <span>{tripData.travelers} travelers</span>
-                                </div>
-                                <div class="flex items-center">
-                                    <Clock class="w-5 h-5 text-cyan-600 mr-2" />
-                                    <span>{calculateDuration(tripData.startDate, tripData.endDate)}</span>
-                                </div>
+                                                          
+                                  
+                                    <!-- Tooltip-like member list -->
+                                    <div class="absolute left-0 top-8 mt-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none p-3 z-10">
+                                      <h4 class="text-sm font-semibold text-gray-700 mb-2">Members:</h4>
+                                      {#if tripData.members.length > 0}
+                                        <ul class="space-y-1 text-sm text-gray-600">
+                                          {#each tripData.members as member}
+                                            <li>@{member.username}</li>
+                                          {/each}
+                                        </ul>
+                                      {:else}
+                                        <p class="text-gray-500 text-sm">No members yet.</p>
+                                      {/if}
+                                    </div>
+                                  </div>
                             </div>
                         </div>
 
@@ -898,7 +919,7 @@ onMount(() => {
                                 <div class="space-y-6">
 
                                     <!-- Submit New Budget -->
-                                    <form onsubmit={submitBudget} class="space-y-4">
+                                    <form on:submit|preventDefault={submitBudget} class="space-y-4">
                                       <div>
                                         <label for="budget" class="block text-sm font-medium text-gray-700">Enter Your Budget ($)</label>
                                         <input
