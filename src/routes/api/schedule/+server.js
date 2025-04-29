@@ -1,28 +1,36 @@
-import { json } from '@sveltejs/kit';
-import sql from '$lib/server/database.js'; //Import the PostgreSQL client 
+import { json, error } from '@sveltejs/kit';
+import sql from '$lib/server/database.js';
+import { getAuth } from 'firebase-admin/auth'; // Firebase Admin SDK
 
-//GET: Fetch all activities 
-export async function GET({ params }){
+export async function GET({ request }) {
     try {
-        
-        const activities = await sql` 
+        const authHeader = request.headers.get('authorization');
+        if (!authHeader) {
+            throw error(401, 'Missing Authorization header');
+        }
+        const token = authHeader.split(' ')[1];
+
+        const decodedToken = await getAuth().verifyIdToken(token);
+        const userId = decodedToken.uid;
+
+        // Find all activities where the user is a member of the trip
+        const activities = await sql`
             SELECT 
-                id,
-                name AS title, 
-                description,
-                activity_date AS date,
-                votes
-            FROM activities
-            WHERE activity_date IS NOT NULL
-            ORDER BY activity_date ASC
-            `;
-                
+                a.id,
+                a.name AS title,
+                a.description,
+                a.activity_date AS date,
+                a.votes
+            FROM activities a
+            INNER JOIN trip_members tm ON a.trip_id = tm.trip_id
+            WHERE tm.user_id = ${userId}
+              AND a.activity_date IS NOT NULL
+            ORDER BY a.activity_date ASC
+        `;
+
         return json(activities);
     } catch (err) {
         console.error('Error fetching activities:', err);
-        return json({
-            error: 'Failed to fetch activities',
-            status: 500,
-        });
+        throw error(500, 'Failed to fetch activities');
     }
 }
