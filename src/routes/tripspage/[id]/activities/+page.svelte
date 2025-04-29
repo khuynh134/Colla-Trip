@@ -137,8 +137,10 @@ function formatDisplayDate(dateString: string | Date | null) {
 
             const createdActivity = await response.json(); 
             activities = [...activities, createdActivity]; //update local state with new activity
-
+            // Force refresh the calendar backend
+            await fetch('/api/schedule/refresh', { method: 'POST' });
             //Reset user input fields
+            
             userInputActivityName = '';
             userInputActivityDescript = '';
             userSelectedActivityDate = null; //reset date picker
