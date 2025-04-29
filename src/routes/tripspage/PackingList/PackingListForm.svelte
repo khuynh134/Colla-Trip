@@ -3,6 +3,7 @@
     export let newItemName: string;
     export let newItemQuantity: number;  
     export let creatorName: string;
+    export let onsubmit: (event: Event) => void;
 
     import { createEventDispatcher} from 'svelte';
     const dispatch = createEventDispatcher();
@@ -12,7 +13,7 @@
     }
 </script>
 
-<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-4">
+<form onsubmit={onsubmit} class="space-y-4">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <!-- Item Name -->
         <div class="md:col-span-2">
