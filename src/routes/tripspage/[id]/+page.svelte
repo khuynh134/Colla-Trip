@@ -37,6 +37,7 @@
     let createFormOpen = $state(false);
 
   let showAddMemberModal = false; // controls showing the modal
+  let packingListLoading = false; // loading state for packing list
 
 
     // Add Member Modal state
@@ -325,7 +326,8 @@
     
 
 async function addItem(event: Event) {
-    event.preventDefault();  // <-- this is the missing part!
+    event.preventDefault();
+    packingListLoading = true;  // <--- set loading true when starting
 
     try {
         const response = await fetch(`/api/packing-list`, {
@@ -352,7 +354,7 @@ async function addItem(event: Event) {
         console.error('Error adding item:', error);
         packingListError = 'Failed to add item. Please try again.';
     } finally {
-        packingListLoading = false;
+        packingListLoading = false;  // <--- always set loading false when done
     }
 }
    
@@ -897,6 +899,9 @@ onMount(() => {
                                 <div class="space-y-6">
 
                                     <!-- Submit New Budget -->
+                                    {#if packingListLoading}
+                                    <p class="text-blue-500 mb-2">Adding item...</p>
+                                    {/if}
                                     <form onsubmit={submitBudget} class="space-y-4">
                                       <div>
                                         <label for="budget" class="block text-sm font-medium text-gray-700">Enter Your Budget ($)</label>
