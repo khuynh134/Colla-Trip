@@ -10,7 +10,7 @@
     import { getAuth } from 'firebase/auth';
     import { triggerToast } from '$lib/stores/notifications';
     import AddMemberModal from '$lib/components/AddMemberModal.svelte';
-   
+  
 
 
     import { 
@@ -324,37 +324,37 @@
 }
     
 
-    async function addItem() {
-        try {
-            const response = await fetch(`/api/packing-list`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    name: newItemName,
-                    quantity: newItemQuantity,
-                    created_by: creatorName,
-                    trip_id: tripId
-                })
-            });
+async function addItem(event: Event) {
+    event.preventDefault();  // <-- this is the missing part!
 
-            if (!response.ok) throw new Error('Error adding item to packing list');
+    try {
+        const response = await fetch(`/api/packing-list`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: newItemName,
+                quantity: newItemQuantity,
+                created_by: creatorName,
+                trip_id: tripId
+            })
+        });
 
-            //const newItem = await response.json();
-            //packingList = [newItem, ...packingList];
-            await loadPackingList();
+        if (!response.ok) throw new Error('Error adding item to packing list');
 
-            newItemName = '';
-            newItemQuantity = 1;
-            creatorName = '';
-        } catch (error) {
-            console.error('Error adding item:', error);
-            packingListError = 'Failed to add item. Please try again.';
-        } finally {
-            packingListLoading = false;
-        }
+        await loadPackingList();
+
+        newItemName = '';
+        newItemQuantity = 1;
+        creatorName = '';
+    } catch (error) {
+        console.error('Error adding item:', error);
+        packingListError = 'Failed to add item. Please try again.';
+    } finally {
+        packingListLoading = false;
     }
+}
    
     async function deleteItem(itemId: number) {
         try {
@@ -897,7 +897,7 @@ onMount(() => {
                                 <div class="space-y-6">
 
                                     <!-- Submit New Budget -->
-                                    <form on:submit|preventDefault={submitBudget} class="space-y-4">
+                                    <form onsubmit={submitBudget} class="space-y-4">
                                       <div>
                                         <label for="budget" class="block text-sm font-medium text-gray-700">Enter Your Budget ($)</label>
                                         <input
@@ -996,7 +996,7 @@ onMount(() => {
                                             bind:newItemName
                                             bind:newItemQuantity
                                             bind:creatorName
-                                            on:submit={addItem}
+                                            onsubmit={addItem}
                                             
                                         />
                                     </div>
