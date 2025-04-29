@@ -175,11 +175,17 @@
             const res = await fetch(`/api/trip-budgets?trip_id=${tripId}`);
             if (!res.ok) throw new Error('Failed to fetch budgets');
             tripBudgets = await res.json();
-            averageBudget = tripBudgets.length > 0
-                ? Math.round(tripBudgets.reduce((acc, item) => acc + Number(item.proposed_budget), 0) / tripBudgets.length)
-                : 0;
+
+            if (tripBudgets.length > 0) {
+                const total = tripBudgets.reduce((acc, item) => acc + (Number(item.proposed_budget) || 0), 0);
+                averageBudget = Math.round(total / tripBudgets.length);
+            } else {
+                averageBudget = 0;
+            }
+
         } catch (err) {
             console.error('Error loading budgets:', err);
+            averageBudget = 0; // <-- optional fallback
         }
     }
 
@@ -713,7 +719,7 @@
                 </div>
           
                 <div class="text-3xl font-bold mb-1 text-gray-800">
-                  ${averageBudget.toLocaleString()}
+                    ${isNaN(averageBudget) ? 0 : averageBudget.toLocaleString()}
                 </div>
                 <div class="text-sm text-gray-500 mb-4">
                   Group Average Budget
@@ -725,7 +731,7 @@
           
                 <div class="mt-2 text-sm text-gray-600 flex justify-between">
                   <span>Spent: $0</span> <!-- You can improve this later to show tripData.budget.spent -->
-                  <span>Remaining: ${averageBudget.toLocaleString()}</span> <!-- Same -->
+                  <span>Remaining: ${isNaN(averageBudget) ? 0 : averageBudget.toLocaleString()}</span> <!-- Same -->
                 </div>
               </div>
           
