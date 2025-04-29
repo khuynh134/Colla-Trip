@@ -171,22 +171,29 @@
     }
 
     async function loadBudgets() {
-        try {
-            const res = await fetch(`/api/trip-budgets?trip_id=${tripId}`);
-            if (!res.ok) throw new Error('Failed to fetch budgets');
-            tripBudgets = await res.json();
+    try {
+        const res = await fetch(`/api/trip-budgets?trip_id=${tripId}`);
+        if (!res.ok) throw new Error('Failed to fetch budgets');
+        
+        const data = await res.json();
+        tripBudgets = data;
 
-            if (tripBudgets.length > 0) {
-                const total = tripBudgets.reduce((acc, item) => acc + (Number(item.proposed_budget) || 0), 0);
-                averageBudget = Math.round(total / tripBudgets.length);
-            } else {
-                averageBudget = 0;
-            }
+        if (tripBudgets.length > 0) {
+        const total = tripBudgets.reduce((acc, item) => {
+            // Safely parse as float regardless of string/number
+            const budget = parseFloat(String(item.proposed_budget));
+            return acc + (isNaN(budget) ? 0 : budget);
+        }, 0);
 
-        } catch (err) {
-            console.error('Error loading budgets:', err);
-            averageBudget = 0; // <-- optional fallback
+        averageBudget = Math.round(total / tripBudgets.length);
+        } else {
+        averageBudget = 0;
         }
+
+    } catch (err) {
+        console.error('Error loading budgets:', err);
+        averageBudget = 0; // fallback
+    }
     }
 
     async function submitBudget(event: Event) {
