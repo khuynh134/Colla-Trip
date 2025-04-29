@@ -49,8 +49,8 @@
             events = data.map((activity: any): CalendarEvent => ({
                 id: activity.id,
                 title: activity.title,
-                start: safeUTCDate(activity.date),
-	            end: safeUTCDate(activity.date),
+                start: new Date(`${activity.date}T00:00:00`),
+                end: new Date(`${activity.date}T00:00:00`),
                 color: '#27ae60',
                 type: 'activity',
                 description: activity.description
