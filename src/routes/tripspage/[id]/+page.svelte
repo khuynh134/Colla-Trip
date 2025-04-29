@@ -1027,12 +1027,6 @@
         
                         {/each}
                     </div>
-                    <div class="mt-4 pt-3 border-t border-gray-100">
-                        <button class="text-cyan-600 hover:text-cyan-700 text-sm flex items-center gap-1">
-                            <PlusCircle class="w-4 h-4" />
-                            <span>Add Highlight</span>
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>
