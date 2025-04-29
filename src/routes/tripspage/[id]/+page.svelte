@@ -179,11 +179,14 @@
         tripBudgets = data;
 
         if (tripBudgets.length > 0) {
+            console.log('Budgets received:', tripBudgets);
         const total = tripBudgets.reduce((acc, item) => {
             // Safely parse as float regardless of string/number
             const budget = parseFloat(String(item.proposed_budget));
             return acc + (isNaN(budget) ? 0 : budget);
         }, 0);
+        console.log('Total budget:', total);
+        console.log('Count:', tripBudgets.length);
 
         averageBudget = Math.round(total / tripBudgets.length);
         } else {

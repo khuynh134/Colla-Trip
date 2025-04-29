@@ -60,27 +60,27 @@ export async function POST({ request }) {
 
 // GET: Fetch all budgets for a specific trip
 export async function GET({ url, request }) {
-  try {
-    const trip_id = url.searchParams.get('trip_id');
-    if (!trip_id) {
-      throw error(400, 'Missing trip_id parameter');
+    try {
+      const trip_id = url.searchParams.get('trip_id');
+      if (!trip_id) {
+        throw error(400, 'Missing trip_id parameter');
+      }
+  
+      const budgets = await sql`
+        SELECT 
+          tb.id,
+          tb.proposed_budget::float AS proposed_budget,
+          u.username
+        FROM trip_budgets tb
+        JOIN users u ON u.id = tb.user_id
+        WHERE tb.trip_id = ${trip_id}
+        ORDER BY tb.created_at ASC
+      `;
+  
+      return json(budgets);
+  
+    } catch (err) {
+      console.error('Error fetching budgets:', err);
+      throw error(500, 'Internal server error');
     }
-
-    const budgets = await sql`
-      SELECT 
-        tb.id,
-        tb.proposed_budget,
-        u.username
-      FROM trip_budgets tb
-      JOIN users u ON u.id = tb.user_id
-      WHERE tb.trip_id = ${trip_id}
-      ORDER BY tb.created_at ASC
-    `;
-
-    return json(budgets);
-
-  } catch (err) {
-    console.error('Error fetching budgets:', err);
-    throw error(500, 'Internal server error');
   }
-}
