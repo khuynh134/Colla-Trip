@@ -24,8 +24,12 @@
 		error = '';
 
 		try {
-			await signInWithEmailAndPassword(auth, email, password);
-			.catch(err => console.error('🔥 signIn error:', err.code, err.message))
+			try {
+				await signInWithEmailAndPassword(auth, email, password);
+			} catch (err) {
+				console.error('🔥 signIn error:', err.code, err.message);
+				throw err; // Re-throw the error to be handled by the outer catch block
+			}
 			loggedIn = true;
 		} catch (err: any) {
 			console.error('Login error:', err);
