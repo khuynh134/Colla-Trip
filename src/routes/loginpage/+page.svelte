@@ -25,6 +25,7 @@
 
 		try {
 			await signInWithEmailAndPassword(auth, email, password);
+			.catch(err => console.error('🔥 signIn error:', err.code, err.message))
 			loggedIn = true;
 		} catch (err: any) {
 			console.error('Login error:', err);

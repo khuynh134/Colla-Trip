@@ -372,13 +372,24 @@ async function updateProfileIcon() {
             <h2 class="font-semibold text-lg mb-2">Select Your Profile Icon</h2>
             <div class="flex gap-4 flex-wrap">
               {#each availableIcons as icon}
-                <img
-                  src={icon}
-                  alt="Icon"
+                <button
+                  type="button"
                   class="w-16 h-16 rounded-full border-2 cursor-pointer transition 
                         {selectedIcon === icon ? 'border-blue-600 scale-110' : 'border-transparent'}"
                   onclick={() => selectedIcon = icon}
-                />
+                  onkeydown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      selectedIcon = icon;
+                    }
+                  }}
+                  aria-label="Select profile icon"
+                >
+                  <img
+                    src={icon}
+                    alt="Icon"
+                    class="w-full h-full rounded-full"
+                  />
+                </button>
               {/each}
             </div>
 
